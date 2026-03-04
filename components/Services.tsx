@@ -7,12 +7,12 @@ const services = [
   {
     title: "Rapid Qualitative Methods",
     description:
-      "Deep understanding without the timeline tax. Custom protocols that surface real actor jobs and decisions in days, not months.",
+      "Deep understanding without the timeline tax. Custom protocols that surface real actor jobs and decisions in days, not months — with outputs stakeholders can read and act on immediately.",
   },
   {
-    title: "Strategic Advisory",
+    title: "Stakeholder Narrative",
     description:
-      "Pattern recognition across real actors, real jobs, and real decisions. I help organizations stop guessing and start grounding strategy in what's actually true.",
+      "Users have a seat at the table alongside PMs, designers, and engineers — as actors with real jobs, not aggregated opinions. I design the process that makes that possible and the narrative that carries it to decision-makers.",
   },
 ];
 

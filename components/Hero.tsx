@@ -13,9 +13,9 @@ export default function Hero() {
         </h1>
       </div>
       <p className="mt-8 text-lg leading-relaxed text-brand-text opacity-85 max-w-[560px]">
-        I design and operate custom research systems — combining deep qualitative
-        methodology with platform thinking to make the craft of understanding
-        people fast, repeatable, and real.
+        I design research systems that pull users directly into the conversation
+        — as actors with real jobs and decisions, not data points to be
+        summarized. Users are stakeholders. The work treats them that way.
       </p>
     </section>
   );

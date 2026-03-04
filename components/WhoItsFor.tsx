@@ -1,7 +1,8 @@
 const items = [
-  "Teams that need user understanding at the speed of their decisions",
-  "Organizations where strategy is built on assumptions rather than evidence",
-  "Leaders burned by research that was too slow, too generic, or too disconnected from the real decision",
+  "Teams ready to treat users as active participants — not research subjects to be summarized and filed away",
+  "Organizations where PMs, designers, and engineers work from user evidence, not assumptions about users",
+  "Leaders who need the user's actual voice in the room — not a deck about what users said",
+  "Stakeholders who need research that connects directly to the decision in front of them",
 ];
 
 export default function WhoItsFor() {
