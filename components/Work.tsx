@@ -2,9 +2,17 @@ import Link from "next/link";
 
 const products = [
   {
+    slug: "ffa",
+    name: "Narrative Driven Design",
+    category: "Research Infrastructure",
+    description:
+      "The intelligence layer that powers every Divergent Networks product — a framework for accumulating, reconciling, and acting on research across time and teams.",
+    status: "Active",
+  },
+  {
     slug: "livability",
     name: "Livability",
-    category: "Research Platform",
+    category: "Self-Service Product",
     description:
       "Rethinking how people find places to live — built around what tenants actually need, not what listing platforms assume.",
     status: "Concept Validation",
@@ -24,14 +32,6 @@ const products = [
     description:
       "A platform for setting and communicating boundaries in digital relationships. Built from research into how trust is contextual, not binary.",
     status: "In Development",
-  },
-  {
-    slug: "ffa",
-    name: "Narrative Driven Design",
-    category: "Research Infrastructure",
-    description:
-      "The intelligence layer that powers every Divergent Networks product — a framework for accumulating, reconciling, and acting on research across time and teams.",
-    status: "Active",
   },
 ];
 
@@ -66,7 +66,7 @@ export default function Work() {
 
       {/* Products */}
       <h2 className="text-xs font-semibold tracking-widest uppercase text-brand-muted mb-8">
-        Products
+        Product Portfolio
       </h2>
       <div className="space-y-3 mb-14">
         {products.map((p) => (

@@ -17,7 +17,7 @@ const projects: Record<
 > = {
   livability: {
     name: "Livability",
-    category: "Research Platform",
+    category: "Self-Service Product",
     status: "Concept Validation",
     tagline: "Rethinking how people find places to live.",
     opportunity:
