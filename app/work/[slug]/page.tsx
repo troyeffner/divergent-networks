@@ -64,21 +64,21 @@ const projects: Record<
       "Trust boundaries are portable — not locked into any one platform",
     ],
     stage:
-      "In development — FFA visibility pilot active. Trust circles model in progress.",
+      "In development — NDD visibility pilot active. Trust circles model in progress.",
   },
   ffa: {
-    name: "FFA Research Platform",
+    name: "Narrative Driven Design",
     category: "Research Infrastructure",
     status: "Active",
     tagline: "The intelligence layer that makes research compound.",
     opportunity:
       "Research doesn't compound in most organizations. Every project starts from scratch. Insights are written in decks that get filed away. The frameworks used in one project never inform the next. The opportunity: build research infrastructure that accumulates intelligence over time — where each study makes the next one faster, deeper, and more connected to what actually happened before.",
     approach:
-      "FFA is a structured system for storing, linking, and acting on research — assumptions, hypotheses, experiments, evidence, and reconciled insights — alongside the workforce methodology needed to run rapid research at scale. It's the backbone of every Divergent Networks product. Every product we build starts as an FFA instance: a structured set of assumptions and hypotheses about a specific actor population.",
+      "Narrative Driven Design is a structured system for storing, linking, and acting on research — assumptions, hypotheses, experiments, evidence, and reconciled insights — alongside the workforce methodology needed to run rapid research at scale. It's the backbone of every Divergent Networks product. Every product we build starts as an NDD instance: a structured set of assumptions and hypotheses about a specific actor population.",
     outcomes: [
       "Research intelligence compounds — each study builds on the last",
       "Hypotheses are explicitly tracked from assumption to evidence to reconciled insight",
-      "The methodology is transferable — FFA instances can be spun up for any research domain",
+      "The methodology is transferable — NDD instances can be spun up for any research domain",
       "Every Divergent Networks product has a traceable research lineage",
     ],
     stage:

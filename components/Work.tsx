@@ -27,7 +27,7 @@ const products = [
   },
   {
     slug: "ffa",
-    name: "FFA Research Platform",
+    name: "Narrative Driven Design",
     category: "Research Infrastructure",
     description:
       "The intelligence layer that powers every Divergent Networks product — a framework for accumulating, reconciling, and acting on research across time and teams.",
