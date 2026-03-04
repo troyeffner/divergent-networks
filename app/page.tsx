@@ -1,4 +1,5 @@
 import Hero from "@/components/Hero";
+import Philosophy from "@/components/Philosophy";
 import Services from "@/components/Services";
 import WhoItsFor from "@/components/WhoItsFor";
 import Work from "@/components/Work";
@@ -9,6 +10,7 @@ export default function Home() {
     <main className="min-h-screen">
       <div className="max-w-[720px] mx-auto px-6 py-16 md:py-24">
         <Hero />
+        <Philosophy />
         <Services />
         <WhoItsFor />
         <Work />
