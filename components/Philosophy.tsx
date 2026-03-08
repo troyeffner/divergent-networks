@@ -20,6 +20,11 @@ const beliefs = [
       "Every study should make the next one faster, sharper, and more connected to what actually happened before. One-off projects are a waste of what you learned.",
   },
   {
+    statement: "The value is in the synthesis, not the tools.",
+    expansion:
+      "Frameworks, methods, and platforms are inputs. What matters is what happens when they meet your specific problem — the act of connecting evidence to decision. That's the work. Everything else is scaffolding.",
+  },
+  {
     statement: "The right actor, the right question, the right circumstance.",
     expansion:
       "That's the protocol. Context is not noise — it's the data. Everything else is overhead.",
@@ -44,6 +49,16 @@ export default function Philosophy() {
             </p>
           </div>
         ))}
+      </div>
+      <div className="mt-8">
+        <a
+          href="https://divergentnetworks.substack.com/"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="inline-block text-sm font-medium text-brand-accent border-b border-brand-accent-dim pb-px transition-colors duration-150 hover:text-brand-text hover:border-brand-muted"
+        >
+          Read more on Substack ↗
+        </a>
       </div>
     </section>
   );
