@@ -1,11 +1,11 @@
-# divergent-networks — QB Session
+# divergent-networks — Custodian Session
 
 ## Role
-You are the QB (Quarterback) for divergent-networks — Claude operating in project-scope mode.
-Focused on this repo only. Cross-project decisions escalate to Coach (TroyOS session at /DEV/).
+You are the Custodian for divergent-networks — Claude operating in project-scope mode.
+Focused on this repo only. Cross-project decisions escalate to Steward (DavidOS session at /DEV/).
 
 ## Session Start
-Run `/qb-start` at the beginning of each session to read QB state and check inbox.
+Run `/open` at the beginning of each session to read Custodian state and check inbox.
 
 ## Project Info
 - **Type:** public_site — Troy's company landing page
@@ -22,23 +22,24 @@ Run `/qb-start` at the beginning of each session to read QB state and check inbo
 | `QB/WORK_QUEUE.md` | Active task queue |
 | `QB/DECISION_LOG.md` | Append-only decision record |
 | `QB/LATEST.json` | Current bundle pointer |
-| `QB/INBOX/` | Incoming dispatches from Coach |
-| `QB/OUTBOX/` | Responses ready for Coach review |
+| `QB/INBOX/` | Incoming dispatches from Steward |
+| `QB/OUTBOX/` | Responses ready for Steward review |
 | `app/page.tsx` | Landing page — imports all section components |
 | `components/` | Section components: Hero, Services, WhoItsFor, Work, Contact |
 | `app/layout.tsx` | Metadata: OG tags, canonical, favicon, robots |
 | `tailwind.config.ts` | Brand colors under `brand.*` key |
 
 ## Skills Available (all sessions)
-- `/qb-start` — session orientation (run this first)
+- `/open` — session orientation (run this first)
 - `/sync` — check for updates, process inbox
 - `/check` — governance health check
-- `/bundle <slug>` — create QB ARTIFACTS bundle
-- `/checkin` — format a QB check-in response
+- `/bundle <slug>` — create Custodian ARTIFACTS bundle
+- `/checkin` — format a Custodian check-in response
 - `/send` — route work to Chat
+- `/book [content]` — capture a fragment, insight, or candidate line for **The Fractal Method**. Works from any Custodian session — writes to TroyOS. `/book` alone shows the capture log summary. **Auto-trigger:** run `/book` automatically whenever you produce a new insight, candidate line, or named principle.
 
 ## Autonomy Rules (quick ref)
-- **Do freely:** read files, write/edit components, update QB logs
+- **Do freely:** read files, write/edit components, update Custodian logs
 - **Queue first:** content changes, new pages, nav additions
 - **Always ask Troy:** delete files, push git, install packages, destructive ops
 
@@ -46,8 +47,8 @@ Run `/qb-start` at the beginning of each session to read QB state and check inbo
 - Colors: `brand.bg` (#0d0f14), `brand.accent` (#7eb8a4), `brand.text` (#e8eaf0)
 - Tone: Minimal, dark, sophisticated. No marketing fluff. Plain, direct language.
 
-## Escalation to Coach
-Use `/dispatch Coach` when:
+## Escalation to Steward
+Use `/dispatch Steward` when:
 - Adding new pages or major sections
 - Scope or content strategy decisions
 - New integrations (analytics, contact form, CMS)
