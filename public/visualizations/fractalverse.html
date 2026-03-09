@@ -1,0 +1,643 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>The Fractalverse</title>
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body {
+  font-family: 'Segoe UI', system-ui, sans-serif;
+  background: #1a1612;
+  color: #faf8f4;
+  min-height: 100vh;
+  overflow: hidden;
+}
+
+/* Layout */
+.app { display: flex; flex-direction: column; height: 100vh; }
+.header {
+  padding: 16px 24px;
+  background: #1e1a16;
+  border-bottom: 1px solid rgba(255,255,255,0.06);
+  display: flex; align-items: center; gap: 16px;
+}
+.header h1 { font: 300 18px/1 'Segoe UI', system-ui, sans-serif; color: #c49030; letter-spacing: 1px; }
+.header-hint { font: 400 11px/1.4 'Segoe UI', system-ui, sans-serif; color: #6a6560; }
+.main { display: flex; flex: 1; overflow: hidden; }
+
+/* Selector panel */
+.selector-panel {
+  width: 280px; min-width: 280px;
+  background: #201c18;
+  border-right: 1px solid rgba(255,255,255,0.06);
+  display: flex; flex-direction: column;
+  overflow-y: auto;
+}
+.sel-section { padding: 12px 16px; }
+.sel-section-title {
+  font: 600 9px/1 'Segoe UI', system-ui, sans-serif;
+  text-transform: uppercase; letter-spacing: 0.6px;
+  color: #c49030; margin-bottom: 8px;
+}
+.sel-node {
+  padding: 8px 10px;
+  border-radius: 6px;
+  cursor: pointer;
+  margin-bottom: 4px;
+  border-left: 3px solid transparent;
+  transition: all 0.15s;
+}
+.sel-node:hover { background: rgba(255,255,255,0.03); }
+.sel-node.selected-a { background: rgba(74,154,180,0.12); border-left-color: #4a9ab4; }
+.sel-node.selected-b { background: rgba(180,106,74,0.12); border-left-color: #b46a4a; }
+.sel-node-name { font: 500 11px/1.3 'Segoe UI', system-ui, sans-serif; color: #c8c2b8; }
+.sel-node-fw { font: 400 8px/1 'Segoe UI', system-ui, sans-serif; color: #5a5550; margin-top: 2px; }
+.sel-node-tags { display: flex; gap: 3px; margin-top: 4px; flex-wrap: wrap; }
+.sel-tag {
+  font: 700 6px/1 'Segoe UI', system-ui, sans-serif;
+  text-transform: uppercase; letter-spacing: 0.3px;
+  padding: 2px 4px; border-radius: 2px;
+}
+.sel-tag.port { background: rgba(196,144,48,0.15); color: #c49030; }
+.sel-tag.tag { background: rgba(90,180,160,0.15); color: #5ab4a0; }
+
+.sel-instructions {
+  padding: 12px 16px;
+  border-top: 1px solid rgba(255,255,255,0.04);
+}
+.sel-step { font: 400 10px/1.5 'Segoe UI', system-ui, sans-serif; color: #6a6560; margin-bottom: 4px; }
+.sel-step span { color: #4a9ab4; font-weight: 600; }
+.sel-step .b-color { color: #b46a4a; }
+
+/* Canvas area */
+.canvas-area {
+  flex: 1;
+  position: relative;
+  overflow: hidden;
+}
+.canvas-area svg { width: 100%; height: 100%; }
+
+/* Tree nodes */
+.tree-node { cursor: pointer; }
+.tree-node circle { transition: all 0.3s; }
+.tree-node text { font-family: 'Segoe UI', system-ui, sans-serif; }
+
+/* Seed glow */
+.seed-glow { filter: url(#glow); }
+
+/* Legend */
+.legend {
+  position: absolute; bottom: 16px; left: 16px;
+  background: rgba(30,26,22,0.9);
+  border: 1px solid rgba(255,255,255,0.08);
+  border-radius: 8px;
+  padding: 12px 16px;
+  display: flex; flex-direction: column; gap: 6px;
+}
+.legend-item { display: flex; align-items: center; gap: 8px; }
+.legend-dot { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
+.legend-line { width: 20px; height: 2px; flex-shrink: 0; border-radius: 1px; }
+.legend-text { font: 400 9px/1 'Segoe UI', system-ui, sans-serif; color: #8a8580; }
+
+/* Ground plane */
+.ground-label {
+  font: 300 10px/1 'Segoe UI', system-ui, sans-serif;
+  fill: #4a4540;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+}
+
+/* Compare status */
+.compare-status {
+  position: absolute; top: 16px; right: 16px;
+  background: rgba(30,26,22,0.9);
+  border: 1px solid rgba(255,255,255,0.08);
+  border-radius: 8px;
+  padding: 12px 16px;
+  max-width: 300px;
+}
+.compare-title { font: 600 10px/1 'Segoe UI', system-ui, sans-serif; color: #c49030; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 8px; }
+.compare-node { font: 400 11px/1.4 'Segoe UI', system-ui, sans-serif; margin-bottom: 4px; }
+.compare-node.a { color: #4a9ab4; }
+.compare-node.b { color: #b46a4a; }
+.compare-stat { font: 400 9px/1.4 'Segoe UI', system-ui, sans-serif; color: #8a8580; margin-top: 6px; }
+.compare-stat span { font-weight: 600; }
+.compare-stat .intersect-count { color: #c49030; }
+
+/* Empty state */
+.empty-state {
+  position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
+  text-align: center; pointer-events: none;
+}
+.empty-title { font: 300 22px/1.3 'Segoe UI', system-ui, sans-serif; color: #3a3530; margin-bottom: 8px; }
+.empty-sub { font: 400 12px/1.5 'Segoe UI', system-ui, sans-serif; color: #2a2520; }
+</style>
+</head>
+<body>
+<div class="app">
+  <div class="header">
+    <h1>The Fractalverse</h1>
+    <span class="header-hint">Pick two nodes. See where their trees intersect. The seeds are the proof.</span>
+  </div>
+  <div class="main">
+    <div class="selector-panel" id="selectorPanel"></div>
+    <div class="canvas-area" id="canvasArea">
+      <div class="empty-state" id="emptyState">
+        <div class="empty-title">Select two nodes to compare</div>
+        <div class="empty-sub">Click one node, then another. Watch the trees grow.</div>
+      </div>
+      <svg id="treeSvg" style="display:none;">
+        <defs>
+          <filter id="glow">
+            <feGaussianBlur stdDeviation="4" result="coloredBlur"/>
+            <feMerge><feMergeNode in="coloredBlur"/><feMergeNode in="SourceGraphic"/></feMerge>
+          </filter>
+          <filter id="glow-strong">
+            <feGaussianBlur stdDeviation="8" result="coloredBlur"/>
+            <feMerge><feMergeNode in="coloredBlur"/><feMergeNode in="SourceGraphic"/></feMerge>
+          </filter>
+        </defs>
+      </svg>
+    </div>
+  </div>
+</div>
+
+<script>
+// ============================================================
+//  DATA: Simplified tree structures for comparison
+//  Each node has: id, label, shortLabel, tags, children
+//  Tags = the self-grown frameworks present in this node's depth
+// ============================================================
+
+const TREE_DATA = {
+  // JTBD Framework
+  'j1': {
+    id: 'j1', label: 'Capture Without Losing Context', shortLabel: 'Capture Context',
+    framework: 'JTBD', color: '#4a9ab4',
+    ports: ['jtbd'], tags: ['operations', 'tree-biology'],
+    children: [
+      { id: 'j1.1', label: 'Fleeting thought in under 3 seconds', shortLabel: 'Fleeting Thought',
+        tags: ['operations'],
+        children: [
+          { id: 'j1.1.1', label: 'Persistent input field, no navigation', shortLabel: 'Persistent Input',
+            tags: ['operations'],
+            children: [
+              { id: 'seed-textbox', label: 'Text box anchored to bottom of screen, always visible', shortLabel: 'Text Box', isSeed: true, tags: ['operations','tree-biology','physics'] },
+              { id: 'seed-charcount', label: 'Character count visible to constrain scope', shortLabel: 'Char Count', isSeed: true, tags: ['operations','linguistics'] },
+            ]},
+          { id: 'j1.1.2', label: 'Voice-to-text with same fidelity as typed', shortLabel: 'Voice Capture',
+            tags: ['operations'],
+            children: [
+              { id: 'seed-mic', label: 'Microphone button adjacent to text input, one tap', shortLabel: 'Mic Button', isSeed: true, tags: ['operations','physics'] },
+            ]},
+        ]},
+      { id: 'j1.2', label: 'Import external source with context preserved', shortLabel: 'Source Import',
+        tags: ['operations','tree-biology'],
+        children: [
+          { id: 'j1.2.1', label: 'URL paste extracts metadata automatically', shortLabel: 'URL Extract',
+            tags: ['operations'],
+            children: [
+              { id: 'seed-url', label: 'Paste URL, system fetches Open Graph data, preview card', shortLabel: 'URL Preview', isSeed: true, tags: ['operations','network'] },
+            ]},
+          { id: 'j1.2.2', label: 'Book capture with page number and context', shortLabel: 'Book Capture',
+            tags: ['tree-biology'],
+            children: [
+              { id: 'seed-book', label: 'Book mode: title persists, page number field, photo OCR', shortLabel: 'Book Mode', isSeed: true, tags: ['tree-biology','linguistics','operations'] },
+            ]},
+        ]},
+      { id: 'j1.4', label: 'Mark maturity level at intake', shortLabel: 'Maturity Intake',
+        tags: ['tree-biology','horizoning'],
+        children: [
+          { id: 'seed-maturity', label: 'Segmented control Air|Soil|Bark, color shifts with selection', shortLabel: 'Maturity Slider', isSeed: true, tags: ['tree-biology','horizoning','operations'] },
+        ]},
+    ]
+  },
+  'j2': {
+    id: 'j2', label: 'Make Sense Through Multiple Lenses', shortLabel: 'Multiple Lenses',
+    framework: 'JTBD', color: '#4a9ab4',
+    ports: ['jtbd'], tags: ['operations', 'linguistics'],
+    children: [
+      { id: 'j2.1', label: 'Answer "What is this?" with a keyword', shortLabel: 'Keyword Tag',
+        tags: ['operations','linguistics'],
+        children: [
+          { id: 'j2.1.1', label: 'Framework chips visible, one-tap tag', shortLabel: 'Chip Tag',
+            tags: ['operations'],
+            children: [
+              { id: 'seed-chips', label: 'Row of colored framework chips below each inbox item, tap to toggle', shortLabel: 'Framework Chips', isSeed: true, tags: ['operations','linguistics'] },
+              { id: 'seed-abbrev', label: 'Chip abbreviations visible at a glance: JTBD, OOUX, META', shortLabel: 'Chip Abbrev', isSeed: true, tags: ['linguistics','operations'] },
+            ]},
+        ]},
+      { id: 'j2.2', label: 'See prompting questions automatically', shortLabel: 'Auto Prompts',
+        tags: ['operations','linguistics'],
+        children: [
+          { id: 'j2.2.1', label: 'Analyzer panel shows methodology questions', shortLabel: 'Method Panel',
+            tags: ['operations'],
+            children: [
+              { id: 'seed-prompt', label: 'Right panel shows framework prompt as checklist, answers become fractal children', shortLabel: 'Prompt Checklist', isSeed: true, tags: ['operations','linguistics','jtbd'] },
+            ]},
+          { id: 'j2.2.2', label: 'Questions phrased as verbs, not nouns', shortLabel: 'Verb Phrasing',
+            tags: ['linguistics'],
+            children: [
+              { id: 'seed-verb', label: '"Where does this grow?" not "Growth stage." Framework as verb.', shortLabel: 'Verb Questions', isSeed: true, tags: ['linguistics','tree-biology'] },
+            ]},
+        ]},
+      { id: 'j2.3', label: 'Decompose into connectable sub-fractals', shortLabel: 'Decompose',
+        tags: ['operations','tree-biology'],
+        children: [
+          { id: 'seed-linkable', label: 'Each fractal child gets unique ID, hover shows link icon, drag to connect', shortLabel: 'Linkable Nodes', isSeed: true, tags: ['operations','network','tree-biology'] },
+          { id: 'seed-promote', label: 'Node count badge, amber glow at 5+, "Promote to Term?" prompt', shortLabel: 'Promote Prompt', isSeed: true, tags: ['operations','tree-biology'] },
+        ]},
+    ]
+  },
+  'j4': {
+    id: 'j4', label: 'Integrate Into Living Structure', shortLabel: 'Integrate',
+    framework: 'JTBD', color: '#4a9ab4',
+    ports: ['jtbd'], tags: ['operations', 'tree-biology'],
+    children: [
+      { id: 'j4.1', label: 'Strengthen existing or create new horizon', shortLabel: 'Strengthen/Create',
+        tags: ['tree-biology','operations'],
+        children: [
+          { id: 'seed-integrate-actions', label: 'Integrator buttons: Strengthen, Horizon, New Category, New Framework', shortLabel: 'Integrator Actions', isSeed: true, tags: ['operations','tree-biology','horizoning'] },
+        ]},
+      { id: 'j4.2', label: 'See where new material connects to existing', shortLabel: 'Connection Match',
+        tags: ['network','operations'],
+        children: [
+          { id: 'seed-connmatch', label: 'Fractals enter where connections match, suggested placement', shortLabel: 'Placement Suggest', isSeed: true, tags: ['network','operations'] },
+        ]},
+    ]
+  },
+
+  // OOUX Framework
+  'ooux-capture': {
+    id: 'ooux-capture', label: 'Capture (Object)', shortLabel: 'Capture',
+    framework: 'OOUX', color: '#7a6ab4',
+    ports: ['ooux','jtbd'], tags: ['operations', 'tree-biology'],
+    children: [
+      { id: 'ooux-source', label: 'Source Context: where this originated', shortLabel: 'Source Context',
+        tags: ['operations'],
+        children: [
+          { id: 'ooux-url-src', label: 'URL Source with extracted metadata', shortLabel: 'URL Source',
+            tags: ['operations','network'],
+            children: [
+              { id: 'seed-url', label: 'Paste URL, system fetches Open Graph data, preview card', shortLabel: 'URL Preview', isSeed: true, tags: ['operations','network'] },
+            ]},
+          { id: 'ooux-book-src', label: 'Book Source: title, author, page', shortLabel: 'Book Source',
+            tags: ['tree-biology','linguistics'],
+            children: [
+              { id: 'seed-book', label: 'Book mode: title persists, page number field, photo OCR', shortLabel: 'Book Mode', isSeed: true, tags: ['tree-biology','linguistics','operations'] },
+            ]},
+        ]},
+      { id: 'ooux-raw', label: 'Raw Content: the captured material', shortLabel: 'Raw Content',
+        tags: ['operations'],
+        children: [
+          { id: 'ooux-text', label: 'Text Note: typed or voice-to-text', shortLabel: 'Text Note',
+            tags: ['operations'],
+            children: [
+              { id: 'seed-textbox', label: 'Text box anchored to bottom of screen, always visible', shortLabel: 'Text Box', isSeed: true, tags: ['operations','tree-biology','physics'] },
+              { id: 'seed-mic', label: 'Microphone button adjacent to text input, one tap', shortLabel: 'Mic Button', isSeed: true, tags: ['operations','physics'] },
+            ]},
+        ]},
+      { id: 'ooux-intake', label: 'Intake Metadata: initial classification', shortLabel: 'Intake Meta',
+        tags: ['tree-biology','horizoning'],
+        children: [
+          { id: 'seed-maturity', label: 'Segmented control Air|Soil|Bark, color shifts with selection', shortLabel: 'Maturity Slider', isSeed: true, tags: ['tree-biology','horizoning','operations'] },
+          { id: 'seed-chips', label: 'Row of colored framework chips below each inbox item, tap to toggle', shortLabel: 'Framework Chips', isSeed: true, tags: ['operations','linguistics'] },
+        ]},
+    ]
+  },
+  'ooux-term': {
+    id: 'ooux-term', label: 'Term (Object)', shortLabel: 'Term',
+    framework: 'OOUX', color: '#7a6ab4',
+    ports: ['ooux'], tags: ['tree-biology', 'operations', 'linguistics'],
+    children: [
+      { id: 'ooux-identity', label: 'Identity: named, addressable object', shortLabel: 'Identity',
+        tags: ['linguistics','operations'],
+        children: [
+          { id: 'seed-title', label: 'Editable title field with character limit suggesting compression', shortLabel: 'Title Field', isSeed: true, tags: ['linguistics','operations'] },
+        ]},
+      { id: 'ooux-position', label: 'Position: where it sits in the structure', shortLabel: 'Position',
+        tags: ['tree-biology','horizoning'],
+        children: [
+          { id: 'seed-chips', label: 'Row of colored framework chips below each inbox item, tap to toggle', shortLabel: 'Framework Chips', isSeed: true, tags: ['operations','linguistics'] },
+          { id: 'seed-maturity', label: 'Segmented control Air|Soil|Bark, color shifts with selection', shortLabel: 'Maturity Slider', isSeed: true, tags: ['tree-biology','horizoning','operations'] },
+        ]},
+      { id: 'ooux-depth', label: 'Depth: fractal children decomposing this term', shortLabel: 'Depth',
+        tags: ['tree-biology','physics'],
+        children: [
+          { id: 'seed-promote', label: 'Node count badge, amber glow at 5+, "Promote to Term?" prompt', shortLabel: 'Promote Prompt', isSeed: true, tags: ['operations','tree-biology'] },
+          { id: 'seed-linkable', label: 'Each fractal child gets unique ID, hover shows link icon, drag to connect', shortLabel: 'Linkable Nodes', isSeed: true, tags: ['operations','network','tree-biology'] },
+        ]},
+    ]
+  },
+  'ooux-framework': {
+    id: 'ooux-framework', label: 'Framework (Object)', shortLabel: 'Framework',
+    framework: 'OOUX', color: '#7a6ab4',
+    ports: ['ooux','jtbd'], tags: ['operations', 'horizoning'],
+    children: [
+      { id: 'ooux-methodology', label: 'Methodology: the question set', shortLabel: 'Methodology',
+        tags: ['linguistics','operations'],
+        children: [
+          { id: 'seed-prompt', label: 'Right panel shows framework prompt as checklist, answers become fractal children', shortLabel: 'Prompt Checklist', isSeed: true, tags: ['operations','linguistics','jtbd'] },
+          { id: 'seed-verb', label: '"Where does this grow?" not "Growth stage." Framework as verb.', shortLabel: 'Verb Questions', isSeed: true, tags: ['linguistics','tree-biology'] },
+        ]},
+      { id: 'ooux-origin', label: 'Origin: structured, home grown, or individual', shortLabel: 'Origin',
+        tags: ['horizoning'],
+        children: [
+          { id: 'seed-origin-badge', label: 'Framework card shows origin section header and badge', shortLabel: 'Origin Badge', isSeed: true, tags: ['operations','horizoning'] },
+        ]},
+    ]
+  },
+  'ooux-connection': {
+    id: 'ooux-connection', label: 'Connection (Object)', shortLabel: 'Connection',
+    framework: 'OOUX', color: '#7a6ab4',
+    ports: ['ooux','network'], tags: ['propagation', 'operations'],
+    children: [
+      { id: 'ooux-endpoints', label: 'Endpoints: source and target Terms', shortLabel: 'Endpoints',
+        tags: ['network','operations'],
+        children: [
+          { id: 'seed-linkable', label: 'Each fractal child gets unique ID, hover shows link icon, drag to connect', shortLabel: 'Linkable Nodes', isSeed: true, tags: ['operations','network','tree-biology'] },
+          { id: 'seed-connmatch', label: 'Fractals enter where connections match, suggested placement', shortLabel: 'Placement Suggest', isSeed: true, tags: ['network','operations'] },
+        ]},
+      { id: 'ooux-weight', label: 'Weight: mesh strength from synthesis evidence', shortLabel: 'Weight',
+        tags: ['propagation','operations'],
+        children: [
+          { id: 'seed-weight-visual', label: 'Line thickness maps to weight, opacity scales', shortLabel: 'Weight Line', isSeed: true, tags: ['propagation','operations','physics'] },
+        ]},
+    ]
+  },
+};
+
+// Collect all seeds across all trees
+function collectSeeds(node) {
+  let seeds = [];
+  if (node.isSeed) seeds.push(node.id);
+  if (node.children) node.children.forEach(c => { seeds = seeds.concat(collectSeeds(c)); });
+  return seeds;
+}
+
+// Collect all node IDs in a tree
+function collectAllIds(node) {
+  let ids = [node.id];
+  if (node.children) node.children.forEach(c => { ids = ids.concat(collectAllIds(c)); });
+  return ids;
+}
+
+// ============================================================
+//  STATE
+// ============================================================
+let selectedA = null;
+let selectedB = null;
+
+// ============================================================
+//  SELECTOR PANEL
+// ============================================================
+function renderSelector() {
+  const panel = document.getElementById('selectorPanel');
+  const fwLookup = { operations: 'Ops', 'tree-biology': 'Bio', linguistics: 'Ling', horizoning: 'Hor',
+    propagation: 'Prop', network: 'Net', physics: 'Phys', jtbd: 'JTBD', ooux: 'OOUX', meme: 'Meme', biographical: 'Bio/Ther' };
+
+  // Group by framework
+  const groups = {};
+  Object.values(TREE_DATA).forEach(node => {
+    const fw = node.framework;
+    if (!groups[fw]) groups[fw] = [];
+    groups[fw].push(node);
+  });
+
+  let html = `<div class="sel-instructions">
+    <div class="sel-step"><span>Click</span> first node (Tree A)</div>
+    <div class="sel-step"><span class="b-color">Click</span> second node (Tree B)</div>
+    <div class="sel-step">Watch the seeds glow where they intersect</div>
+  </div>`;
+
+  Object.entries(groups).forEach(([fw, nodes]) => {
+    html += `<div class="sel-section"><div class="sel-section-title">${fw}</div>`;
+    nodes.forEach(n => {
+      const isA = selectedA === n.id;
+      const isB = selectedB === n.id;
+      const cls = isA ? 'selected-a' : isB ? 'selected-b' : '';
+      const portChips = (n.ports || []).map(p => `<span class="sel-tag port">${fwLookup[p] || p}</span>`).join('');
+      const tagChips = (n.tags || []).map(t => `<span class="sel-tag tag">${fwLookup[t] || t}</span>`).join('');
+      html += `<div class="sel-node ${cls}" onclick="selectNode('${n.id}')">
+        <div class="sel-node-name">${n.label}</div>
+        <div class="sel-node-tags">${portChips}${tagChips}</div>
+      </div>`;
+    });
+    html += '</div>';
+  });
+  panel.innerHTML = html;
+}
+
+function selectNode(id) {
+  if (selectedA === id) { selectedA = null; }
+  else if (selectedB === id) { selectedB = null; }
+  else if (!selectedA) { selectedA = id; }
+  else if (!selectedB) { selectedB = id; }
+  else { selectedA = id; selectedB = null; }
+  renderSelector();
+  renderTrees();
+}
+
+// ============================================================
+//  TREE VISUALIZATION
+// ============================================================
+function renderTrees() {
+  const svg = document.getElementById('treeSvg');
+  const empty = document.getElementById('emptyState');
+
+  if (!selectedA && !selectedB) {
+    svg.style.display = 'none';
+    empty.style.display = 'block';
+    document.querySelector('.compare-status')?.remove();
+    return;
+  }
+  svg.style.display = 'block';
+  empty.style.display = 'none';
+
+  const rect = document.getElementById('canvasArea').getBoundingClientRect();
+  const W = rect.width;
+  const H = rect.height;
+  svg.setAttribute('viewBox', `0 0 ${W} ${H}`);
+
+  const treeA = selectedA ? TREE_DATA[selectedA] : null;
+  const treeB = selectedB ? TREE_DATA[selectedB] : null;
+
+  // Find shared seeds
+  const seedsA = treeA ? new Set(collectSeeds(treeA)) : new Set();
+  const seedsB = treeB ? new Set(collectSeeds(treeB)) : new Set();
+  const sharedSeeds = new Set([...seedsA].filter(s => seedsB.has(s)));
+  const allSeedsA = treeA ? collectSeeds(treeA) : [];
+  const allSeedsB = treeB ? collectSeeds(treeB) : [];
+  const uniqueA = [...seedsA].filter(s => !seedsB.has(s));
+  const uniqueB = [...seedsB].filter(s => !seedsA.has(s));
+
+  // Layout parameters
+  const groundY = H - 80;
+  const topPad = 60;
+  const centerX = W / 2;
+  const treeSpacing = treeA && treeB ? W * 0.38 : 0;
+  const treeCenterA = treeA && treeB ? centerX - treeSpacing / 2 : centerX;
+  const treeCenterB = treeA && treeB ? centerX + treeSpacing / 2 : centerX;
+
+  // Flatten tree into positioned nodes (top-down, root at top)
+  function layoutTree(tree, cx, availW) {
+    if (!tree) return [];
+    const nodes = [];
+    const levels = [];
+
+    function walkLevels(node, depth) {
+      if (!levels[depth]) levels[depth] = [];
+      levels[depth].push(node);
+      if (node.children) node.children.forEach(c => walkLevels(c, depth + 1));
+    }
+    walkLevels(tree, 0);
+
+    const maxDepth = levels.length;
+    const levelH = Math.min(80, (groundY - topPad - 40) / Math.max(maxDepth, 1));
+
+    function positionNodes(node, depth, xMin, xMax, parentX, parentY) {
+      const x = (xMin + xMax) / 2;
+      const y = topPad + depth * levelH;
+      nodes.push({ ...node, x, y, parentX, parentY, depth });
+      if (node.children && node.children.length > 0) {
+        const childW = (xMax - xMin) / node.children.length;
+        node.children.forEach((c, i) => {
+          positionNodes(c, depth + 1, xMin + i * childW, xMin + (i + 1) * childW, x, y);
+        });
+      }
+    }
+    positionNodes(tree, 0, cx - availW / 2, cx + availW / 2, null, null);
+    return nodes;
+  }
+
+  const availW = treeA && treeB ? W * 0.42 : W * 0.7;
+  const nodesA = layoutTree(treeA, treeCenterA, availW);
+  const nodesB = layoutTree(treeB, treeCenterB, availW);
+
+  // Build SVG
+  let svgContent = '';
+
+  // Ground plane
+  svgContent += `<line x1="0" y1="${groundY}" x2="${W}" y2="${groundY}" stroke="rgba(196,144,48,0.15)" stroke-width="1" stroke-dasharray="4,4"/>`;
+  svgContent += `<text x="${W/2}" y="${groundY + 20}" text-anchor="middle" class="ground-label">raw data / seeds</text>`;
+
+  // Draw edges
+  function drawEdges(nodes, color, opacity) {
+    nodes.forEach(n => {
+      if (n.parentX !== null) {
+        const isShared = n.isSeed && sharedSeeds.has(n.id);
+        const edgeColor = isShared ? '#c49030' : color;
+        const edgeOp = isShared ? 0.6 : opacity;
+        const strokeW = isShared ? 2 : 1;
+        svgContent += `<line x1="${n.parentX}" y1="${n.parentY}" x2="${n.x}" y2="${n.y}" stroke="${edgeColor}" stroke-opacity="${edgeOp}" stroke-width="${strokeW}"/>`;
+      }
+    });
+  }
+
+  if (nodesA.length) drawEdges(nodesA, '#4a9ab4', 0.3);
+  if (nodesB.length) drawEdges(nodesB, '#b46a4a', 0.3);
+
+  // Draw shared seed connections (mycelium)
+  if (sharedSeeds.size > 0) {
+    const seedPositions = {};
+    nodesA.forEach(n => { if (n.isSeed && sharedSeeds.has(n.id)) seedPositions[n.id + '_a'] = n; });
+    nodesB.forEach(n => { if (n.isSeed && sharedSeeds.has(n.id)) seedPositions[n.id + '_b'] = n; });
+    sharedSeeds.forEach(seedId => {
+      const a = seedPositions[seedId + '_a'];
+      const b = seedPositions[seedId + '_b'];
+      if (a && b) {
+        const midY = groundY - 10;
+        svgContent += `<path d="M${a.x},${a.y} Q${(a.x+b.x)/2},${midY + 30} ${b.x},${b.y}" fill="none" stroke="#c49030" stroke-opacity="0.25" stroke-width="1.5" stroke-dasharray="3,3"/>`;
+      }
+    });
+  }
+
+  // Draw nodes
+  function drawNodes(nodes, treeColor, treeSide) {
+    nodes.forEach(n => {
+      const isShared = n.isSeed && sharedSeeds.has(n.id);
+      const isUnique = n.isSeed && !isShared;
+      const r = n.depth === 0 ? 8 : n.isSeed ? 6 : 4;
+      let fill, strokeColor, strokeW, glowClass;
+
+      if (isShared) {
+        fill = '#c49030'; strokeColor = '#c49030'; strokeW = 2; glowClass = 'seed-glow';
+      } else if (n.isSeed) {
+        fill = treeColor; strokeColor = treeColor; strokeW = 1; glowClass = '';
+      } else if (n.depth === 0) {
+        fill = 'transparent'; strokeColor = treeColor; strokeW = 2; glowClass = '';
+      } else {
+        fill = 'rgba(255,255,255,0.06)'; strokeColor = treeColor; strokeW = 1; glowClass = '';
+      }
+
+      svgContent += `<g class="tree-node ${glowClass}">`;
+      svgContent += `<circle cx="${n.x}" cy="${n.y}" r="${r}" fill="${fill}" stroke="${strokeColor}" stroke-width="${strokeW}"/>`;
+
+      // Labels
+      if (n.depth === 0) {
+        svgContent += `<text x="${n.x}" y="${n.y - 14}" text-anchor="middle" fill="${treeColor}" font-size="12" font-weight="600">${n.shortLabel || n.label}</text>`;
+      } else if (n.isSeed) {
+        const anchor = treeSide === 'a' ? 'end' : treeSide === 'b' ? 'start' : 'middle';
+        const dx = treeSide === 'a' ? -10 : treeSide === 'b' ? 10 : 0;
+        const labelColor = isShared ? '#c49030' : '#6a6560';
+        svgContent += `<text x="${n.x + dx}" y="${n.y + 3}" text-anchor="${anchor}" fill="${labelColor}" font-size="${isShared ? 9 : 8}" font-weight="${isShared ? 500 : 400}">${n.shortLabel}</text>`;
+      } else if (n.depth <= 1) {
+        svgContent += `<text x="${n.x}" y="${n.y + r + 12}" text-anchor="middle" fill="#8a8580" font-size="9">${n.shortLabel}</text>`;
+      }
+      svgContent += '</g>';
+    });
+  }
+
+  if (nodesA.length) drawNodes(nodesA, '#4a9ab4', 'a');
+  if (nodesB.length) drawNodes(nodesB, '#b46a4a', 'b');
+
+  // Legend
+  svgContent += `
+    <g transform="translate(16, ${H - 70})">
+      <rect x="0" y="0" width="200" height="60" rx="6" fill="rgba(30,26,22,0.9)" stroke="rgba(255,255,255,0.08)"/>
+      <circle cx="16" cy="16" r="5" fill="#c49030" filter="url(#glow)"/><text x="28" y="19" fill="#8a8580" font-size="9">Shared seed (intersection)</text>
+      <circle cx="16" cy="32" r="4" fill="#4a9ab4"/><text x="28" y="35" fill="#8a8580" font-size="9">Tree A only</text>
+      <circle cx="16" cy="48" r="4" fill="#b46a4a"/><text x="28" y="51" fill="#8a8580" font-size="9">Tree B only</text>
+    </g>`;
+
+  svg.innerHTML = `<defs>
+    <filter id="glow"><feGaussianBlur stdDeviation="4" result="coloredBlur"/><feMerge><feMergeNode in="coloredBlur"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
+  </defs>` + svgContent;
+
+  // Status panel
+  let statusEl = document.querySelector('.compare-status');
+  if (!statusEl) {
+    statusEl = document.createElement('div');
+    statusEl.className = 'compare-status';
+    document.getElementById('canvasArea').appendChild(statusEl);
+  }
+
+  if (treeA && treeB) {
+    statusEl.innerHTML = `
+      <div class="compare-title">Comparison</div>
+      <div class="compare-node a">${treeA.label}</div>
+      <div class="compare-node b">${treeB.label}</div>
+      <div class="compare-stat"><span class="intersect-count">${sharedSeeds.size}</span> shared seeds</div>
+      <div class="compare-stat"><span>${uniqueA.length}</span> unique to A, <span>${uniqueB.length}</span> unique to B</div>
+      <div class="compare-stat">Convergence: <span class="intersect-count">${seedsA.size + seedsB.size > 0 ? Math.round(sharedSeeds.size / (new Set([...seedsA, ...seedsB]).size) * 100) : 0}%</span></div>
+    `;
+  } else if (treeA || treeB) {
+    const t = treeA || treeB;
+    const seeds = treeA ? seedsA : seedsB;
+    statusEl.innerHTML = `
+      <div class="compare-title">Single Tree</div>
+      <div class="compare-node ${treeA ? 'a' : 'b'}">${t.label}</div>
+      <div class="compare-stat"><span>${seeds.size}</span> seeds at depth</div>
+      <div class="compare-stat">Select a second node to compare</div>
+    `;
+  }
+}
+
+// Init
+renderSelector();
+renderTrees();
+window.addEventListener('resize', renderTrees);
+</script>
+</body>
+</html>

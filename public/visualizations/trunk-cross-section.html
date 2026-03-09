@@ -1,0 +1,4996 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Trunk Cross-Section</title>
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body {
+  font-family: 'Segoe UI', system-ui, sans-serif;
+  background: #2a2520;
+  color: #faf8f4;
+  overflow: hidden;
+  height: 100vh;
+  width: 100vw;
+}
+
+#app { width: 100%; height: 100%; position: relative; }
+
+/* Top bar */
+.top-bar {
+  position: absolute; top: 0; left: 0; right: 0; z-index: 100;
+  padding: 16px 24px;
+  display: flex; align-items: center; gap: 16px;
+  background: linear-gradient(180deg, rgba(42,37,32,0.95) 0%, rgba(42,37,32,0) 100%);
+}
+.top-bar h1 { font: 600 18px Georgia, serif; color: #faf8f4; }
+.stats { margin-left: auto; display: flex; gap: 16px; font-size: 12px; color: #8a8580; }
+.stats .stat-val { color: #faf8f4; font-weight: 600; }
+
+/* Ring labels */
+.ring-label {
+  position: absolute; z-index: 5;
+  font-size: 10px; letter-spacing: 1.5px; text-transform: uppercase;
+  color: rgba(250,248,244,0.15); font-weight: 600;
+  pointer-events: none;
+}
+
+/* Canvas area */
+#ring-canvas {
+  width: 100%; height: 100%;
+  position: absolute; top: 0; left: 0;
+}
+
+/* SVG connections */
+#connections-svg {
+  position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+  z-index: 5; pointer-events: none;
+}
+
+/* Element nodes on the rings */
+.node {
+  position: absolute;
+  background: rgba(250,248,244,0.06);
+  border: 1px solid rgba(250,248,244,0.12);
+  border-radius: 8px;
+  padding: 5px 8px;
+  cursor: pointer;
+  transition: all 0.25s ease;
+  max-width: 160px;
+  z-index: 10;
+  font-size: 9px;
+}
+.node:hover {
+  background: rgba(250,248,244,0.12);
+  border-color: rgba(250,248,244,0.3);
+  transform: scale(1.08);
+  z-index: 20;
+}
+.node.active {
+  background: rgba(250,248,244,0.15);
+  border-color: rgba(196,144,48,0.6);
+  box-shadow: 0 0 20px rgba(196,144,48,0.15);
+  z-index: 25;
+}
+.node .node-id {
+  font-size: 8px; font-weight: 700;
+  margin-bottom: 1px;
+  opacity: 0.5;
+}
+.node .node-title {
+  font-size: 9px; font-weight: 500;
+  line-height: 1.2;
+  color: #faf8f4;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+.node.canopy { border-left: 2px solid #a85050; }
+.node.canopy .node-id { color: #c46a6a; }
+.node.trunk-ks { border-left: 2px solid #c49030; }
+.node.trunk-ks .node-id { color: #d4a843; }
+.node.atomic { border-left: 2px solid #6a6560; }
+.node.atomic .node-id { color: #8a8580; }
+
+/* Detail panel - DEPTH VIEW */
+.detail-panel {
+  position: absolute;
+  right: 0; top: 0; bottom: 0;
+  width: 400px;
+  background: rgba(42,37,32,0.97);
+  border-left: 1px solid rgba(250,248,244,0.08);
+  padding: 60px 20px 20px;
+  overflow-y: auto;
+  transform: translateX(100%);
+  transition: transform 0.3s ease;
+  z-index: 50;
+}
+.detail-panel.open { transform: translateX(0); }
+.detail-panel .close-btn {
+  position: absolute; top: 14px; right: 14px;
+  width: 28px; height: 28px;
+  border: 1px solid rgba(250,248,244,0.15);
+  border-radius: 50%;
+  background: none; color: #8a8580;
+  cursor: pointer; font-size: 14px;
+  display: flex; align-items: center; justify-content: center;
+}
+.detail-panel .close-btn:hover { color: #faf8f4; border-color: rgba(250,248,244,0.3); }
+
+/* Panel header */
+.panel-header {
+  margin-bottom: 16px;
+  padding-bottom: 12px;
+  border-bottom: 1px solid rgba(250,248,244,0.08);
+}
+.panel-header .panel-id {
+  font-size: 10px; font-weight: 700; letter-spacing: 1px;
+  margin-bottom: 4px;
+}
+.panel-header .panel-title {
+  font: 600 15px Georgia, serif;
+  color: #faf8f4;
+  line-height: 1.3;
+}
+.panel-layer {
+  display: inline-block;
+  font-size: 9px; font-weight: 600;
+  letter-spacing: 0.5px;
+  padding: 2px 8px;
+  border-radius: 3px;
+  margin-top: 6px;
+}
+.panel-layer.canopy { background: rgba(168,80,80,0.2); color: #c46a6a; }
+.panel-layer.trunk-ks { background: rgba(196,144,48,0.2); color: #d4a843; }
+.panel-layer.atomic { background: rgba(106,101,96,0.2); color: #8a8580; }
+
+/* Quote */
+.panel-quote {
+  font-size: 12px; font-style: italic; color: #b4afa7;
+  padding: 10px 14px;
+  border-left: 2px solid rgba(196,144,48,0.3);
+  margin: 12px 0;
+  line-height: 1.5;
+}
+
+/* Tags */
+.panel-tags {
+  display: flex; flex-wrap: wrap; gap: 4px;
+  margin: 10px 0 16px;
+}
+.panel-tags .tag {
+  font-size: 9px; padding: 2px 6px;
+  background: rgba(250,248,244,0.05);
+  border-radius: 3px; color: #8a8580;
+}
+
+/* Axis labels */
+.axis-label {
+  font-size: 10px; font-weight: 700;
+  letter-spacing: 1.5px; text-transform: uppercase;
+  color: rgba(250,248,244,0.35);
+  margin: 16px 0 8px;
+  padding-bottom: 4px;
+  border-bottom: 1px solid rgba(250,248,244,0.06);
+}
+.axis-label .axis-desc {
+  font-size: 9px; font-weight: 400;
+  letter-spacing: 0;
+  text-transform: none;
+  color: rgba(250,248,244,0.2);
+  display: block;
+  margin-top: 2px;
+}
+
+/* Depth stack */
+.depth-stack {
+  display: flex; flex-direction: column; gap: 3px;
+}
+.depth-item {
+  display: flex; align-items: center; gap: 8px;
+  padding: 6px 10px;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: background 0.2s;
+  border-left: 2px solid transparent;
+}
+.depth-item:hover {
+  background: rgba(250,248,244,0.06);
+}
+.depth-item.canopy { border-left-color: #a85050; }
+.depth-item.trunk-ks { border-left-color: #c49030; }
+.depth-item.atomic { border-left-color: #6a6560; }
+
+.depth-item .di-id {
+  font-size: 8px; font-weight: 700;
+  opacity: 0.5; min-width: 40px;
+}
+.depth-item .di-title {
+  font-size: 10px; color: #b4afa7;
+  line-height: 1.3;
+}
+.depth-item .di-ks {
+  font-size: 7px; font-weight: 700;
+  letter-spacing: 0.5px;
+  color: #c49030; margin-left: auto;
+  white-space: nowrap;
+}
+
+/* Surface connections (secondary) */
+.surface-section { margin-top: 12px; }
+.surface-item {
+  display: flex; align-items: center; gap: 8px;
+  padding: 4px 10px;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: background 0.2s;
+  font-size: 10px; color: #8a8580;
+}
+.surface-item:hover {
+  background: rgba(250,248,244,0.06);
+  color: #b4afa7;
+}
+.surface-item .si-id {
+  font-size: 8px; font-weight: 700;
+  opacity: 0.5; min-width: 40px;
+}
+
+/* Depth bar visualization */
+.depth-bar {
+  height: 6px; border-radius: 3px;
+  margin: 8px 0 4px;
+  background: rgba(250,248,244,0.05);
+  overflow: hidden;
+}
+.depth-bar-fill {
+  height: 100%; border-radius: 3px;
+  background: linear-gradient(90deg, #6a4530, #c49030, #a85050);
+  transition: width 0.5s ease;
+}
+.depth-bar-label {
+  font-size: 9px; color: #6a6560;
+  margin-bottom: 12px;
+}
+
+/* Empty state */
+.empty-depth {
+  font-size: 11px; color: #5a5550;
+  font-style: italic;
+  padding: 12px 0;
+}
+</style>
+</head>
+<body>
+<div id="app">
+  <div class="top-bar">
+    <h1>Trunk Cross-Section</h1>
+    <div class="stats">
+      <span><span class="stat-val" id="stat-total">0</span> elements</span>
+      <span><span class="stat-val" id="stat-ks">0</span> keystones</span>
+      <span><span class="stat-val" id="stat-canopy">0</span> canopy</span>
+    </div>
+  </div>
+  <canvas id="ring-canvas"></canvas>
+  <svg id="connections-svg"></svg>
+  <div id="nodes-container"></div>
+  <div class="detail-panel" id="detail-panel">
+    <button class="close-btn" onclick="closePanel()">&times;</button>
+    <div id="panel-content"></div>
+  </div>
+</div>
+
+<script>
+// DATA EMBED
+const ELEMENTS = [
+  {
+    "id": "RE-008",
+    "num": 8,
+    "title": "The Mesh Is the Substrate, Not the Router",
+    "tags": [],
+    "layer": "trunk",
+    "keystone": false,
+    "ring": "trunk_atomic",
+    "connections": [],
+    "referenced_by": [],
+    "quote": ""
+  },
+  {
+    "id": "RE-009",
+    "num": 9,
+    "title": "Pulse \u2014 Ambient Propagation Through Known Topology",
+    "tags": [],
+    "layer": "trunk",
+    "keystone": false,
+    "ring": "trunk_atomic",
+    "connections": [],
+    "referenced_by": [],
+    "quote": ""
+  },
+  {
+    "id": "RE-010",
+    "num": 10,
+    "title": "Packet \u2014 Direct Address via Tag",
+    "tags": [],
+    "layer": "trunk",
+    "keystone": false,
+    "ring": "trunk_atomic",
+    "connections": [],
+    "referenced_by": [],
+    "quote": ""
+  },
+  {
+    "id": "RE-011",
+    "num": 11,
+    "title": "Two Primitives, One Mesh",
+    "tags": [],
+    "layer": "trunk",
+    "keystone": false,
+    "ring": "trunk_atomic",
+    "connections": [],
+    "referenced_by": [],
+    "quote": ""
+  },
+  {
+    "id": "RE-012",
+    "num": 12,
+    "title": "The OSPF Intersection \u2014 Potentially Novel",
+    "tags": [],
+    "layer": "trunk",
+    "keystone": false,
+    "ring": "trunk_atomic",
+    "connections": [],
+    "referenced_by": [],
+    "quote": ""
+  },
+  {
+    "id": "RE-013",
+    "num": 13,
+    "title": "Heartwood Is the Storage Layer \u2014 Every Message Is a Growth Ring",
+    "tags": [],
+    "layer": "trunk",
+    "keystone": false,
+    "ring": "trunk_atomic",
+    "connections": [],
+    "referenced_by": [],
+    "quote": ""
+  },
+  {
+    "id": "RE-014",
+    "num": 14,
+    "title": "Organic Pruning \u2014 Compaction as Growth, Not Deletion",
+    "tags": [],
+    "layer": "trunk",
+    "keystone": false,
+    "ring": "trunk_atomic",
+    "connections": [],
+    "referenced_by": [
+      "RE-085"
+    ],
+    "quote": ""
+  },
+  {
+    "id": "RE-015",
+    "num": 15,
+    "title": "The Three-Layer Architecture \u2014 Event Horizon, Mesh, Heartwood",
+    "tags": [],
+    "layer": "trunk",
+    "keystone": false,
+    "ring": "trunk_atomic",
+    "connections": [],
+    "referenced_by": [
+      "RE-111"
+    ],
+    "quote": ""
+  },
+  {
+    "id": "RE-016",
+    "num": 16,
+    "title": "The Cell Knows Itself But Not Beyond Its Event Horizon",
+    "tags": [],
+    "layer": "trunk",
+    "keystone": false,
+    "ring": "trunk_atomic",
+    "connections": [],
+    "referenced_by": [],
+    "quote": ""
+  },
+  {
+    "id": "RE-017",
+    "num": 17,
+    "title": "Event Horizon = Impact Radius (Same Circle, Two Directions)",
+    "tags": [],
+    "layer": "trunk",
+    "keystone": false,
+    "ring": "trunk_atomic",
+    "connections": [],
+    "referenced_by": [
+      "RE-098"
+    ],
+    "quote": ""
+  },
+  {
+    "id": "RE-018",
+    "num": 18,
+    "title": "The Impact Radius Lifecycle \u2014 Grows, Changes, Retires to Heartwood",
+    "tags": [],
+    "layer": "trunk",
+    "keystone": false,
+    "ring": "trunk_atomic",
+    "connections": [],
+    "referenced_by": [],
+    "quote": ""
+  },
+  {
+    "id": "RE-019",
+    "num": 19,
+    "title": "The IR Lifecycle IS the Practitioner Lifecycle (Same Pattern, Different Zoom)",
+    "tags": [],
+    "layer": "trunk",
+    "keystone": false,
+    "ring": "trunk_atomic",
+    "connections": [],
+    "referenced_by": [],
+    "quote": ""
+  },
+  {
+    "id": "RE-020",
+    "num": 20,
+    "title": "NDD IS Heartwood (Identity Declaration)",
+    "tags": [],
+    "layer": "trunk",
+    "keystone": false,
+    "ring": "trunk_atomic",
+    "connections": [],
+    "referenced_by": [],
+    "quote": ""
+  },
+  {
+    "id": "RE-021",
+    "num": 21,
+    "title": "The Core Communication Problem \u2014 Everyone Needs to Know Only What They Need to Know, and They Don't Know What That Is",
+    "tags": [],
+    "layer": "trunk",
+    "keystone": false,
+    "ring": "trunk_atomic",
+    "connections": [],
+    "referenced_by": [],
+    "quote": ""
+  },
+  {
+    "id": "RE-022",
+    "num": 22,
+    "title": "The Cost of No Topology \u2014 Endless Hours, Missed Instructions, Fragmented Context",
+    "tags": [],
+    "layer": "trunk",
+    "keystone": false,
+    "ring": "trunk_atomic",
+    "connections": [],
+    "referenced_by": [],
+    "quote": ""
+  },
+  {
+    "id": "RE-023",
+    "num": 23,
+    "title": "No Organizational Heartwood \u2014 Spreadsheets and PM Tools as False Ground",
+    "tags": [],
+    "layer": "trunk",
+    "keystone": false,
+    "ring": "trunk_atomic",
+    "connections": [],
+    "referenced_by": [],
+    "quote": ""
+  },
+  {
+    "id": "RE-024",
+    "num": 24,
+    "title": "Frameworks Are DNA \u2014 Gene Expression, Not Tool Selection",
+    "tags": [],
+    "layer": "trunk",
+    "keystone": false,
+    "ring": "trunk_atomic",
+    "connections": [],
+    "referenced_by": [],
+    "quote": ""
+  },
+  {
+    "id": "RE-025",
+    "num": 25,
+    "title": "Expressed Frameworks ARE Live Mesh Connections \u2014 Filled with Current Data to the Lower Event Horizon",
+    "tags": [],
+    "layer": "trunk",
+    "keystone": false,
+    "ring": "trunk_atomic",
+    "connections": [],
+    "referenced_by": [
+      "RE-106"
+    ],
+    "quote": ""
+  },
+  {
+    "id": "RE-026",
+    "num": 26,
+    "title": "Three-Domain Convergence IS the Fractal Proof \u2014 IP Routing, Biological Evolution, ND Cognition",
+    "tags": [],
+    "layer": "trunk",
+    "keystone": false,
+    "ring": "trunk_atomic",
+    "connections": [],
+    "referenced_by": [],
+    "quote": ""
+  },
+  {
+    "id": "RE-027",
+    "num": 27,
+    "title": "The Fractal IS the Cell \u2014 No Deletion, Accretion Layers, Timestamped Atoms",
+    "tags": [],
+    "layer": "trunk",
+    "keystone": false,
+    "ring": "trunk_atomic",
+    "connections": [],
+    "referenced_by": [
+      "RE-095",
+      "RE-113"
+    ],
+    "quote": ""
+  },
+  {
+    "id": "RE-028",
+    "num": 28,
+    "title": "Stacking Open Umbrellas \u2014 The Spatial Model for Fractal-to-Cell Parent-Child Relationships",
+    "tags": [],
+    "layer": "trunk",
+    "keystone": false,
+    "ring": "trunk_atomic",
+    "connections": [],
+    "referenced_by": [],
+    "quote": ""
+  },
+  {
+    "id": "RE-029",
+    "num": 29,
+    "title": "Troy's Core Skill Named \u2014 Fractal Cognition as Rapid Domain-Crossing and Overlay",
+    "tags": [],
+    "layer": "trunk",
+    "keystone": false,
+    "ring": "trunk_atomic",
+    "connections": [],
+    "referenced_by": [
+      "RE-103"
+    ],
+    "quote": ""
+  },
+  {
+    "id": "RE-030",
+    "num": 30,
+    "title": "The Sudoku Process \u2014 Overlay, Pattern-Match, Confirm by Evidence, Return",
+    "tags": [],
+    "layer": "trunk",
+    "keystone": false,
+    "ring": "trunk_atomic",
+    "connections": [],
+    "referenced_by": [
+      "RE-100"
+    ],
+    "quote": ""
+  },
+  {
+    "id": "RE-031",
+    "num": 31,
+    "title": "Environment Designer, Not User Designer \u2014 The User Is Created by the Environment",
+    "tags": [],
+    "layer": "trunk",
+    "keystone": false,
+    "ring": "trunk_atomic",
+    "connections": [],
+    "referenced_by": [],
+    "quote": ""
+  },
+  {
+    "id": "RE-032",
+    "num": 32,
+    "title": "The Dishwasher \u2014 Abstraction as the Vehicle for Cross-Domain Overlay",
+    "tags": [],
+    "layer": "trunk",
+    "keystone": false,
+    "ring": "trunk_atomic",
+    "connections": [],
+    "referenced_by": [],
+    "quote": ""
+  },
+  {
+    "id": "RE-033",
+    "num": 33,
+    "title": "Cognition IS the Active Mesh Receptors \u2014 Your Thinking Is Your Current Expression State",
+    "tags": [],
+    "layer": "trunk",
+    "keystone": false,
+    "ring": "trunk_atomic",
+    "connections": [],
+    "referenced_by": [
+      "RE-090",
+      "RE-092",
+      "RE-099"
+    ],
+    "quote": ""
+  },
+  {
+    "id": "RE-034",
+    "num": 34,
+    "title": "Spark Lifecycle Operations \u2014 Four Actions on the Collection Data Structure",
+    "tags": [],
+    "layer": "trunk",
+    "keystone": false,
+    "ring": "trunk_atomic",
+    "connections": [],
+    "referenced_by": [],
+    "quote": ""
+  },
+  {
+    "id": "RE-035",
+    "num": 35,
+    "title": "Aggregation as Translation, Not Import \u2014 Each Connection Creates a Mini Synthesis",
+    "tags": [],
+    "layer": "trunk",
+    "keystone": false,
+    "ring": "trunk_atomic",
+    "connections": [],
+    "referenced_by": [
+      "RE-098"
+    ],
+    "quote": ""
+  },
+  {
+    "id": "RE-036",
+    "num": 36,
+    "title": "Empathy as Fractal Cognition \u2014 The Brain That Sees Other People's Contexts",
+    "tags": [],
+    "layer": "trunk",
+    "keystone": false,
+    "ring": "trunk_atomic",
+    "connections": [],
+    "referenced_by": [],
+    "quote": ""
+  },
+  {
+    "id": "RE-037",
+    "num": 37,
+    "title": "Simultaneous Multi-Layer Perception \u2014 The Dishwasher Sees Everything at Once",
+    "tags": [],
+    "layer": "trunk",
+    "keystone": false,
+    "ring": "trunk_atomic",
+    "connections": [],
+    "referenced_by": [],
+    "quote": ""
+  },
+  {
+    "id": "RE-038",
+    "num": 38,
+    "title": "Spark Zero \u2014 The Domain Identification Event Before the Spark",
+    "tags": [],
+    "layer": "trunk",
+    "keystone": false,
+    "ring": "trunk_atomic",
+    "connections": [],
+    "referenced_by": [
+      "RE-106",
+      "RE-109",
+      "RE-111"
+    ],
+    "quote": ""
+  },
+  {
+    "id": "RE-039",
+    "num": 39,
+    "title": "Nothing Exists Without Prior Existence \u2014 The Philosophical Ground of Spark Zero",
+    "tags": [],
+    "layer": "trunk",
+    "keystone": false,
+    "ring": "trunk_atomic",
+    "connections": [],
+    "referenced_by": [],
+    "quote": ""
+  },
+  {
+    "id": "RE-040",
+    "num": 40,
+    "title": "Spark Zero IS a Collection \u2014 The \"What Is It\" Layer",
+    "tags": [],
+    "layer": "trunk",
+    "keystone": false,
+    "ring": "trunk_atomic",
+    "connections": [],
+    "referenced_by": [],
+    "quote": ""
+  },
+  {
+    "id": "RE-041",
+    "num": 41,
+    "title": "The Event Horizon Is Always Present \u2014 Comprehension Distance Between Domains",
+    "tags": [],
+    "layer": "trunk",
+    "keystone": false,
+    "ring": "trunk_atomic",
+    "connections": [],
+    "referenced_by": [
+      "RE-098"
+    ],
+    "quote": ""
+  },
+  {
+    "id": "RE-042",
+    "num": 42,
+    "title": "The Care Engine IS the Event Horizon \u2014 What Drives Perception Range",
+    "tags": [],
+    "layer": "trunk",
+    "keystone": false,
+    "ring": "trunk_atomic",
+    "connections": [],
+    "referenced_by": [
+      "RE-098"
+    ],
+    "quote": ""
+  },
+  {
+    "id": "RE-043",
+    "num": 43,
+    "title": "The Event Horizon Is Dynamic \u2014 Context Shifts Trigger Spark Zero",
+    "tags": [],
+    "layer": "trunk",
+    "keystone": false,
+    "ring": "trunk_atomic",
+    "connections": [],
+    "referenced_by": [],
+    "quote": ""
+  },
+  {
+    "id": "RE-044",
+    "num": 44,
+    "title": "The Computer as First Matching Environment \u2014 Origin of the Layered Architecture",
+    "tags": [],
+    "layer": "trunk",
+    "keystone": false,
+    "ring": "trunk_atomic",
+    "connections": [],
+    "referenced_by": [
+      "RE-082",
+      "RE-103"
+    ],
+    "quote": ""
+  },
+  {
+    "id": "RE-045",
+    "num": 45,
+    "title": "The Transmission Overlay \u2014 \"I Am the Mechanic of Computers\"",
+    "tags": [],
+    "layer": "trunk",
+    "keystone": false,
+    "ring": "trunk_atomic",
+    "connections": [],
+    "referenced_by": [
+      "RE-082",
+      "RE-103"
+    ],
+    "quote": ""
+  },
+  {
+    "id": "RE-046",
+    "num": 46,
+    "title": "The Mesh as Personal Navigation \u2014 \"Up Over Up Over Up Over\"",
+    "tags": [],
+    "layer": "trunk",
+    "keystone": false,
+    "ring": "trunk_atomic",
+    "connections": [],
+    "referenced_by": [],
+    "quote": ""
+  },
+  {
+    "id": "RE-047",
+    "num": 47,
+    "title": "PhD Track as Spark Zero Collection \u2014 The Academic Discipline Container",
+    "tags": [],
+    "layer": "trunk",
+    "keystone": false,
+    "ring": "trunk_atomic",
+    "connections": [],
+    "referenced_by": [],
+    "quote": ""
+  },
+  {
+    "id": "RE-048",
+    "num": 48,
+    "title": "The Fractals ARE the Database \u2014 Linking Is Between Fractals, Not Inside a System",
+    "tags": [],
+    "layer": "trunk",
+    "keystone": false,
+    "ring": "trunk_atomic",
+    "connections": [],
+    "referenced_by": [
+      "RE-095"
+    ],
+    "quote": ""
+  },
+  {
+    "id": "RE-049",
+    "num": 49,
+    "title": "The Database Comes to the Fractal \u2014 Signals Attract, Not Links Connect",
+    "tags": [],
+    "layer": "trunk",
+    "keystone": false,
+    "ring": "trunk_atomic",
+    "connections": [],
+    "referenced_by": [],
+    "quote": ""
+  },
+  {
+    "id": "RE-050",
+    "num": 50,
+    "title": "The Re-Pass as Altitude Shift \u2014 Each Pass Sees Different Soil Attributes",
+    "tags": [],
+    "layer": "trunk",
+    "keystone": false,
+    "ring": "trunk_atomic",
+    "connections": [],
+    "referenced_by": [
+      "RE-100"
+    ],
+    "quote": ""
+  },
+  {
+    "id": "RE-051",
+    "num": 51,
+    "title": "Multi-Framework Collection \u2014 The Depth That Hasn't Been Seen Before",
+    "tags": [],
+    "layer": "trunk",
+    "keystone": false,
+    "ring": "trunk_atomic",
+    "connections": [],
+    "referenced_by": [],
+    "quote": ""
+  },
+  {
+    "id": "RE-052",
+    "num": 52,
+    "title": "This Feels Like a Cycle of Life \u2014 The Method IS the Lifecycle",
+    "tags": [],
+    "layer": "trunk",
+    "keystone": false,
+    "ring": "trunk_atomic",
+    "connections": [],
+    "referenced_by": [],
+    "quote": ""
+  },
+  {
+    "id": "RE-053",
+    "num": 53,
+    "title": "Research Maturity as Three-Dimensional Stopping Criteria \u2014 \"When to Stop\" Solved",
+    "tags": [],
+    "layer": "trunk",
+    "keystone": false,
+    "ring": "trunk_atomic",
+    "connections": [],
+    "referenced_by": [],
+    "quote": ""
+  },
+  {
+    "id": "RE-054",
+    "num": 54,
+    "title": "Air Is the Pre-Soil Layer \u2014 Raw Data Before Nitrogen Fixation",
+    "tags": [],
+    "layer": "trunk",
+    "keystone": false,
+    "ring": "trunk_atomic",
+    "connections": [],
+    "referenced_by": [],
+    "quote": ""
+  },
+  {
+    "id": "RE-055",
+    "num": 55,
+    "title": "The Spark as Condensation Nucleus \u2014 Mesh Creates Gravity, Data Precipitates Down",
+    "tags": [],
+    "layer": "trunk",
+    "keystone": false,
+    "ring": "trunk_atomic",
+    "connections": [],
+    "referenced_by": [],
+    "quote": ""
+  },
+  {
+    "id": "RE-056",
+    "num": 56,
+    "title": "The Mesh IS the Cycle \u2014 Not Infrastructure, Identity",
+    "tags": [],
+    "layer": "trunk",
+    "keystone": false,
+    "ring": "trunk_atomic",
+    "connections": [],
+    "referenced_by": [
+      "RE-086"
+    ],
+    "quote": ""
+  },
+  {
+    "id": "RE-057",
+    "num": 57,
+    "title": "One to Many to One \u2014 The Red Thread Circle",
+    "tags": [],
+    "layer": "trunk",
+    "keystone": false,
+    "ring": "trunk_atomic",
+    "connections": [],
+    "referenced_by": [],
+    "quote": ""
+  },
+  {
+    "id": "RE-058",
+    "num": 58,
+    "title": "Rain Event \u2014 The Named Operation for Spark-Driven Precipitation",
+    "tags": [],
+    "layer": "trunk",
+    "keystone": false,
+    "ring": "trunk_atomic",
+    "connections": [],
+    "referenced_by": [],
+    "quote": ""
+  },
+  {
+    "id": "RE-059",
+    "num": 59,
+    "title": "Fixing Events Are Universal \u2014 Every Compression Transition Is a Fix",
+    "tags": [],
+    "layer": "trunk",
+    "keystone": false,
+    "ring": "trunk_atomic",
+    "connections": [],
+    "referenced_by": [],
+    "quote": ""
+  },
+  {
+    "id": "RE-060",
+    "num": 60,
+    "title": "Fixing vs Building \u2014 Two Distinct Operations in the Compression Cycle",
+    "tags": [],
+    "layer": "trunk",
+    "keystone": false,
+    "ring": "trunk_atomic",
+    "connections": [],
+    "referenced_by": [],
+    "quote": ""
+  },
+  {
+    "id": "RE-061",
+    "num": 61,
+    "title": "The Analysis Contradiction Dissolved \u2014 There Is No Breaking Down, Only Building Up",
+    "tags": [],
+    "layer": "trunk",
+    "keystone": false,
+    "ring": "trunk_atomic",
+    "connections": [],
+    "referenced_by": [],
+    "quote": ""
+  },
+  {
+    "id": "RE-062",
+    "num": 62,
+    "title": "Compression Resets at Every Event Horizon Crossing \u2014 The Transmission Chain",
+    "tags": [],
+    "layer": "trunk",
+    "keystone": false,
+    "ring": "trunk_atomic",
+    "connections": [],
+    "referenced_by": [],
+    "quote": ""
+  },
+  {
+    "id": "RE-063",
+    "num": 63,
+    "title": "There Is No Analysis \u2014 Dispersal IS Synthesis With the Larger Domain",
+    "tags": [],
+    "layer": "canopy",
+    "keystone": false,
+    "ring": "canopy",
+    "connections": [],
+    "referenced_by": [],
+    "quote": ""
+  },
+  {
+    "id": "RE-064",
+    "num": 64,
+    "title": "The Causal Loop \u2014 The Synthesis Cycle as Closed, Self-Sustaining System",
+    "tags": [],
+    "layer": "canopy",
+    "keystone": false,
+    "ring": "canopy",
+    "connections": [],
+    "referenced_by": [
+      "RE-086"
+    ],
+    "quote": ""
+  },
+  {
+    "id": "RE-065",
+    "num": 65,
+    "title": "The Outer Synthesis Circle \u2014 Cycles Are Nodes in a Mesh of Cycles",
+    "tags": [],
+    "layer": "canopy",
+    "keystone": false,
+    "ring": "canopy",
+    "connections": [],
+    "referenced_by": [
+      "RE-087"
+    ],
+    "quote": ""
+  },
+  {
+    "id": "RE-066",
+    "num": 66,
+    "title": "Saturation IS the Fixing Threshold \u2014 The Signal to Build",
+    "tags": [],
+    "layer": "trunk",
+    "keystone": false,
+    "ring": "trunk_atomic",
+    "connections": [],
+    "referenced_by": [],
+    "quote": ""
+  },
+  {
+    "id": "RE-067",
+    "num": 67,
+    "title": "Rain at Every Level \u2014 Air Is Pulled In at Every Compression Node",
+    "tags": [],
+    "layer": "trunk",
+    "keystone": false,
+    "ring": "trunk_atomic",
+    "connections": [],
+    "referenced_by": [],
+    "quote": ""
+  },
+  {
+    "id": "RE-068",
+    "num": 68,
+    "title": "Not Up or Down \u2014 Inward or Outward. Compression and Expansion.",
+    "tags": [],
+    "layer": "trunk",
+    "keystone": false,
+    "ring": "trunk_atomic",
+    "connections": [],
+    "referenced_by": [
+      "RE-081",
+      "RE-082",
+      "RE-097"
+    ],
+    "quote": ""
+  },
+  {
+    "id": "RE-069",
+    "num": 69,
+    "title": "Selective Compression \u2014 Not Everything Fixes. Unfixed Data Is Signal for the Universe.",
+    "tags": [],
+    "layer": "canopy",
+    "keystone": false,
+    "ring": "canopy",
+    "connections": [],
+    "referenced_by": [
+      "RE-087"
+    ],
+    "quote": ""
+  },
+  {
+    "id": "RE-070",
+    "num": 70,
+    "title": "IN OUT AND AROUND \u2014 The Third Directional Force",
+    "tags": [],
+    "layer": "canopy",
+    "keystone": false,
+    "ring": "canopy",
+    "connections": [],
+    "referenced_by": [
+      "RE-083",
+      "RE-096"
+    ],
+    "quote": ""
+  },
+  {
+    "id": "RE-071",
+    "num": 71,
+    "title": "Mesh Gravity Creates Event Horizons \u2014 The Inward Pull Becomes Self-Sustaining",
+    "tags": [],
+    "layer": "canopy",
+    "keystone": false,
+    "ring": "canopy",
+    "connections": [],
+    "referenced_by": [
+      "RE-080",
+      "RE-083",
+      "RE-089",
+      "RE-091"
+    ],
+    "quote": ""
+  },
+  {
+    "id": "RE-072",
+    "num": 72,
+    "title": "The Canopy Is the Air of the Universe \u2014 Scale Closure",
+    "tags": [],
+    "layer": "canopy",
+    "keystone": false,
+    "ring": "canopy",
+    "connections": [],
+    "referenced_by": [
+      "RE-080",
+      "RE-081",
+      "RE-085",
+      "RE-087",
+      "RE-088",
+      "RE-093",
+      "RE-111"
+    ],
+    "quote": ""
+  },
+  {
+    "id": "RE-073",
+    "num": 73,
+    "title": "Division at the Canopy IS the Fruit \u2014 The Canopy Feeds the Roots, Not the Soil",
+    "tags": [],
+    "layer": "canopy",
+    "keystone": false,
+    "ring": "canopy",
+    "connections": [],
+    "referenced_by": [],
+    "quote": ""
+  },
+  {
+    "id": "RE-074",
+    "num": 74,
+    "title": "The Leaf Falls \u2014 Every Form of Canopy Release Is a Different Phase of the Tree",
+    "tags": [],
+    "layer": "canopy",
+    "keystone": false,
+    "ring": "canopy",
+    "connections": [],
+    "referenced_by": [
+      "RE-085",
+      "RE-087"
+    ],
+    "quote": ""
+  },
+  {
+    "id": "RE-075",
+    "num": 75,
+    "title": "The Air Is the Human, the Air Is the Process \u2014 Identity and Method Are Atmospheric",
+    "tags": [],
+    "layer": "canopy",
+    "keystone": false,
+    "ring": "canopy",
+    "connections": [],
+    "referenced_by": [
+      "RE-090",
+      "RE-093"
+    ],
+    "quote": ""
+  },
+  {
+    "id": "RE-076",
+    "num": 76,
+    "title": "We Are Verbs Fixing Nouns \u2014 The Grammatical Structure of Compression",
+    "tags": [],
+    "layer": "canopy",
+    "keystone": false,
+    "ring": "canopy",
+    "connections": [],
+    "referenced_by": [
+      "RE-089",
+      "RE-090",
+      "RE-091"
+    ],
+    "quote": ""
+  },
+  {
+    "id": "RE-077",
+    "num": 77,
+    "title": "The Verb Becomes a Noun Through Compression \u2014 And We Are Neither",
+    "tags": [],
+    "layer": "canopy",
+    "keystone": false,
+    "ring": "canopy",
+    "connections": [],
+    "referenced_by": [
+      "RE-091",
+      "RE-092"
+    ],
+    "quote": ""
+  },
+  {
+    "id": "RE-078",
+    "num": 78,
+    "title": "Every Fractal Is a Fiber Under Tension \u2014 Cell Division as the Mechanism of Compression",
+    "tags": [],
+    "layer": "canopy",
+    "keystone": false,
+    "ring": "canopy",
+    "connections": [],
+    "referenced_by": [
+      "RE-080",
+      "RE-082",
+      "RE-083",
+      "RE-085",
+      "RE-089",
+      "RE-091",
+      "RE-094",
+      "RE-099",
+      "RE-102",
+      "RE-104"
+    ],
+    "quote": ""
+  },
+  {
+    "id": "RE-079",
+    "num": 79,
+    "title": "Fractalizing Books Is Spark Zero \u2014 System Ports vs. Local Ports",
+    "tags": [],
+    "layer": "trunk",
+    "keystone": false,
+    "ring": "trunk_atomic",
+    "connections": [],
+    "referenced_by": [
+      "RE-080",
+      "RE-081",
+      "RE-084",
+      "RE-088",
+      "RE-090",
+      "RE-098",
+      "RE-101",
+      "RE-108"
+    ],
+    "quote": ""
+  },
+  {
+    "id": "RE-080",
+    "num": 80,
+    "title": "Port Growth Trajectory. Local Ports Become System Ports Through Compression",
+    "tags": [
+      "port-growth",
+      "local-to-system",
+      "compression-trajectory",
+      "mesh-densification",
+      "fractal-promotion"
+    ],
+    "layer": "canopy",
+    "keystone": true,
+    "ring": "canopy",
+    "connections": [
+      "RE-079",
+      "RE-071",
+      "RE-072",
+      "RE-078"
+    ],
+    "referenced_by": [
+      "RE-081",
+      "RE-082",
+      "RE-084",
+      "RE-088",
+      "RE-090",
+      "RE-108"
+    ],
+    "quote": "the system ports are the growth, it moves from internal fractals, to internal ports on the parent fractal, then those ports get dense by mesh, and that raises to the next parent fractal, and from t..."
+  },
+  {
+    "id": "RE-081",
+    "num": 81,
+    "title": "Port-Match Intake. Fractals Enter Wherever They Fit",
+    "tags": [
+      "port-match",
+      "intake-topology",
+      "ring-irrelevance",
+      "attachment-by-fit",
+      "no-sequential-intake"
+    ],
+    "layer": "canopy",
+    "keystone": true,
+    "ring": "canopy",
+    "connections": [
+      "RE-079",
+      "RE-080",
+      "RE-072",
+      "RE-068"
+    ],
+    "referenced_by": [
+      "RE-082",
+      "RE-090",
+      "RE-095",
+      "RE-096",
+      "RE-099",
+      "RE-101",
+      "RE-102",
+      "RE-111"
+    ],
+    "quote": "I guess the fractal gets pulled into the system wherever it matches the most. That could be at the roots, that could be at the trunk, that could be at the canopy. It doesn't matter. It's just an it..."
+  },
+  {
+    "id": "RE-082",
+    "num": 82,
+    "title": "The Tree as Biographical Self-Understanding Tool",
+    "tags": [
+      "self-understanding",
+      "biography",
+      "expansion-consolidation",
+      "child-development",
+      "visual-tree",
+      "reflexive-application"
+    ],
+    "layer": "canopy",
+    "keystone": true,
+    "ring": "canopy",
+    "connections": [
+      "RE-044",
+      "RE-045",
+      "RE-068",
+      "RE-078",
+      "RE-080",
+      "RE-081"
+    ],
+    "referenced_by": [
+      "RE-083",
+      "RE-084",
+      "RE-090",
+      "RE-092",
+      "RE-095",
+      "RE-097",
+      "RE-103"
+    ],
+    "quote": "this is a way for humans to build their understanding of themselves, they can tell a story about a child in time and space, then build their tree to visually see how that child grew up through many..."
+  },
+  {
+    "id": "RE-083",
+    "num": 83,
+    "title": "Horizon Event. The Branch",
+    "tags": [
+      "horizon-event",
+      "branch",
+      "expansion-consolidation",
+      "biographical-tree",
+      "new-term",
+      "growth-direction"
+    ],
+    "layer": "canopy",
+    "keystone": true,
+    "ring": "canopy",
+    "connections": [
+      "RE-082",
+      "RE-071",
+      "RE-078",
+      "RE-070"
+    ],
+    "referenced_by": [
+      "RE-084",
+      "RE-085",
+      "RE-086",
+      "RE-104",
+      "RE-105",
+      "RE-112"
+    ],
+    "quote": "we have a new term, this is a horizon event, this makes me feel like saying branch"
+  },
+  {
+    "id": "RE-084",
+    "num": 84,
+    "title": "Home-Grown Branches. Decisions and Self-Understanding",
+    "tags": [
+      "home-grown",
+      "branch-types",
+      "decisions",
+      "self-understanding",
+      "product-branches",
+      "framework-application"
+    ],
+    "layer": "trunk",
+    "keystone": true,
+    "ring": "trunk_keystone",
+    "connections": [
+      "RE-083",
+      "RE-082",
+      "RE-079",
+      "RE-080"
+    ],
+    "referenced_by": [
+      "RE-085",
+      "RE-086",
+      "RE-112"
+    ],
+    "quote": "we have home grown, branch to helping make decisions, branch to helping understand themselves."
+  },
+  {
+    "id": "RE-085",
+    "num": 85,
+    "title": "Prune or Branch? The Seed Question",
+    "tags": [
+      "pruning",
+      "seed",
+      "branch-lifecycle",
+      "fruit",
+      "compression-threshold",
+      "new-fractal",
+      "reflection-tool"
+    ],
+    "layer": "canopy",
+    "keystone": true,
+    "ring": "canopy",
+    "connections": [
+      "RE-083",
+      "RE-084",
+      "RE-014",
+      "RE-074",
+      "RE-072",
+      "RE-078"
+    ],
+    "referenced_by": [
+      "RE-087",
+      "RE-094",
+      "RE-110",
+      "RE-112"
+    ],
+    "quote": "the question, is this a branch that is staying on, or is the compression so strong that we prune and start a seed of 'reflection tool for people'"
+  },
+  {
+    "id": "RE-086",
+    "num": 86,
+    "title": "Everything Is Spawning. The Home-Grown Cascade",
+    "tags": [
+      "spawning",
+      "cascade",
+      "self-demonstration",
+      "generative-loop",
+      "home-grown",
+      "meta-proof"
+    ],
+    "layer": "canopy",
+    "keystone": true,
+    "ring": "canopy",
+    "connections": [
+      "RE-084",
+      "RE-083",
+      "RE-064",
+      "RE-056"
+    ],
+    "referenced_by": [],
+    "quote": "Here's what's clear, everything is 'spawning' another term, from the home grown"
+  },
+  {
+    "id": "RE-087",
+    "num": 87,
+    "title": "External Feedback Determines Branch or Seed. Forced Compression Into Seed",
+    "tags": [
+      "external-feedback",
+      "branch-or-seed",
+      "forced-compression",
+      "app-as-seed",
+      "environment-signal",
+      "pruning-trigger"
+    ],
+    "layer": "canopy",
+    "keystone": true,
+    "ring": "canopy",
+    "connections": [
+      "RE-085",
+      "RE-069",
+      "RE-074",
+      "RE-072",
+      "RE-065"
+    ],
+    "referenced_by": [
+      "RE-088",
+      "RE-089",
+      "RE-110"
+    ],
+    "quote": "AH!! when we get feedback from users, the external environment, that will tell us if its a branch or if its a new seed. if its a new seed for an app then that's a forced compression of that entire ..."
+  },
+  {
+    "id": "RE-088",
+    "num": 88,
+    "title": "Seed Ports. The Third Compression Level of Ports",
+    "tags": [
+      "seed-ports",
+      "port-compression",
+      "local-system-seed",
+      "forced-compression",
+      "genetic-code",
+      "port-trajectory-extended"
+    ],
+    "layer": "canopy",
+    "keystone": true,
+    "ring": "canopy",
+    "connections": [
+      "RE-080",
+      "RE-087",
+      "RE-079",
+      "RE-072"
+    ],
+    "referenced_by": [
+      "RE-089",
+      "RE-090",
+      "RE-094",
+      "RE-110"
+    ],
+    "quote": "including compressing local ports into system ports, and system ports into seed ports."
+  },
+  {
+    "id": "RE-089",
+    "num": 89,
+    "title": "Naming IS Compression. Every Quote Is an Event Horizon",
+    "tags": [
+      "naming-as-compression",
+      "quotes",
+      "event-horizon",
+      "language-compression",
+      "living-synthesis",
+      "verbal-compression-event"
+    ],
+    "layer": "canopy",
+    "keystone": true,
+    "ring": "canopy",
+    "connections": [
+      "RE-071",
+      "RE-078",
+      "RE-076",
+      "RE-087",
+      "RE-088"
+    ],
+    "referenced_by": [
+      "RE-105"
+    ],
+    "quote": "these quotes I make 'this is a living synthesis' is a compression event"
+  },
+  {
+    "id": "RE-090",
+    "num": 90,
+    "title": "Pre-Installed Ports. Emotions and Needs as Factory Firmware",
+    "tags": [
+      "pre-installed-ports",
+      "emotions",
+      "needs",
+      "verbs",
+      "nouns",
+      "nature-nurture",
+      "factory-firmware",
+      "environment-as-noun",
+      "human-fractal-genesis"
+    ],
+    "layer": "canopy",
+    "keystone": true,
+    "ring": "canopy",
+    "connections": [
+      "RE-082",
+      "RE-081",
+      "RE-079",
+      "RE-080",
+      "RE-088",
+      "RE-076",
+      "RE-075",
+      "RE-033"
+    ],
+    "referenced_by": [
+      "RE-091",
+      "RE-096"
+    ],
+    "quote": "every human is a fractal that starts with pre installed ports: A set blend of emotions, and a set blend of needs, (Verbs) After that its the environment that determines how those mesh due to enviro..."
+  },
+  {
+    "id": "RE-091",
+    "num": 91,
+    "title": "Verbs Pausing Verbs to Make Nouns. The Origin of Structure",
+    "tags": [
+      "verb-pause",
+      "noun-creation",
+      "structure-origin",
+      "compression-as-pause",
+      "verb-verb-interaction",
+      "stillness-as-noun"
+    ],
+    "layer": "canopy",
+    "keystone": true,
+    "ring": "canopy",
+    "connections": [
+      "RE-076",
+      "RE-077",
+      "RE-078",
+      "RE-090",
+      "RE-071"
+    ],
+    "referenced_by": [
+      "RE-092",
+      "RE-093",
+      "RE-094",
+      "RE-104"
+    ],
+    "quote": "We are made of nouns and verbs But it was the verbs who had to pause other verbs in order to make a noun."
+  },
+  {
+    "id": "RE-092",
+    "num": 92,
+    "title": "Verbs Pausing Each Other IS Self-Realization",
+    "tags": [
+      "self-realization",
+      "verb-pause",
+      "consciousness",
+      "reflexive-pause",
+      "the-mirror",
+      "identity-formation"
+    ],
+    "layer": "canopy",
+    "keystone": true,
+    "ring": "canopy",
+    "connections": [
+      "RE-091",
+      "RE-077",
+      "RE-082",
+      "RE-033"
+    ],
+    "referenced_by": [
+      "RE-093",
+      "RE-094",
+      "RE-103"
+    ],
+    "quote": "Verbs pausing each other is the self realisation"
+  },
+  {
+    "id": "RE-093",
+    "num": 93,
+    "title": "The Universe Played a Joke. A Verb Paused Another Verb to Make a Noun, and That Was the Punchline",
+    "tags": [
+      "universe-self-realization",
+      "cosmic-joke",
+      "verb-pause-as-creation",
+      "matter-as-paused-verb",
+      "the-punchline",
+      "origin"
+    ],
+    "layer": "canopy",
+    "keystone": true,
+    "ring": "canopy",
+    "connections": [
+      "RE-092",
+      "RE-091",
+      "RE-072",
+      "RE-075"
+    ],
+    "referenced_by": [
+      "RE-094"
+    ],
+    "quote": "the universe realizing itself is saying a portion of the verb played a joke, paused another verb, to make a noun"
+  },
+  {
+    "id": "RE-094",
+    "num": 94,
+    "title": "The Verb Pauses Itself. Self-Germination",
+    "tags": [
+      "self-germination",
+      "self-pause",
+      "verb-noun-inside",
+      "seed-contains-both",
+      "origin-mechanism",
+      "autopoiesis"
+    ],
+    "layer": "canopy",
+    "keystone": true,
+    "ring": "canopy",
+    "connections": [
+      "RE-093",
+      "RE-092",
+      "RE-091",
+      "RE-088",
+      "RE-085",
+      "RE-078"
+    ],
+    "referenced_by": [
+      "RE-103",
+      "RE-104"
+    ],
+    "quote": "or does the verb pause itself, and once paused, inside it had the verb and the noun, self germination"
+  },
+  {
+    "id": "RE-095",
+    "num": 95,
+    "title": "Click Into the Fractal. Every Element Has Its Own Density Map",
+    "tags": [
+      "fractal-navigation",
+      "click-into",
+      "nested-density",
+      "visual-trunk",
+      "interaction-pattern",
+      "first-interaction"
+    ],
+    "layer": "trunk",
+    "keystone": true,
+    "ring": "trunk_keystone",
+    "connections": [
+      "RE-027",
+      "RE-048",
+      "RE-081",
+      "RE-082"
+    ],
+    "referenced_by": [
+      "RE-096",
+      "RE-097",
+      "RE-099",
+      "RE-100",
+      "RE-101",
+      "RE-102",
+      "RE-106",
+      "RE-107",
+      "RE-108",
+      "RE-113"
+    ],
+    "quote": "now I want to click into one and see its trunk density map, this could be a first visual and interaction of the trunk"
+  },
+  {
+    "id": "RE-096",
+    "num": 96,
+    "title": "Inside vs. Pulled In. The Two Sources Visible on Click-Into",
+    "tags": [
+      "inside-vs-pulled",
+      "internal-external",
+      "click-into-view",
+      "pre-existing",
+      "environmental-intake",
+      "two-sources"
+    ],
+    "layer": "trunk",
+    "keystone": true,
+    "ring": "trunk_keystone",
+    "connections": [
+      "RE-095",
+      "RE-090",
+      "RE-081",
+      "RE-070"
+    ],
+    "referenced_by": [],
+    "quote": "you can click in and see what was already inside the system and what was pulled into the system from the environment"
+  },
+  {
+    "id": "RE-097",
+    "num": 97,
+    "title": "Top Bisection Looking Down. The Trunk Density Map IS the Cross-Section View",
+    "tags": [
+      "bisection",
+      "cross-section",
+      "looking-down",
+      "top-view",
+      "trunk-density-map",
+      "visual-orientation"
+    ],
+    "layer": "trunk",
+    "keystone": false,
+    "ring": "trunk_atomic",
+    "connections": [
+      "RE-068",
+      "RE-082",
+      "RE-095"
+    ],
+    "referenced_by": [
+      "RE-099",
+      "RE-100",
+      "RE-106",
+      "RE-107",
+      "RE-113"
+    ],
+    "quote": "This is the top bisection of the trunk looking down = trunk density map"
+  },
+  {
+    "id": "RE-098",
+    "num": 98,
+    "title": "Communication as Port-Distance Reading. Shared Language as Shared Ports",
+    "tags": [
+      "communication",
+      "shared-language",
+      "port-distance",
+      "bringing-up-to-speed",
+      "event-horizon-thickness",
+      "translation-cost"
+    ],
+    "layer": "trunk",
+    "keystone": true,
+    "ring": "trunk_keystone",
+    "connections": [
+      "RE-017",
+      "RE-035",
+      "RE-079",
+      "RE-041",
+      "RE-042"
+    ],
+    "referenced_by": [],
+    "quote": "This is how I think and communicate btw, I have to look at that person compared to where my trunk is, some people I would have to bring up to a lot of speed to have a 'shared language'"
+  },
+  {
+    "id": "RE-099",
+    "num": 99,
+    "title": "The Cross-Section Shows Active Fiber Tips. No Searching Required",
+    "tags": [
+      "fiber-tips",
+      "active-surface",
+      "cross-section-as-status",
+      "no-searching",
+      "ready-ports",
+      "synthesis-intake"
+    ],
+    "layer": "canopy",
+    "keystone": true,
+    "ring": "canopy",
+    "connections": [
+      "RE-078",
+      "RE-097",
+      "RE-081",
+      "RE-095",
+      "RE-033"
+    ],
+    "referenced_by": [
+      "RE-100",
+      "RE-101",
+      "RE-102",
+      "RE-106",
+      "RE-107"
+    ],
+    "quote": "These are the tips of the current active fibers, waiting to connect with whatever new comes in, this is a big deal for synthesis, this means that when a new synthesis comes in, we don't have to go ..."
+  },
+  {
+    "id": "RE-100",
+    "num": 100,
+    "title": "Go Wide, Crawl, Comb as Cross-Section Navigation Modes",
+    "tags": [
+      "go-wide",
+      "crawl",
+      "comb",
+      "navigation-modes",
+      "cross-section-interaction",
+      "discovery-through-depth",
+      "lateral-connection"
+    ],
+    "layer": "trunk",
+    "keystone": true,
+    "ring": "trunk_keystone",
+    "connections": [
+      "RE-095",
+      "RE-097",
+      "RE-099",
+      "RE-030",
+      "RE-050"
+    ],
+    "referenced_by": [
+      "RE-102"
+    ],
+    "quote": "this is when the {go wide, crawl, comb} is interesting, because they would go a level deep in two separate sections and see a connection"
+  },
+  {
+    "id": "RE-101",
+    "num": 101,
+    "title": "Select, Attach, Port, Why. The Basic Interaction Sequence",
+    "tags": [
+      "interaction-sequence",
+      "select-attach-port-why",
+      "basic-interaction",
+      "user-driven-synthesis",
+      "four-step-intake"
+    ],
+    "layer": "trunk",
+    "keystone": true,
+    "ring": "trunk_keystone",
+    "connections": [
+      "RE-095",
+      "RE-081",
+      "RE-079",
+      "RE-099"
+    ],
+    "referenced_by": [
+      "RE-102"
+    ],
+    "quote": "As a basic interaction this could be like select an insight you have, now click an active fiber to attach, now on what ports and why"
+  },
+  {
+    "id": "RE-102",
+    "num": 102,
+    "title": "Depth-Matching. Navigate Down to Find the Connection. Deep Thread Division",
+    "tags": [
+      "depth-matching",
+      "navigate-down",
+      "closest-tip",
+      "deep-thread-division",
+      "growth-process",
+      "external-to-roots",
+      "surface-miss-depth-hit"
+    ],
+    "layer": "canopy",
+    "keystone": true,
+    "ring": "canopy",
+    "connections": [
+      "RE-099",
+      "RE-095",
+      "RE-078",
+      "RE-081",
+      "RE-100",
+      "RE-101"
+    ],
+    "referenced_by": [
+      "RE-104",
+      "RE-107"
+    ],
+    "quote": "if you have an environmental item that you're trying to match, but nothing is exactly right in the thread tips that you see. You can click the closest thread tip that makes sense and go into that f..."
+  },
+  {
+    "id": "RE-103",
+    "num": 103,
+    "title": "This Is the System Map. The One I Have Been Looking For My Entire Life",
+    "tags": [
+      "system-map",
+      "lifetime-search",
+      "self-realization",
+      "biographical-compression",
+      "the-product",
+      "thesis-statement"
+    ],
+    "layer": "canopy",
+    "keystone": true,
+    "ring": "canopy",
+    "connections": [
+      "RE-082",
+      "RE-092",
+      "RE-094",
+      "RE-029",
+      "RE-044",
+      "RE-045"
+    ],
+    "referenced_by": [],
+    "quote": "this is the system map I've been looking for my entire life"
+  },
+  {
+    "id": "RE-104",
+    "num": 104,
+    "title": "Not Branch. Division. What Grows Behind Is the Branch",
+    "tags": [
+      "division-not-branch",
+      "branch-is-past",
+      "division-is-event",
+      "branch-is-artifact",
+      "forward-vs-behind",
+      "correction"
+    ],
+    "layer": "canopy",
+    "keystone": true,
+    "ring": "canopy",
+    "connections": [
+      "RE-083",
+      "RE-078",
+      "RE-091",
+      "RE-094",
+      "RE-102"
+    ],
+    "referenced_by": [
+      "RE-105",
+      "RE-107",
+      "RE-110",
+      "RE-112"
+    ],
+    "quote": "ah, its not 'branch' its 'division' this feels like a division moment and what grows behind us is a branch"
+  },
+  {
+    "id": "RE-105",
+    "num": 105,
+    "title": "Multiple Metaphors Are Valid. But Need a Term Map",
+    "tags": [
+      "metaphor-alignment",
+      "term-map",
+      "vocabulary-governance",
+      "multiple-metaphors",
+      "naming-drift",
+      "terminology-tracking"
+    ],
+    "layer": "trunk",
+    "keystone": false,
+    "ring": "trunk_atomic",
+    "connections": [
+      "RE-089",
+      "RE-104",
+      "RE-083"
+    ],
+    "referenced_by": [
+      "RE-108",
+      "RE-109"
+    ],
+    "quote": "We're jumping and aligning metaphors, horizon event, branch, its ok to use multiple metaphors, but I need a map to keep track where we are"
+  },
+  {
+    "id": "RE-106",
+    "num": 106,
+    "title": "Turn It Inside Out. JTBD Perspective on the Cross-Section",
+    "tags": [
+      "inside-out",
+      "JTBD-perspective",
+      "multiple-views",
+      "fractal-perspective-flip",
+      "jobs-to-be-done",
+      "element-as-lens"
+    ],
+    "layer": "trunk",
+    "keystone": true,
+    "ring": "trunk_keystone",
+    "connections": [
+      "RE-095",
+      "RE-097",
+      "RE-099",
+      "RE-038",
+      "RE-025"
+    ],
+    "referenced_by": [
+      "RE-108"
+    ],
+    "quote": "right now we're just looking from the fiber perspective, but I think we could also look from a jobs-to-be-done perspective as well. Take that element within the fractal, pull it out, turn it inside..."
+  },
+  {
+    "id": "RE-107",
+    "num": 107,
+    "title": "Depth Panel. The Right Rail Shows What Is Beneath the Fiber",
+    "tags": [
+      "depth-view",
+      "support-structure",
+      "right-panel",
+      "fiber-depth",
+      "beneath-the-surface",
+      "cross-axis",
+      "division-support",
+      "depth-matching-UI"
+    ],
+    "layer": "canopy",
+    "keystone": true,
+    "ring": "canopy",
+    "connections": [
+      "RE-102",
+      "RE-095",
+      "RE-099",
+      "RE-097",
+      "RE-104"
+    ],
+    "referenced_by": [
+      "RE-108",
+      "RE-112",
+      "RE-113"
+    ],
+    "quote": "here is an interesting 2x in this visual, we can see the trunk and the fiber tip's connection to other top most fiber tips. Assumption: the right hand rail is showing the same thing as the visual. ..."
+  },
+  {
+    "id": "RE-108",
+    "num": 108,
+    "title": "Every Fractal Has Installed Category Ports You Can Dive Into",
+    "tags": [
+      "category-ports",
+      "structural-ports",
+      "fractal-navigation",
+      "installed-categories",
+      "dive-into-ports",
+      "topic-structure"
+    ],
+    "layer": "canopy",
+    "keystone": true,
+    "ring": "canopy",
+    "connections": [
+      "RE-107",
+      "RE-079",
+      "RE-080",
+      "RE-095",
+      "RE-106",
+      "RE-105"
+    ],
+    "referenced_by": [
+      "RE-109",
+      "RE-110",
+      "RE-111",
+      "RE-112",
+      "RE-113"
+    ],
+    "quote": "every fractal you click into on a topic has structural installed category ports than you can dive into"
+  },
+  {
+    "id": "RE-109",
+    "num": 109,
+    "title": "Mapping Metaphor Categories Is a Novel Operation. This Has Never Been Done Before",
+    "tags": [
+      "novel-operation",
+      "metaphor-mapping",
+      "first-time",
+      "category-discovery",
+      "term-alignment",
+      "precedent"
+    ],
+    "layer": "trunk",
+    "keystone": false,
+    "ring": "trunk_atomic",
+    "connections": [
+      "RE-105",
+      "RE-108",
+      "RE-038"
+    ],
+    "referenced_by": [
+      "RE-110",
+      "RE-111"
+    ],
+    "quote": "for metaphors we found the categories for this context and laid them out, which has never been done before"
+  },
+  {
+    "id": "RE-110",
+    "num": 110,
+    "title": "This IS a Division. And It Should Seed as a Business Solution",
+    "tags": [
+      "division-event",
+      "propagation",
+      "seed",
+      "business-application",
+      "company-metaphor-scan",
+      "small-business",
+      "product-seed",
+      "cross-domain"
+    ],
+    "layer": "canopy",
+    "keystone": true,
+    "ring": "canopy",
+    "connections": [
+      "RE-085",
+      "RE-087",
+      "RE-088",
+      "RE-104",
+      "RE-108",
+      "RE-109"
+    ],
+    "referenced_by": [
+      "RE-112"
+    ],
+    "quote": "this is a {division, propagation} this should seed as a business solution over in small business, scan a company site and organize their metaphors!"
+  },
+  {
+    "id": "RE-111",
+    "num": 111,
+    "title": "Bootstrap Paradox. First Metaphors Find the Categories. You Always Enter Below the Fractal Above",
+    "tags": [
+      "bootstrap",
+      "entry-point",
+      "fractal-above",
+      "categories-emerge",
+      "discovery-sequence",
+      "air-before-fixing",
+      "scale-awareness",
+      "never-step-in-exact"
+    ],
+    "layer": "canopy",
+    "keystone": true,
+    "ring": "canopy",
+    "connections": [
+      "RE-072",
+      "RE-108",
+      "RE-109",
+      "RE-081",
+      "RE-038",
+      "RE-015"
+    ],
+    "referenced_by": [],
+    "quote": "first, you have to find the metaphor categories (find the questions) before you can find the actual metaphors, or your first set of metaphors is used to find the categories. you never step in at th..."
+  },
+  {
+    "id": "RE-112",
+    "num": 112,
+    "title": "Horizon Event. Seeding Into Visual Representation of the Trunk",
+    "tags": [
+      "horizon-event",
+      "division",
+      "visual-seed",
+      "UI-creation",
+      "creation-event",
+      "experiment",
+      "visualization-domain",
+      "seeding"
+    ],
+    "layer": "canopy",
+    "keystone": true,
+    "ring": "canopy",
+    "connections": [
+      "RE-104",
+      "RE-110",
+      "RE-083",
+      "RE-084",
+      "RE-085",
+      "RE-107",
+      "RE-108"
+    ],
+    "referenced_by": [],
+    "quote": "lets create several of these pages. this is a creation event. capture it, you just inspired me to build UI. I can already see these as our experiments for visualization which I already love. So thi..."
+  },
+  {
+    "id": "RE-113",
+    "num": 113,
+    "title": "Inside Each Category, Show the Bisection and Depth of That Category's Trunk",
+    "tags": [
+      "category-depth",
+      "bisection-per-category",
+      "nested-cross-section",
+      "category-trunk",
+      "fractal-within-category",
+      "depth-per-port"
+    ],
+    "layer": "canopy",
+    "keystone": true,
+    "ring": "canopy",
+    "connections": [
+      "RE-108",
+      "RE-107",
+      "RE-097",
+      "RE-095",
+      "RE-027"
+    ],
+    "referenced_by": [],
+    "quote": "OH! inside of the top categories you could represent the bisection and depth of that category trunk"
+  }
+];
+
+const DEPTH_MAP = {
+  "RE-008": [],
+  "RE-009": [],
+  "RE-010": [],
+  "RE-011": [],
+  "RE-012": [],
+  "RE-013": [],
+  "RE-014": [],
+  "RE-015": [],
+  "RE-016": [],
+  "RE-017": [],
+  "RE-018": [],
+  "RE-019": [],
+  "RE-020": [],
+  "RE-021": [],
+  "RE-022": [],
+  "RE-023": [],
+  "RE-024": [],
+  "RE-025": [],
+  "RE-026": [],
+  "RE-027": [],
+  "RE-028": [],
+  "RE-029": [],
+  "RE-030": [],
+  "RE-031": [],
+  "RE-032": [],
+  "RE-033": [],
+  "RE-034": [],
+  "RE-035": [],
+  "RE-036": [],
+  "RE-037": [],
+  "RE-038": [],
+  "RE-039": [],
+  "RE-040": [],
+  "RE-041": [],
+  "RE-042": [],
+  "RE-043": [],
+  "RE-044": [],
+  "RE-045": [],
+  "RE-046": [],
+  "RE-047": [],
+  "RE-048": [],
+  "RE-049": [],
+  "RE-050": [],
+  "RE-051": [],
+  "RE-052": [],
+  "RE-053": [],
+  "RE-054": [],
+  "RE-055": [],
+  "RE-056": [],
+  "RE-057": [],
+  "RE-058": [],
+  "RE-059": [],
+  "RE-060": [],
+  "RE-061": [],
+  "RE-062": [],
+  "RE-063": [],
+  "RE-064": [],
+  "RE-065": [],
+  "RE-066": [],
+  "RE-067": [],
+  "RE-068": [],
+  "RE-069": [],
+  "RE-070": [],
+  "RE-071": [],
+  "RE-072": [],
+  "RE-073": [],
+  "RE-074": [],
+  "RE-075": [],
+  "RE-076": [],
+  "RE-077": [],
+  "RE-078": [],
+  "RE-079": [],
+  "RE-080": [
+    {
+      "id": "RE-071",
+      "title": "Mesh Gravity Creates Event Horizons \u2014 The Inward Pull Becomes Self-Sustaining",
+      "layer": "canopy",
+      "keystone": false
+    },
+    {
+      "id": "RE-072",
+      "title": "The Canopy Is the Air of the Universe \u2014 Scale Closure",
+      "layer": "canopy",
+      "keystone": false
+    },
+    {
+      "id": "RE-078",
+      "title": "Every Fractal Is a Fiber Under Tension \u2014 Cell Division as the Mechanism of Compression",
+      "layer": "canopy",
+      "keystone": false
+    },
+    {
+      "id": "RE-079",
+      "title": "Fractalizing Books Is Spark Zero \u2014 System Ports vs. Local Ports",
+      "layer": "trunk",
+      "keystone": false
+    }
+  ],
+  "RE-081": [
+    {
+      "id": "RE-068",
+      "title": "Not Up or Down \u2014 Inward or Outward. Compression and Expansion.",
+      "layer": "trunk",
+      "keystone": false
+    },
+    {
+      "id": "RE-071",
+      "title": "Mesh Gravity Creates Event Horizons \u2014 The Inward Pull Becomes Self-Sustaining",
+      "layer": "canopy",
+      "keystone": false
+    },
+    {
+      "id": "RE-072",
+      "title": "The Canopy Is the Air of the Universe \u2014 Scale Closure",
+      "layer": "canopy",
+      "keystone": false
+    },
+    {
+      "id": "RE-078",
+      "title": "Every Fractal Is a Fiber Under Tension \u2014 Cell Division as the Mechanism of Compression",
+      "layer": "canopy",
+      "keystone": false
+    },
+    {
+      "id": "RE-079",
+      "title": "Fractalizing Books Is Spark Zero \u2014 System Ports vs. Local Ports",
+      "layer": "trunk",
+      "keystone": false
+    },
+    {
+      "id": "RE-080",
+      "title": "Port Growth Trajectory. Local Ports Become System Ports Through Compression",
+      "layer": "canopy",
+      "keystone": true
+    }
+  ],
+  "RE-082": [
+    {
+      "id": "RE-044",
+      "title": "The Computer as First Matching Environment \u2014 Origin of the Layered Architecture",
+      "layer": "trunk",
+      "keystone": false
+    },
+    {
+      "id": "RE-045",
+      "title": "The Transmission Overlay \u2014 \"I Am the Mechanic of Computers\"",
+      "layer": "trunk",
+      "keystone": false
+    },
+    {
+      "id": "RE-068",
+      "title": "Not Up or Down \u2014 Inward or Outward. Compression and Expansion.",
+      "layer": "trunk",
+      "keystone": false
+    },
+    {
+      "id": "RE-071",
+      "title": "Mesh Gravity Creates Event Horizons \u2014 The Inward Pull Becomes Self-Sustaining",
+      "layer": "canopy",
+      "keystone": false
+    },
+    {
+      "id": "RE-072",
+      "title": "The Canopy Is the Air of the Universe \u2014 Scale Closure",
+      "layer": "canopy",
+      "keystone": false
+    },
+    {
+      "id": "RE-078",
+      "title": "Every Fractal Is a Fiber Under Tension \u2014 Cell Division as the Mechanism of Compression",
+      "layer": "canopy",
+      "keystone": false
+    },
+    {
+      "id": "RE-079",
+      "title": "Fractalizing Books Is Spark Zero \u2014 System Ports vs. Local Ports",
+      "layer": "trunk",
+      "keystone": false
+    },
+    {
+      "id": "RE-080",
+      "title": "Port Growth Trajectory. Local Ports Become System Ports Through Compression",
+      "layer": "canopy",
+      "keystone": true
+    },
+    {
+      "id": "RE-081",
+      "title": "Port-Match Intake. Fractals Enter Wherever They Fit",
+      "layer": "canopy",
+      "keystone": true
+    }
+  ],
+  "RE-083": [
+    {
+      "id": "RE-044",
+      "title": "The Computer as First Matching Environment \u2014 Origin of the Layered Architecture",
+      "layer": "trunk",
+      "keystone": false
+    },
+    {
+      "id": "RE-045",
+      "title": "The Transmission Overlay \u2014 \"I Am the Mechanic of Computers\"",
+      "layer": "trunk",
+      "keystone": false
+    },
+    {
+      "id": "RE-068",
+      "title": "Not Up or Down \u2014 Inward or Outward. Compression and Expansion.",
+      "layer": "trunk",
+      "keystone": false
+    },
+    {
+      "id": "RE-070",
+      "title": "IN OUT AND AROUND \u2014 The Third Directional Force",
+      "layer": "canopy",
+      "keystone": false
+    },
+    {
+      "id": "RE-071",
+      "title": "Mesh Gravity Creates Event Horizons \u2014 The Inward Pull Becomes Self-Sustaining",
+      "layer": "canopy",
+      "keystone": false
+    },
+    {
+      "id": "RE-078",
+      "title": "Every Fractal Is a Fiber Under Tension \u2014 Cell Division as the Mechanism of Compression",
+      "layer": "canopy",
+      "keystone": false
+    },
+    {
+      "id": "RE-080",
+      "title": "Port Growth Trajectory. Local Ports Become System Ports Through Compression",
+      "layer": "canopy",
+      "keystone": true
+    },
+    {
+      "id": "RE-081",
+      "title": "Port-Match Intake. Fractals Enter Wherever They Fit",
+      "layer": "canopy",
+      "keystone": true
+    },
+    {
+      "id": "RE-082",
+      "title": "The Tree as Biographical Self-Understanding Tool",
+      "layer": "canopy",
+      "keystone": true
+    }
+  ],
+  "RE-084": [
+    {
+      "id": "RE-070",
+      "title": "IN OUT AND AROUND \u2014 The Third Directional Force",
+      "layer": "canopy",
+      "keystone": false
+    },
+    {
+      "id": "RE-071",
+      "title": "Mesh Gravity Creates Event Horizons \u2014 The Inward Pull Becomes Self-Sustaining",
+      "layer": "canopy",
+      "keystone": false
+    },
+    {
+      "id": "RE-072",
+      "title": "The Canopy Is the Air of the Universe \u2014 Scale Closure",
+      "layer": "canopy",
+      "keystone": false
+    },
+    {
+      "id": "RE-078",
+      "title": "Every Fractal Is a Fiber Under Tension \u2014 Cell Division as the Mechanism of Compression",
+      "layer": "canopy",
+      "keystone": false
+    },
+    {
+      "id": "RE-079",
+      "title": "Fractalizing Books Is Spark Zero \u2014 System Ports vs. Local Ports",
+      "layer": "trunk",
+      "keystone": false
+    },
+    {
+      "id": "RE-080",
+      "title": "Port Growth Trajectory. Local Ports Become System Ports Through Compression",
+      "layer": "canopy",
+      "keystone": true
+    },
+    {
+      "id": "RE-082",
+      "title": "The Tree as Biographical Self-Understanding Tool",
+      "layer": "canopy",
+      "keystone": true
+    },
+    {
+      "id": "RE-083",
+      "title": "Horizon Event. The Branch",
+      "layer": "canopy",
+      "keystone": true
+    }
+  ],
+  "RE-085": [
+    {
+      "id": "RE-014",
+      "title": "Organic Pruning \u2014 Compaction as Growth, Not Deletion",
+      "layer": "trunk",
+      "keystone": false
+    },
+    {
+      "id": "RE-070",
+      "title": "IN OUT AND AROUND \u2014 The Third Directional Force",
+      "layer": "canopy",
+      "keystone": false
+    },
+    {
+      "id": "RE-071",
+      "title": "Mesh Gravity Creates Event Horizons \u2014 The Inward Pull Becomes Self-Sustaining",
+      "layer": "canopy",
+      "keystone": false
+    },
+    {
+      "id": "RE-072",
+      "title": "The Canopy Is the Air of the Universe \u2014 Scale Closure",
+      "layer": "canopy",
+      "keystone": false
+    },
+    {
+      "id": "RE-074",
+      "title": "The Leaf Falls \u2014 Every Form of Canopy Release Is a Different Phase of the Tree",
+      "layer": "canopy",
+      "keystone": false
+    },
+    {
+      "id": "RE-078",
+      "title": "Every Fractal Is a Fiber Under Tension \u2014 Cell Division as the Mechanism of Compression",
+      "layer": "canopy",
+      "keystone": false
+    },
+    {
+      "id": "RE-079",
+      "title": "Fractalizing Books Is Spark Zero \u2014 System Ports vs. Local Ports",
+      "layer": "trunk",
+      "keystone": false
+    },
+    {
+      "id": "RE-080",
+      "title": "Port Growth Trajectory. Local Ports Become System Ports Through Compression",
+      "layer": "canopy",
+      "keystone": true
+    },
+    {
+      "id": "RE-082",
+      "title": "The Tree as Biographical Self-Understanding Tool",
+      "layer": "canopy",
+      "keystone": true
+    },
+    {
+      "id": "RE-083",
+      "title": "Horizon Event. The Branch",
+      "layer": "canopy",
+      "keystone": true
+    },
+    {
+      "id": "RE-084",
+      "title": "Home-Grown Branches. Decisions and Self-Understanding",
+      "layer": "trunk",
+      "keystone": true
+    }
+  ],
+  "RE-086": [
+    {
+      "id": "RE-056",
+      "title": "The Mesh IS the Cycle \u2014 Not Infrastructure, Identity",
+      "layer": "trunk",
+      "keystone": false
+    },
+    {
+      "id": "RE-064",
+      "title": "The Causal Loop \u2014 The Synthesis Cycle as Closed, Self-Sustaining System",
+      "layer": "canopy",
+      "keystone": false
+    },
+    {
+      "id": "RE-079",
+      "title": "Fractalizing Books Is Spark Zero \u2014 System Ports vs. Local Ports",
+      "layer": "trunk",
+      "keystone": false
+    },
+    {
+      "id": "RE-080",
+      "title": "Port Growth Trajectory. Local Ports Become System Ports Through Compression",
+      "layer": "canopy",
+      "keystone": true
+    },
+    {
+      "id": "RE-082",
+      "title": "The Tree as Biographical Self-Understanding Tool",
+      "layer": "canopy",
+      "keystone": true
+    },
+    {
+      "id": "RE-083",
+      "title": "Horizon Event. The Branch",
+      "layer": "canopy",
+      "keystone": true
+    },
+    {
+      "id": "RE-084",
+      "title": "Home-Grown Branches. Decisions and Self-Understanding",
+      "layer": "trunk",
+      "keystone": true
+    }
+  ],
+  "RE-087": [
+    {
+      "id": "RE-014",
+      "title": "Organic Pruning \u2014 Compaction as Growth, Not Deletion",
+      "layer": "trunk",
+      "keystone": false
+    },
+    {
+      "id": "RE-065",
+      "title": "The Outer Synthesis Circle \u2014 Cycles Are Nodes in a Mesh of Cycles",
+      "layer": "canopy",
+      "keystone": false
+    },
+    {
+      "id": "RE-069",
+      "title": "Selective Compression \u2014 Not Everything Fixes. Unfixed Data Is Signal for the Universe.",
+      "layer": "canopy",
+      "keystone": false
+    },
+    {
+      "id": "RE-072",
+      "title": "The Canopy Is the Air of the Universe \u2014 Scale Closure",
+      "layer": "canopy",
+      "keystone": false
+    },
+    {
+      "id": "RE-074",
+      "title": "The Leaf Falls \u2014 Every Form of Canopy Release Is a Different Phase of the Tree",
+      "layer": "canopy",
+      "keystone": false
+    },
+    {
+      "id": "RE-078",
+      "title": "Every Fractal Is a Fiber Under Tension \u2014 Cell Division as the Mechanism of Compression",
+      "layer": "canopy",
+      "keystone": false
+    },
+    {
+      "id": "RE-083",
+      "title": "Horizon Event. The Branch",
+      "layer": "canopy",
+      "keystone": true
+    },
+    {
+      "id": "RE-084",
+      "title": "Home-Grown Branches. Decisions and Self-Understanding",
+      "layer": "trunk",
+      "keystone": true
+    },
+    {
+      "id": "RE-085",
+      "title": "Prune or Branch? The Seed Question",
+      "layer": "canopy",
+      "keystone": true
+    }
+  ],
+  "RE-088": [
+    {
+      "id": "RE-065",
+      "title": "The Outer Synthesis Circle \u2014 Cycles Are Nodes in a Mesh of Cycles",
+      "layer": "canopy",
+      "keystone": false
+    },
+    {
+      "id": "RE-069",
+      "title": "Selective Compression \u2014 Not Everything Fixes. Unfixed Data Is Signal for the Universe.",
+      "layer": "canopy",
+      "keystone": false
+    },
+    {
+      "id": "RE-071",
+      "title": "Mesh Gravity Creates Event Horizons \u2014 The Inward Pull Becomes Self-Sustaining",
+      "layer": "canopy",
+      "keystone": false
+    },
+    {
+      "id": "RE-072",
+      "title": "The Canopy Is the Air of the Universe \u2014 Scale Closure",
+      "layer": "canopy",
+      "keystone": false
+    },
+    {
+      "id": "RE-074",
+      "title": "The Leaf Falls \u2014 Every Form of Canopy Release Is a Different Phase of the Tree",
+      "layer": "canopy",
+      "keystone": false
+    },
+    {
+      "id": "RE-078",
+      "title": "Every Fractal Is a Fiber Under Tension \u2014 Cell Division as the Mechanism of Compression",
+      "layer": "canopy",
+      "keystone": false
+    },
+    {
+      "id": "RE-079",
+      "title": "Fractalizing Books Is Spark Zero \u2014 System Ports vs. Local Ports",
+      "layer": "trunk",
+      "keystone": false
+    },
+    {
+      "id": "RE-080",
+      "title": "Port Growth Trajectory. Local Ports Become System Ports Through Compression",
+      "layer": "canopy",
+      "keystone": true
+    },
+    {
+      "id": "RE-085",
+      "title": "Prune or Branch? The Seed Question",
+      "layer": "canopy",
+      "keystone": true
+    },
+    {
+      "id": "RE-087",
+      "title": "External Feedback Determines Branch or Seed. Forced Compression Into Seed",
+      "layer": "canopy",
+      "keystone": true
+    }
+  ],
+  "RE-089": [
+    {
+      "id": "RE-065",
+      "title": "The Outer Synthesis Circle \u2014 Cycles Are Nodes in a Mesh of Cycles",
+      "layer": "canopy",
+      "keystone": false
+    },
+    {
+      "id": "RE-069",
+      "title": "Selective Compression \u2014 Not Everything Fixes. Unfixed Data Is Signal for the Universe.",
+      "layer": "canopy",
+      "keystone": false
+    },
+    {
+      "id": "RE-071",
+      "title": "Mesh Gravity Creates Event Horizons \u2014 The Inward Pull Becomes Self-Sustaining",
+      "layer": "canopy",
+      "keystone": false
+    },
+    {
+      "id": "RE-072",
+      "title": "The Canopy Is the Air of the Universe \u2014 Scale Closure",
+      "layer": "canopy",
+      "keystone": false
+    },
+    {
+      "id": "RE-074",
+      "title": "The Leaf Falls \u2014 Every Form of Canopy Release Is a Different Phase of the Tree",
+      "layer": "canopy",
+      "keystone": false
+    },
+    {
+      "id": "RE-076",
+      "title": "We Are Verbs Fixing Nouns \u2014 The Grammatical Structure of Compression",
+      "layer": "canopy",
+      "keystone": false
+    },
+    {
+      "id": "RE-078",
+      "title": "Every Fractal Is a Fiber Under Tension \u2014 Cell Division as the Mechanism of Compression",
+      "layer": "canopy",
+      "keystone": false
+    },
+    {
+      "id": "RE-079",
+      "title": "Fractalizing Books Is Spark Zero \u2014 System Ports vs. Local Ports",
+      "layer": "trunk",
+      "keystone": false
+    },
+    {
+      "id": "RE-080",
+      "title": "Port Growth Trajectory. Local Ports Become System Ports Through Compression",
+      "layer": "canopy",
+      "keystone": true
+    },
+    {
+      "id": "RE-085",
+      "title": "Prune or Branch? The Seed Question",
+      "layer": "canopy",
+      "keystone": true
+    },
+    {
+      "id": "RE-087",
+      "title": "External Feedback Determines Branch or Seed. Forced Compression Into Seed",
+      "layer": "canopy",
+      "keystone": true
+    },
+    {
+      "id": "RE-088",
+      "title": "Seed Ports. The Third Compression Level of Ports",
+      "layer": "canopy",
+      "keystone": true
+    }
+  ],
+  "RE-090": [
+    {
+      "id": "RE-033",
+      "title": "Cognition IS the Active Mesh Receptors \u2014 Your Thinking Is Your Current Expression State",
+      "layer": "trunk",
+      "keystone": false
+    },
+    {
+      "id": "RE-044",
+      "title": "The Computer as First Matching Environment \u2014 Origin of the Layered Architecture",
+      "layer": "trunk",
+      "keystone": false
+    },
+    {
+      "id": "RE-045",
+      "title": "The Transmission Overlay \u2014 \"I Am the Mechanic of Computers\"",
+      "layer": "trunk",
+      "keystone": false
+    },
+    {
+      "id": "RE-068",
+      "title": "Not Up or Down \u2014 Inward or Outward. Compression and Expansion.",
+      "layer": "trunk",
+      "keystone": false
+    },
+    {
+      "id": "RE-072",
+      "title": "The Canopy Is the Air of the Universe \u2014 Scale Closure",
+      "layer": "canopy",
+      "keystone": false
+    },
+    {
+      "id": "RE-075",
+      "title": "The Air Is the Human, the Air Is the Process \u2014 Identity and Method Are Atmospheric",
+      "layer": "canopy",
+      "keystone": false
+    },
+    {
+      "id": "RE-076",
+      "title": "We Are Verbs Fixing Nouns \u2014 The Grammatical Structure of Compression",
+      "layer": "canopy",
+      "keystone": false
+    },
+    {
+      "id": "RE-078",
+      "title": "Every Fractal Is a Fiber Under Tension \u2014 Cell Division as the Mechanism of Compression",
+      "layer": "canopy",
+      "keystone": false
+    },
+    {
+      "id": "RE-079",
+      "title": "Fractalizing Books Is Spark Zero \u2014 System Ports vs. Local Ports",
+      "layer": "trunk",
+      "keystone": false
+    },
+    {
+      "id": "RE-080",
+      "title": "Port Growth Trajectory. Local Ports Become System Ports Through Compression",
+      "layer": "canopy",
+      "keystone": true
+    },
+    {
+      "id": "RE-081",
+      "title": "Port-Match Intake. Fractals Enter Wherever They Fit",
+      "layer": "canopy",
+      "keystone": true
+    },
+    {
+      "id": "RE-082",
+      "title": "The Tree as Biographical Self-Understanding Tool",
+      "layer": "canopy",
+      "keystone": true
+    },
+    {
+      "id": "RE-087",
+      "title": "External Feedback Determines Branch or Seed. Forced Compression Into Seed",
+      "layer": "canopy",
+      "keystone": true
+    },
+    {
+      "id": "RE-088",
+      "title": "Seed Ports. The Third Compression Level of Ports",
+      "layer": "canopy",
+      "keystone": true
+    }
+  ],
+  "RE-091": [
+    {
+      "id": "RE-033",
+      "title": "Cognition IS the Active Mesh Receptors \u2014 Your Thinking Is Your Current Expression State",
+      "layer": "trunk",
+      "keystone": false
+    },
+    {
+      "id": "RE-071",
+      "title": "Mesh Gravity Creates Event Horizons \u2014 The Inward Pull Becomes Self-Sustaining",
+      "layer": "canopy",
+      "keystone": false
+    },
+    {
+      "id": "RE-075",
+      "title": "The Air Is the Human, the Air Is the Process \u2014 Identity and Method Are Atmospheric",
+      "layer": "canopy",
+      "keystone": false
+    },
+    {
+      "id": "RE-076",
+      "title": "We Are Verbs Fixing Nouns \u2014 The Grammatical Structure of Compression",
+      "layer": "canopy",
+      "keystone": false
+    },
+    {
+      "id": "RE-077",
+      "title": "The Verb Becomes a Noun Through Compression \u2014 And We Are Neither",
+      "layer": "canopy",
+      "keystone": false
+    },
+    {
+      "id": "RE-078",
+      "title": "Every Fractal Is a Fiber Under Tension \u2014 Cell Division as the Mechanism of Compression",
+      "layer": "canopy",
+      "keystone": false
+    },
+    {
+      "id": "RE-079",
+      "title": "Fractalizing Books Is Spark Zero \u2014 System Ports vs. Local Ports",
+      "layer": "trunk",
+      "keystone": false
+    },
+    {
+      "id": "RE-080",
+      "title": "Port Growth Trajectory. Local Ports Become System Ports Through Compression",
+      "layer": "canopy",
+      "keystone": true
+    },
+    {
+      "id": "RE-081",
+      "title": "Port-Match Intake. Fractals Enter Wherever They Fit",
+      "layer": "canopy",
+      "keystone": true
+    },
+    {
+      "id": "RE-082",
+      "title": "The Tree as Biographical Self-Understanding Tool",
+      "layer": "canopy",
+      "keystone": true
+    },
+    {
+      "id": "RE-088",
+      "title": "Seed Ports. The Third Compression Level of Ports",
+      "layer": "canopy",
+      "keystone": true
+    },
+    {
+      "id": "RE-090",
+      "title": "Pre-Installed Ports. Emotions and Needs as Factory Firmware",
+      "layer": "canopy",
+      "keystone": true
+    }
+  ],
+  "RE-092": [
+    {
+      "id": "RE-033",
+      "title": "Cognition IS the Active Mesh Receptors \u2014 Your Thinking Is Your Current Expression State",
+      "layer": "trunk",
+      "keystone": false
+    },
+    {
+      "id": "RE-044",
+      "title": "The Computer as First Matching Environment \u2014 Origin of the Layered Architecture",
+      "layer": "trunk",
+      "keystone": false
+    },
+    {
+      "id": "RE-045",
+      "title": "The Transmission Overlay \u2014 \"I Am the Mechanic of Computers\"",
+      "layer": "trunk",
+      "keystone": false
+    },
+    {
+      "id": "RE-068",
+      "title": "Not Up or Down \u2014 Inward or Outward. Compression and Expansion.",
+      "layer": "trunk",
+      "keystone": false
+    },
+    {
+      "id": "RE-071",
+      "title": "Mesh Gravity Creates Event Horizons \u2014 The Inward Pull Becomes Self-Sustaining",
+      "layer": "canopy",
+      "keystone": false
+    },
+    {
+      "id": "RE-076",
+      "title": "We Are Verbs Fixing Nouns \u2014 The Grammatical Structure of Compression",
+      "layer": "canopy",
+      "keystone": false
+    },
+    {
+      "id": "RE-077",
+      "title": "The Verb Becomes a Noun Through Compression \u2014 And We Are Neither",
+      "layer": "canopy",
+      "keystone": false
+    },
+    {
+      "id": "RE-078",
+      "title": "Every Fractal Is a Fiber Under Tension \u2014 Cell Division as the Mechanism of Compression",
+      "layer": "canopy",
+      "keystone": false
+    },
+    {
+      "id": "RE-080",
+      "title": "Port Growth Trajectory. Local Ports Become System Ports Through Compression",
+      "layer": "canopy",
+      "keystone": true
+    },
+    {
+      "id": "RE-081",
+      "title": "Port-Match Intake. Fractals Enter Wherever They Fit",
+      "layer": "canopy",
+      "keystone": true
+    },
+    {
+      "id": "RE-082",
+      "title": "The Tree as Biographical Self-Understanding Tool",
+      "layer": "canopy",
+      "keystone": true
+    },
+    {
+      "id": "RE-090",
+      "title": "Pre-Installed Ports. Emotions and Needs as Factory Firmware",
+      "layer": "canopy",
+      "keystone": true
+    },
+    {
+      "id": "RE-091",
+      "title": "Verbs Pausing Verbs to Make Nouns. The Origin of Structure",
+      "layer": "canopy",
+      "keystone": true
+    }
+  ],
+  "RE-093": [
+    {
+      "id": "RE-033",
+      "title": "Cognition IS the Active Mesh Receptors \u2014 Your Thinking Is Your Current Expression State",
+      "layer": "trunk",
+      "keystone": false
+    },
+    {
+      "id": "RE-072",
+      "title": "The Canopy Is the Air of the Universe \u2014 Scale Closure",
+      "layer": "canopy",
+      "keystone": false
+    },
+    {
+      "id": "RE-075",
+      "title": "The Air Is the Human, the Air Is the Process \u2014 Identity and Method Are Atmospheric",
+      "layer": "canopy",
+      "keystone": false
+    },
+    {
+      "id": "RE-077",
+      "title": "The Verb Becomes a Noun Through Compression \u2014 And We Are Neither",
+      "layer": "canopy",
+      "keystone": false
+    },
+    {
+      "id": "RE-082",
+      "title": "The Tree as Biographical Self-Understanding Tool",
+      "layer": "canopy",
+      "keystone": true
+    },
+    {
+      "id": "RE-091",
+      "title": "Verbs Pausing Verbs to Make Nouns. The Origin of Structure",
+      "layer": "canopy",
+      "keystone": true
+    },
+    {
+      "id": "RE-092",
+      "title": "Verbs Pausing Each Other IS Self-Realization",
+      "layer": "canopy",
+      "keystone": true
+    }
+  ],
+  "RE-094": [
+    {
+      "id": "RE-014",
+      "title": "Organic Pruning \u2014 Compaction as Growth, Not Deletion",
+      "layer": "trunk",
+      "keystone": false
+    },
+    {
+      "id": "RE-072",
+      "title": "The Canopy Is the Air of the Universe \u2014 Scale Closure",
+      "layer": "canopy",
+      "keystone": false
+    },
+    {
+      "id": "RE-074",
+      "title": "The Leaf Falls \u2014 Every Form of Canopy Release Is a Different Phase of the Tree",
+      "layer": "canopy",
+      "keystone": false
+    },
+    {
+      "id": "RE-075",
+      "title": "The Air Is the Human, the Air Is the Process \u2014 Identity and Method Are Atmospheric",
+      "layer": "canopy",
+      "keystone": false
+    },
+    {
+      "id": "RE-078",
+      "title": "Every Fractal Is a Fiber Under Tension \u2014 Cell Division as the Mechanism of Compression",
+      "layer": "canopy",
+      "keystone": false
+    },
+    {
+      "id": "RE-079",
+      "title": "Fractalizing Books Is Spark Zero \u2014 System Ports vs. Local Ports",
+      "layer": "trunk",
+      "keystone": false
+    },
+    {
+      "id": "RE-080",
+      "title": "Port Growth Trajectory. Local Ports Become System Ports Through Compression",
+      "layer": "canopy",
+      "keystone": true
+    },
+    {
+      "id": "RE-083",
+      "title": "Horizon Event. The Branch",
+      "layer": "canopy",
+      "keystone": true
+    },
+    {
+      "id": "RE-084",
+      "title": "Home-Grown Branches. Decisions and Self-Understanding",
+      "layer": "trunk",
+      "keystone": true
+    },
+    {
+      "id": "RE-085",
+      "title": "Prune or Branch? The Seed Question",
+      "layer": "canopy",
+      "keystone": true
+    },
+    {
+      "id": "RE-087",
+      "title": "External Feedback Determines Branch or Seed. Forced Compression Into Seed",
+      "layer": "canopy",
+      "keystone": true
+    },
+    {
+      "id": "RE-088",
+      "title": "Seed Ports. The Third Compression Level of Ports",
+      "layer": "canopy",
+      "keystone": true
+    },
+    {
+      "id": "RE-091",
+      "title": "Verbs Pausing Verbs to Make Nouns. The Origin of Structure",
+      "layer": "canopy",
+      "keystone": true
+    },
+    {
+      "id": "RE-092",
+      "title": "Verbs Pausing Each Other IS Self-Realization",
+      "layer": "canopy",
+      "keystone": true
+    },
+    {
+      "id": "RE-093",
+      "title": "The Universe Played a Joke. A Verb Paused Another Verb to Make a Noun, and That Was the Punchline",
+      "layer": "canopy",
+      "keystone": true
+    }
+  ],
+  "RE-095": [
+    {
+      "id": "RE-027",
+      "title": "The Fractal IS the Cell \u2014 No Deletion, Accretion Layers, Timestamped Atoms",
+      "layer": "trunk",
+      "keystone": false
+    },
+    {
+      "id": "RE-044",
+      "title": "The Computer as First Matching Environment \u2014 Origin of the Layered Architecture",
+      "layer": "trunk",
+      "keystone": false
+    },
+    {
+      "id": "RE-045",
+      "title": "The Transmission Overlay \u2014 \"I Am the Mechanic of Computers\"",
+      "layer": "trunk",
+      "keystone": false
+    },
+    {
+      "id": "RE-048",
+      "title": "The Fractals ARE the Database \u2014 Linking Is Between Fractals, Not Inside a System",
+      "layer": "trunk",
+      "keystone": false
+    },
+    {
+      "id": "RE-068",
+      "title": "Not Up or Down \u2014 Inward or Outward. Compression and Expansion.",
+      "layer": "trunk",
+      "keystone": false
+    },
+    {
+      "id": "RE-072",
+      "title": "The Canopy Is the Air of the Universe \u2014 Scale Closure",
+      "layer": "canopy",
+      "keystone": false
+    },
+    {
+      "id": "RE-078",
+      "title": "Every Fractal Is a Fiber Under Tension \u2014 Cell Division as the Mechanism of Compression",
+      "layer": "canopy",
+      "keystone": false
+    },
+    {
+      "id": "RE-079",
+      "title": "Fractalizing Books Is Spark Zero \u2014 System Ports vs. Local Ports",
+      "layer": "trunk",
+      "keystone": false
+    },
+    {
+      "id": "RE-080",
+      "title": "Port Growth Trajectory. Local Ports Become System Ports Through Compression",
+      "layer": "canopy",
+      "keystone": true
+    },
+    {
+      "id": "RE-081",
+      "title": "Port-Match Intake. Fractals Enter Wherever They Fit",
+      "layer": "canopy",
+      "keystone": true
+    },
+    {
+      "id": "RE-082",
+      "title": "The Tree as Biographical Self-Understanding Tool",
+      "layer": "canopy",
+      "keystone": true
+    }
+  ],
+  "RE-096": [
+    {
+      "id": "RE-027",
+      "title": "The Fractal IS the Cell \u2014 No Deletion, Accretion Layers, Timestamped Atoms",
+      "layer": "trunk",
+      "keystone": false
+    },
+    {
+      "id": "RE-033",
+      "title": "Cognition IS the Active Mesh Receptors \u2014 Your Thinking Is Your Current Expression State",
+      "layer": "trunk",
+      "keystone": false
+    },
+    {
+      "id": "RE-048",
+      "title": "The Fractals ARE the Database \u2014 Linking Is Between Fractals, Not Inside a System",
+      "layer": "trunk",
+      "keystone": false
+    },
+    {
+      "id": "RE-070",
+      "title": "IN OUT AND AROUND \u2014 The Third Directional Force",
+      "layer": "canopy",
+      "keystone": false
+    },
+    {
+      "id": "RE-075",
+      "title": "The Air Is the Human, the Air Is the Process \u2014 Identity and Method Are Atmospheric",
+      "layer": "canopy",
+      "keystone": false
+    },
+    {
+      "id": "RE-076",
+      "title": "We Are Verbs Fixing Nouns \u2014 The Grammatical Structure of Compression",
+      "layer": "canopy",
+      "keystone": false
+    },
+    {
+      "id": "RE-079",
+      "title": "Fractalizing Books Is Spark Zero \u2014 System Ports vs. Local Ports",
+      "layer": "trunk",
+      "keystone": false
+    },
+    {
+      "id": "RE-080",
+      "title": "Port Growth Trajectory. Local Ports Become System Ports Through Compression",
+      "layer": "canopy",
+      "keystone": true
+    },
+    {
+      "id": "RE-081",
+      "title": "Port-Match Intake. Fractals Enter Wherever They Fit",
+      "layer": "canopy",
+      "keystone": true
+    },
+    {
+      "id": "RE-082",
+      "title": "The Tree as Biographical Self-Understanding Tool",
+      "layer": "canopy",
+      "keystone": true
+    },
+    {
+      "id": "RE-088",
+      "title": "Seed Ports. The Third Compression Level of Ports",
+      "layer": "canopy",
+      "keystone": true
+    },
+    {
+      "id": "RE-090",
+      "title": "Pre-Installed Ports. Emotions and Needs as Factory Firmware",
+      "layer": "canopy",
+      "keystone": true
+    },
+    {
+      "id": "RE-095",
+      "title": "Click Into the Fractal. Every Element Has Its Own Density Map",
+      "layer": "trunk",
+      "keystone": true
+    }
+  ],
+  "RE-097": [
+    {
+      "id": "RE-027",
+      "title": "The Fractal IS the Cell \u2014 No Deletion, Accretion Layers, Timestamped Atoms",
+      "layer": "trunk",
+      "keystone": false
+    },
+    {
+      "id": "RE-044",
+      "title": "The Computer as First Matching Environment \u2014 Origin of the Layered Architecture",
+      "layer": "trunk",
+      "keystone": false
+    },
+    {
+      "id": "RE-045",
+      "title": "The Transmission Overlay \u2014 \"I Am the Mechanic of Computers\"",
+      "layer": "trunk",
+      "keystone": false
+    },
+    {
+      "id": "RE-048",
+      "title": "The Fractals ARE the Database \u2014 Linking Is Between Fractals, Not Inside a System",
+      "layer": "trunk",
+      "keystone": false
+    },
+    {
+      "id": "RE-068",
+      "title": "Not Up or Down \u2014 Inward or Outward. Compression and Expansion.",
+      "layer": "trunk",
+      "keystone": false
+    },
+    {
+      "id": "RE-078",
+      "title": "Every Fractal Is a Fiber Under Tension \u2014 Cell Division as the Mechanism of Compression",
+      "layer": "canopy",
+      "keystone": false
+    },
+    {
+      "id": "RE-080",
+      "title": "Port Growth Trajectory. Local Ports Become System Ports Through Compression",
+      "layer": "canopy",
+      "keystone": true
+    },
+    {
+      "id": "RE-081",
+      "title": "Port-Match Intake. Fractals Enter Wherever They Fit",
+      "layer": "canopy",
+      "keystone": true
+    },
+    {
+      "id": "RE-082",
+      "title": "The Tree as Biographical Self-Understanding Tool",
+      "layer": "canopy",
+      "keystone": true
+    },
+    {
+      "id": "RE-095",
+      "title": "Click Into the Fractal. Every Element Has Its Own Density Map",
+      "layer": "trunk",
+      "keystone": true
+    }
+  ],
+  "RE-098": [
+    {
+      "id": "RE-017",
+      "title": "Event Horizon = Impact Radius (Same Circle, Two Directions)",
+      "layer": "trunk",
+      "keystone": false
+    },
+    {
+      "id": "RE-035",
+      "title": "Aggregation as Translation, Not Import \u2014 Each Connection Creates a Mini Synthesis",
+      "layer": "trunk",
+      "keystone": false
+    },
+    {
+      "id": "RE-041",
+      "title": "The Event Horizon Is Always Present \u2014 Comprehension Distance Between Domains",
+      "layer": "trunk",
+      "keystone": false
+    },
+    {
+      "id": "RE-042",
+      "title": "The Care Engine IS the Event Horizon \u2014 What Drives Perception Range",
+      "layer": "trunk",
+      "keystone": false
+    },
+    {
+      "id": "RE-079",
+      "title": "Fractalizing Books Is Spark Zero \u2014 System Ports vs. Local Ports",
+      "layer": "trunk",
+      "keystone": false
+    }
+  ],
+  "RE-099": [
+    {
+      "id": "RE-033",
+      "title": "Cognition IS the Active Mesh Receptors \u2014 Your Thinking Is Your Current Expression State",
+      "layer": "trunk",
+      "keystone": false
+    },
+    {
+      "id": "RE-068",
+      "title": "Not Up or Down \u2014 Inward or Outward. Compression and Expansion.",
+      "layer": "trunk",
+      "keystone": false
+    },
+    {
+      "id": "RE-072",
+      "title": "The Canopy Is the Air of the Universe \u2014 Scale Closure",
+      "layer": "canopy",
+      "keystone": false
+    },
+    {
+      "id": "RE-078",
+      "title": "Every Fractal Is a Fiber Under Tension \u2014 Cell Division as the Mechanism of Compression",
+      "layer": "canopy",
+      "keystone": false
+    },
+    {
+      "id": "RE-079",
+      "title": "Fractalizing Books Is Spark Zero \u2014 System Ports vs. Local Ports",
+      "layer": "trunk",
+      "keystone": false
+    },
+    {
+      "id": "RE-080",
+      "title": "Port Growth Trajectory. Local Ports Become System Ports Through Compression",
+      "layer": "canopy",
+      "keystone": true
+    },
+    {
+      "id": "RE-081",
+      "title": "Port-Match Intake. Fractals Enter Wherever They Fit",
+      "layer": "canopy",
+      "keystone": true
+    },
+    {
+      "id": "RE-082",
+      "title": "The Tree as Biographical Self-Understanding Tool",
+      "layer": "canopy",
+      "keystone": true
+    },
+    {
+      "id": "RE-095",
+      "title": "Click Into the Fractal. Every Element Has Its Own Density Map",
+      "layer": "trunk",
+      "keystone": true
+    },
+    {
+      "id": "RE-097",
+      "title": "Top Bisection Looking Down. The Trunk Density Map IS the Cross-Section View",
+      "layer": "trunk",
+      "keystone": false
+    }
+  ],
+  "RE-100": [
+    {
+      "id": "RE-027",
+      "title": "The Fractal IS the Cell \u2014 No Deletion, Accretion Layers, Timestamped Atoms",
+      "layer": "trunk",
+      "keystone": false
+    },
+    {
+      "id": "RE-030",
+      "title": "The Sudoku Process \u2014 Overlay, Pattern-Match, Confirm by Evidence, Return",
+      "layer": "trunk",
+      "keystone": false
+    },
+    {
+      "id": "RE-033",
+      "title": "Cognition IS the Active Mesh Receptors \u2014 Your Thinking Is Your Current Expression State",
+      "layer": "trunk",
+      "keystone": false
+    },
+    {
+      "id": "RE-048",
+      "title": "The Fractals ARE the Database \u2014 Linking Is Between Fractals, Not Inside a System",
+      "layer": "trunk",
+      "keystone": false
+    },
+    {
+      "id": "RE-050",
+      "title": "The Re-Pass as Altitude Shift \u2014 Each Pass Sees Different Soil Attributes",
+      "layer": "trunk",
+      "keystone": false
+    },
+    {
+      "id": "RE-068",
+      "title": "Not Up or Down \u2014 Inward or Outward. Compression and Expansion.",
+      "layer": "trunk",
+      "keystone": false
+    },
+    {
+      "id": "RE-078",
+      "title": "Every Fractal Is a Fiber Under Tension \u2014 Cell Division as the Mechanism of Compression",
+      "layer": "canopy",
+      "keystone": false
+    },
+    {
+      "id": "RE-081",
+      "title": "Port-Match Intake. Fractals Enter Wherever They Fit",
+      "layer": "canopy",
+      "keystone": true
+    },
+    {
+      "id": "RE-082",
+      "title": "The Tree as Biographical Self-Understanding Tool",
+      "layer": "canopy",
+      "keystone": true
+    },
+    {
+      "id": "RE-095",
+      "title": "Click Into the Fractal. Every Element Has Its Own Density Map",
+      "layer": "trunk",
+      "keystone": true
+    },
+    {
+      "id": "RE-097",
+      "title": "Top Bisection Looking Down. The Trunk Density Map IS the Cross-Section View",
+      "layer": "trunk",
+      "keystone": false
+    },
+    {
+      "id": "RE-099",
+      "title": "The Cross-Section Shows Active Fiber Tips. No Searching Required",
+      "layer": "canopy",
+      "keystone": true
+    }
+  ],
+  "RE-101": [
+    {
+      "id": "RE-027",
+      "title": "The Fractal IS the Cell \u2014 No Deletion, Accretion Layers, Timestamped Atoms",
+      "layer": "trunk",
+      "keystone": false
+    },
+    {
+      "id": "RE-033",
+      "title": "Cognition IS the Active Mesh Receptors \u2014 Your Thinking Is Your Current Expression State",
+      "layer": "trunk",
+      "keystone": false
+    },
+    {
+      "id": "RE-048",
+      "title": "The Fractals ARE the Database \u2014 Linking Is Between Fractals, Not Inside a System",
+      "layer": "trunk",
+      "keystone": false
+    },
+    {
+      "id": "RE-078",
+      "title": "Every Fractal Is a Fiber Under Tension \u2014 Cell Division as the Mechanism of Compression",
+      "layer": "canopy",
+      "keystone": false
+    },
+    {
+      "id": "RE-079",
+      "title": "Fractalizing Books Is Spark Zero \u2014 System Ports vs. Local Ports",
+      "layer": "trunk",
+      "keystone": false
+    },
+    {
+      "id": "RE-081",
+      "title": "Port-Match Intake. Fractals Enter Wherever They Fit",
+      "layer": "canopy",
+      "keystone": true
+    },
+    {
+      "id": "RE-082",
+      "title": "The Tree as Biographical Self-Understanding Tool",
+      "layer": "canopy",
+      "keystone": true
+    },
+    {
+      "id": "RE-095",
+      "title": "Click Into the Fractal. Every Element Has Its Own Density Map",
+      "layer": "trunk",
+      "keystone": true
+    },
+    {
+      "id": "RE-097",
+      "title": "Top Bisection Looking Down. The Trunk Density Map IS the Cross-Section View",
+      "layer": "trunk",
+      "keystone": false
+    },
+    {
+      "id": "RE-099",
+      "title": "The Cross-Section Shows Active Fiber Tips. No Searching Required",
+      "layer": "canopy",
+      "keystone": true
+    }
+  ],
+  "RE-102": [
+    {
+      "id": "RE-030",
+      "title": "The Sudoku Process \u2014 Overlay, Pattern-Match, Confirm by Evidence, Return",
+      "layer": "trunk",
+      "keystone": false
+    },
+    {
+      "id": "RE-033",
+      "title": "Cognition IS the Active Mesh Receptors \u2014 Your Thinking Is Your Current Expression State",
+      "layer": "trunk",
+      "keystone": false
+    },
+    {
+      "id": "RE-050",
+      "title": "The Re-Pass as Altitude Shift \u2014 Each Pass Sees Different Soil Attributes",
+      "layer": "trunk",
+      "keystone": false
+    },
+    {
+      "id": "RE-078",
+      "title": "Every Fractal Is a Fiber Under Tension \u2014 Cell Division as the Mechanism of Compression",
+      "layer": "canopy",
+      "keystone": false
+    },
+    {
+      "id": "RE-079",
+      "title": "Fractalizing Books Is Spark Zero \u2014 System Ports vs. Local Ports",
+      "layer": "trunk",
+      "keystone": false
+    },
+    {
+      "id": "RE-081",
+      "title": "Port-Match Intake. Fractals Enter Wherever They Fit",
+      "layer": "canopy",
+      "keystone": true
+    },
+    {
+      "id": "RE-095",
+      "title": "Click Into the Fractal. Every Element Has Its Own Density Map",
+      "layer": "trunk",
+      "keystone": true
+    },
+    {
+      "id": "RE-097",
+      "title": "Top Bisection Looking Down. The Trunk Density Map IS the Cross-Section View",
+      "layer": "trunk",
+      "keystone": false
+    },
+    {
+      "id": "RE-099",
+      "title": "The Cross-Section Shows Active Fiber Tips. No Searching Required",
+      "layer": "canopy",
+      "keystone": true
+    },
+    {
+      "id": "RE-100",
+      "title": "Go Wide, Crawl, Comb as Cross-Section Navigation Modes",
+      "layer": "trunk",
+      "keystone": true
+    },
+    {
+      "id": "RE-101",
+      "title": "Select, Attach, Port, Why. The Basic Interaction Sequence",
+      "layer": "trunk",
+      "keystone": true
+    }
+  ],
+  "RE-103": [
+    {
+      "id": "RE-029",
+      "title": "Troy's Core Skill Named \u2014 Fractal Cognition as Rapid Domain-Crossing and Overlay",
+      "layer": "trunk",
+      "keystone": false
+    },
+    {
+      "id": "RE-033",
+      "title": "Cognition IS the Active Mesh Receptors \u2014 Your Thinking Is Your Current Expression State",
+      "layer": "trunk",
+      "keystone": false
+    },
+    {
+      "id": "RE-044",
+      "title": "The Computer as First Matching Environment \u2014 Origin of the Layered Architecture",
+      "layer": "trunk",
+      "keystone": false
+    },
+    {
+      "id": "RE-045",
+      "title": "The Transmission Overlay \u2014 \"I Am the Mechanic of Computers\"",
+      "layer": "trunk",
+      "keystone": false
+    },
+    {
+      "id": "RE-068",
+      "title": "Not Up or Down \u2014 Inward or Outward. Compression and Expansion.",
+      "layer": "trunk",
+      "keystone": false
+    },
+    {
+      "id": "RE-077",
+      "title": "The Verb Becomes a Noun Through Compression \u2014 And We Are Neither",
+      "layer": "canopy",
+      "keystone": false
+    },
+    {
+      "id": "RE-078",
+      "title": "Every Fractal Is a Fiber Under Tension \u2014 Cell Division as the Mechanism of Compression",
+      "layer": "canopy",
+      "keystone": false
+    },
+    {
+      "id": "RE-080",
+      "title": "Port Growth Trajectory. Local Ports Become System Ports Through Compression",
+      "layer": "canopy",
+      "keystone": true
+    },
+    {
+      "id": "RE-081",
+      "title": "Port-Match Intake. Fractals Enter Wherever They Fit",
+      "layer": "canopy",
+      "keystone": true
+    },
+    {
+      "id": "RE-082",
+      "title": "The Tree as Biographical Self-Understanding Tool",
+      "layer": "canopy",
+      "keystone": true
+    },
+    {
+      "id": "RE-085",
+      "title": "Prune or Branch? The Seed Question",
+      "layer": "canopy",
+      "keystone": true
+    },
+    {
+      "id": "RE-088",
+      "title": "Seed Ports. The Third Compression Level of Ports",
+      "layer": "canopy",
+      "keystone": true
+    },
+    {
+      "id": "RE-091",
+      "title": "Verbs Pausing Verbs to Make Nouns. The Origin of Structure",
+      "layer": "canopy",
+      "keystone": true
+    },
+    {
+      "id": "RE-092",
+      "title": "Verbs Pausing Each Other IS Self-Realization",
+      "layer": "canopy",
+      "keystone": true
+    },
+    {
+      "id": "RE-093",
+      "title": "The Universe Played a Joke. A Verb Paused Another Verb to Make a Noun, and That Was the Punchline",
+      "layer": "canopy",
+      "keystone": true
+    },
+    {
+      "id": "RE-094",
+      "title": "The Verb Pauses Itself. Self-Germination",
+      "layer": "canopy",
+      "keystone": true
+    }
+  ],
+  "RE-104": [
+    {
+      "id": "RE-070",
+      "title": "IN OUT AND AROUND \u2014 The Third Directional Force",
+      "layer": "canopy",
+      "keystone": false
+    },
+    {
+      "id": "RE-071",
+      "title": "Mesh Gravity Creates Event Horizons \u2014 The Inward Pull Becomes Self-Sustaining",
+      "layer": "canopy",
+      "keystone": false
+    },
+    {
+      "id": "RE-076",
+      "title": "We Are Verbs Fixing Nouns \u2014 The Grammatical Structure of Compression",
+      "layer": "canopy",
+      "keystone": false
+    },
+    {
+      "id": "RE-077",
+      "title": "The Verb Becomes a Noun Through Compression \u2014 And We Are Neither",
+      "layer": "canopy",
+      "keystone": false
+    },
+    {
+      "id": "RE-078",
+      "title": "Every Fractal Is a Fiber Under Tension \u2014 Cell Division as the Mechanism of Compression",
+      "layer": "canopy",
+      "keystone": false
+    },
+    {
+      "id": "RE-081",
+      "title": "Port-Match Intake. Fractals Enter Wherever They Fit",
+      "layer": "canopy",
+      "keystone": true
+    },
+    {
+      "id": "RE-082",
+      "title": "The Tree as Biographical Self-Understanding Tool",
+      "layer": "canopy",
+      "keystone": true
+    },
+    {
+      "id": "RE-083",
+      "title": "Horizon Event. The Branch",
+      "layer": "canopy",
+      "keystone": true
+    },
+    {
+      "id": "RE-085",
+      "title": "Prune or Branch? The Seed Question",
+      "layer": "canopy",
+      "keystone": true
+    },
+    {
+      "id": "RE-088",
+      "title": "Seed Ports. The Third Compression Level of Ports",
+      "layer": "canopy",
+      "keystone": true
+    },
+    {
+      "id": "RE-090",
+      "title": "Pre-Installed Ports. Emotions and Needs as Factory Firmware",
+      "layer": "canopy",
+      "keystone": true
+    },
+    {
+      "id": "RE-091",
+      "title": "Verbs Pausing Verbs to Make Nouns. The Origin of Structure",
+      "layer": "canopy",
+      "keystone": true
+    },
+    {
+      "id": "RE-092",
+      "title": "Verbs Pausing Each Other IS Self-Realization",
+      "layer": "canopy",
+      "keystone": true
+    },
+    {
+      "id": "RE-093",
+      "title": "The Universe Played a Joke. A Verb Paused Another Verb to Make a Noun, and That Was the Punchline",
+      "layer": "canopy",
+      "keystone": true
+    },
+    {
+      "id": "RE-094",
+      "title": "The Verb Pauses Itself. Self-Germination",
+      "layer": "canopy",
+      "keystone": true
+    },
+    {
+      "id": "RE-095",
+      "title": "Click Into the Fractal. Every Element Has Its Own Density Map",
+      "layer": "trunk",
+      "keystone": true
+    },
+    {
+      "id": "RE-099",
+      "title": "The Cross-Section Shows Active Fiber Tips. No Searching Required",
+      "layer": "canopy",
+      "keystone": true
+    },
+    {
+      "id": "RE-100",
+      "title": "Go Wide, Crawl, Comb as Cross-Section Navigation Modes",
+      "layer": "trunk",
+      "keystone": true
+    },
+    {
+      "id": "RE-101",
+      "title": "Select, Attach, Port, Why. The Basic Interaction Sequence",
+      "layer": "trunk",
+      "keystone": true
+    },
+    {
+      "id": "RE-102",
+      "title": "Depth-Matching. Navigate Down to Find the Connection. Deep Thread Division",
+      "layer": "canopy",
+      "keystone": true
+    }
+  ],
+  "RE-105": [
+    {
+      "id": "RE-071",
+      "title": "Mesh Gravity Creates Event Horizons \u2014 The Inward Pull Becomes Self-Sustaining",
+      "layer": "canopy",
+      "keystone": false
+    },
+    {
+      "id": "RE-076",
+      "title": "We Are Verbs Fixing Nouns \u2014 The Grammatical Structure of Compression",
+      "layer": "canopy",
+      "keystone": false
+    },
+    {
+      "id": "RE-078",
+      "title": "Every Fractal Is a Fiber Under Tension \u2014 Cell Division as the Mechanism of Compression",
+      "layer": "canopy",
+      "keystone": false
+    },
+    {
+      "id": "RE-083",
+      "title": "Horizon Event. The Branch",
+      "layer": "canopy",
+      "keystone": true
+    },
+    {
+      "id": "RE-087",
+      "title": "External Feedback Determines Branch or Seed. Forced Compression Into Seed",
+      "layer": "canopy",
+      "keystone": true
+    },
+    {
+      "id": "RE-088",
+      "title": "Seed Ports. The Third Compression Level of Ports",
+      "layer": "canopy",
+      "keystone": true
+    },
+    {
+      "id": "RE-089",
+      "title": "Naming IS Compression. Every Quote Is an Event Horizon",
+      "layer": "canopy",
+      "keystone": true
+    },
+    {
+      "id": "RE-091",
+      "title": "Verbs Pausing Verbs to Make Nouns. The Origin of Structure",
+      "layer": "canopy",
+      "keystone": true
+    },
+    {
+      "id": "RE-094",
+      "title": "The Verb Pauses Itself. Self-Germination",
+      "layer": "canopy",
+      "keystone": true
+    },
+    {
+      "id": "RE-102",
+      "title": "Depth-Matching. Navigate Down to Find the Connection. Deep Thread Division",
+      "layer": "canopy",
+      "keystone": true
+    },
+    {
+      "id": "RE-104",
+      "title": "Not Branch. Division. What Grows Behind Is the Branch",
+      "layer": "canopy",
+      "keystone": true
+    }
+  ],
+  "RE-106": [
+    {
+      "id": "RE-025",
+      "title": "Expressed Frameworks ARE Live Mesh Connections \u2014 Filled with Current Data to the Lower Event Horizon",
+      "layer": "trunk",
+      "keystone": false
+    },
+    {
+      "id": "RE-027",
+      "title": "The Fractal IS the Cell \u2014 No Deletion, Accretion Layers, Timestamped Atoms",
+      "layer": "trunk",
+      "keystone": false
+    },
+    {
+      "id": "RE-033",
+      "title": "Cognition IS the Active Mesh Receptors \u2014 Your Thinking Is Your Current Expression State",
+      "layer": "trunk",
+      "keystone": false
+    },
+    {
+      "id": "RE-038",
+      "title": "Spark Zero \u2014 The Domain Identification Event Before the Spark",
+      "layer": "trunk",
+      "keystone": false
+    },
+    {
+      "id": "RE-048",
+      "title": "The Fractals ARE the Database \u2014 Linking Is Between Fractals, Not Inside a System",
+      "layer": "trunk",
+      "keystone": false
+    },
+    {
+      "id": "RE-068",
+      "title": "Not Up or Down \u2014 Inward or Outward. Compression and Expansion.",
+      "layer": "trunk",
+      "keystone": false
+    },
+    {
+      "id": "RE-078",
+      "title": "Every Fractal Is a Fiber Under Tension \u2014 Cell Division as the Mechanism of Compression",
+      "layer": "canopy",
+      "keystone": false
+    },
+    {
+      "id": "RE-081",
+      "title": "Port-Match Intake. Fractals Enter Wherever They Fit",
+      "layer": "canopy",
+      "keystone": true
+    },
+    {
+      "id": "RE-082",
+      "title": "The Tree as Biographical Self-Understanding Tool",
+      "layer": "canopy",
+      "keystone": true
+    },
+    {
+      "id": "RE-095",
+      "title": "Click Into the Fractal. Every Element Has Its Own Density Map",
+      "layer": "trunk",
+      "keystone": true
+    },
+    {
+      "id": "RE-097",
+      "title": "Top Bisection Looking Down. The Trunk Density Map IS the Cross-Section View",
+      "layer": "trunk",
+      "keystone": false
+    },
+    {
+      "id": "RE-099",
+      "title": "The Cross-Section Shows Active Fiber Tips. No Searching Required",
+      "layer": "canopy",
+      "keystone": true
+    }
+  ],
+  "RE-107": [
+    {
+      "id": "RE-068",
+      "title": "Not Up or Down \u2014 Inward or Outward. Compression and Expansion.",
+      "layer": "trunk",
+      "keystone": false
+    },
+    {
+      "id": "RE-078",
+      "title": "Every Fractal Is a Fiber Under Tension \u2014 Cell Division as the Mechanism of Compression",
+      "layer": "canopy",
+      "keystone": false
+    },
+    {
+      "id": "RE-081",
+      "title": "Port-Match Intake. Fractals Enter Wherever They Fit",
+      "layer": "canopy",
+      "keystone": true
+    },
+    {
+      "id": "RE-082",
+      "title": "The Tree as Biographical Self-Understanding Tool",
+      "layer": "canopy",
+      "keystone": true
+    },
+    {
+      "id": "RE-083",
+      "title": "Horizon Event. The Branch",
+      "layer": "canopy",
+      "keystone": true
+    },
+    {
+      "id": "RE-091",
+      "title": "Verbs Pausing Verbs to Make Nouns. The Origin of Structure",
+      "layer": "canopy",
+      "keystone": true
+    },
+    {
+      "id": "RE-094",
+      "title": "The Verb Pauses Itself. Self-Germination",
+      "layer": "canopy",
+      "keystone": true
+    },
+    {
+      "id": "RE-095",
+      "title": "Click Into the Fractal. Every Element Has Its Own Density Map",
+      "layer": "trunk",
+      "keystone": true
+    },
+    {
+      "id": "RE-097",
+      "title": "Top Bisection Looking Down. The Trunk Density Map IS the Cross-Section View",
+      "layer": "trunk",
+      "keystone": false
+    },
+    {
+      "id": "RE-099",
+      "title": "The Cross-Section Shows Active Fiber Tips. No Searching Required",
+      "layer": "canopy",
+      "keystone": true
+    },
+    {
+      "id": "RE-100",
+      "title": "Go Wide, Crawl, Comb as Cross-Section Navigation Modes",
+      "layer": "trunk",
+      "keystone": true
+    },
+    {
+      "id": "RE-101",
+      "title": "Select, Attach, Port, Why. The Basic Interaction Sequence",
+      "layer": "trunk",
+      "keystone": true
+    },
+    {
+      "id": "RE-102",
+      "title": "Depth-Matching. Navigate Down to Find the Connection. Deep Thread Division",
+      "layer": "canopy",
+      "keystone": true
+    },
+    {
+      "id": "RE-104",
+      "title": "Not Branch. Division. What Grows Behind Is the Branch",
+      "layer": "canopy",
+      "keystone": true
+    }
+  ],
+  "RE-108": [
+    {
+      "id": "RE-025",
+      "title": "Expressed Frameworks ARE Live Mesh Connections \u2014 Filled with Current Data to the Lower Event Horizon",
+      "layer": "trunk",
+      "keystone": false
+    },
+    {
+      "id": "RE-038",
+      "title": "Spark Zero \u2014 The Domain Identification Event Before the Spark",
+      "layer": "trunk",
+      "keystone": false
+    },
+    {
+      "id": "RE-071",
+      "title": "Mesh Gravity Creates Event Horizons \u2014 The Inward Pull Becomes Self-Sustaining",
+      "layer": "canopy",
+      "keystone": false
+    },
+    {
+      "id": "RE-072",
+      "title": "The Canopy Is the Air of the Universe \u2014 Scale Closure",
+      "layer": "canopy",
+      "keystone": false
+    },
+    {
+      "id": "RE-078",
+      "title": "Every Fractal Is a Fiber Under Tension \u2014 Cell Division as the Mechanism of Compression",
+      "layer": "canopy",
+      "keystone": false
+    },
+    {
+      "id": "RE-079",
+      "title": "Fractalizing Books Is Spark Zero \u2014 System Ports vs. Local Ports",
+      "layer": "trunk",
+      "keystone": false
+    },
+    {
+      "id": "RE-080",
+      "title": "Port Growth Trajectory. Local Ports Become System Ports Through Compression",
+      "layer": "canopy",
+      "keystone": true
+    },
+    {
+      "id": "RE-083",
+      "title": "Horizon Event. The Branch",
+      "layer": "canopy",
+      "keystone": true
+    },
+    {
+      "id": "RE-089",
+      "title": "Naming IS Compression. Every Quote Is an Event Horizon",
+      "layer": "canopy",
+      "keystone": true
+    },
+    {
+      "id": "RE-095",
+      "title": "Click Into the Fractal. Every Element Has Its Own Density Map",
+      "layer": "trunk",
+      "keystone": true
+    },
+    {
+      "id": "RE-097",
+      "title": "Top Bisection Looking Down. The Trunk Density Map IS the Cross-Section View",
+      "layer": "trunk",
+      "keystone": false
+    },
+    {
+      "id": "RE-099",
+      "title": "The Cross-Section Shows Active Fiber Tips. No Searching Required",
+      "layer": "canopy",
+      "keystone": true
+    },
+    {
+      "id": "RE-102",
+      "title": "Depth-Matching. Navigate Down to Find the Connection. Deep Thread Division",
+      "layer": "canopy",
+      "keystone": true
+    },
+    {
+      "id": "RE-104",
+      "title": "Not Branch. Division. What Grows Behind Is the Branch",
+      "layer": "canopy",
+      "keystone": true
+    },
+    {
+      "id": "RE-105",
+      "title": "Multiple Metaphors Are Valid. But Need a Term Map",
+      "layer": "trunk",
+      "keystone": false
+    },
+    {
+      "id": "RE-106",
+      "title": "Turn It Inside Out. JTBD Perspective on the Cross-Section",
+      "layer": "trunk",
+      "keystone": true
+    },
+    {
+      "id": "RE-107",
+      "title": "Depth Panel. The Right Rail Shows What Is Beneath the Fiber",
+      "layer": "canopy",
+      "keystone": true
+    }
+  ],
+  "RE-109": [
+    {
+      "id": "RE-038",
+      "title": "Spark Zero \u2014 The Domain Identification Event Before the Spark",
+      "layer": "trunk",
+      "keystone": false
+    },
+    {
+      "id": "RE-079",
+      "title": "Fractalizing Books Is Spark Zero \u2014 System Ports vs. Local Ports",
+      "layer": "trunk",
+      "keystone": false
+    },
+    {
+      "id": "RE-080",
+      "title": "Port Growth Trajectory. Local Ports Become System Ports Through Compression",
+      "layer": "canopy",
+      "keystone": true
+    },
+    {
+      "id": "RE-083",
+      "title": "Horizon Event. The Branch",
+      "layer": "canopy",
+      "keystone": true
+    },
+    {
+      "id": "RE-089",
+      "title": "Naming IS Compression. Every Quote Is an Event Horizon",
+      "layer": "canopy",
+      "keystone": true
+    },
+    {
+      "id": "RE-095",
+      "title": "Click Into the Fractal. Every Element Has Its Own Density Map",
+      "layer": "trunk",
+      "keystone": true
+    },
+    {
+      "id": "RE-104",
+      "title": "Not Branch. Division. What Grows Behind Is the Branch",
+      "layer": "canopy",
+      "keystone": true
+    },
+    {
+      "id": "RE-105",
+      "title": "Multiple Metaphors Are Valid. But Need a Term Map",
+      "layer": "trunk",
+      "keystone": false
+    },
+    {
+      "id": "RE-106",
+      "title": "Turn It Inside Out. JTBD Perspective on the Cross-Section",
+      "layer": "trunk",
+      "keystone": true
+    },
+    {
+      "id": "RE-107",
+      "title": "Depth Panel. The Right Rail Shows What Is Beneath the Fiber",
+      "layer": "canopy",
+      "keystone": true
+    },
+    {
+      "id": "RE-108",
+      "title": "Every Fractal Has Installed Category Ports You Can Dive Into",
+      "layer": "canopy",
+      "keystone": true
+    }
+  ],
+  "RE-110": [
+    {
+      "id": "RE-014",
+      "title": "Organic Pruning \u2014 Compaction as Growth, Not Deletion",
+      "layer": "trunk",
+      "keystone": false
+    },
+    {
+      "id": "RE-038",
+      "title": "Spark Zero \u2014 The Domain Identification Event Before the Spark",
+      "layer": "trunk",
+      "keystone": false
+    },
+    {
+      "id": "RE-065",
+      "title": "The Outer Synthesis Circle \u2014 Cycles Are Nodes in a Mesh of Cycles",
+      "layer": "canopy",
+      "keystone": false
+    },
+    {
+      "id": "RE-069",
+      "title": "Selective Compression \u2014 Not Everything Fixes. Unfixed Data Is Signal for the Universe.",
+      "layer": "canopy",
+      "keystone": false
+    },
+    {
+      "id": "RE-072",
+      "title": "The Canopy Is the Air of the Universe \u2014 Scale Closure",
+      "layer": "canopy",
+      "keystone": false
+    },
+    {
+      "id": "RE-074",
+      "title": "The Leaf Falls \u2014 Every Form of Canopy Release Is a Different Phase of the Tree",
+      "layer": "canopy",
+      "keystone": false
+    },
+    {
+      "id": "RE-078",
+      "title": "Every Fractal Is a Fiber Under Tension \u2014 Cell Division as the Mechanism of Compression",
+      "layer": "canopy",
+      "keystone": false
+    },
+    {
+      "id": "RE-079",
+      "title": "Fractalizing Books Is Spark Zero \u2014 System Ports vs. Local Ports",
+      "layer": "trunk",
+      "keystone": false
+    },
+    {
+      "id": "RE-080",
+      "title": "Port Growth Trajectory. Local Ports Become System Ports Through Compression",
+      "layer": "canopy",
+      "keystone": true
+    },
+    {
+      "id": "RE-083",
+      "title": "Horizon Event. The Branch",
+      "layer": "canopy",
+      "keystone": true
+    },
+    {
+      "id": "RE-084",
+      "title": "Home-Grown Branches. Decisions and Self-Understanding",
+      "layer": "trunk",
+      "keystone": true
+    },
+    {
+      "id": "RE-085",
+      "title": "Prune or Branch? The Seed Question",
+      "layer": "canopy",
+      "keystone": true
+    },
+    {
+      "id": "RE-087",
+      "title": "External Feedback Determines Branch or Seed. Forced Compression Into Seed",
+      "layer": "canopy",
+      "keystone": true
+    },
+    {
+      "id": "RE-088",
+      "title": "Seed Ports. The Third Compression Level of Ports",
+      "layer": "canopy",
+      "keystone": true
+    },
+    {
+      "id": "RE-091",
+      "title": "Verbs Pausing Verbs to Make Nouns. The Origin of Structure",
+      "layer": "canopy",
+      "keystone": true
+    },
+    {
+      "id": "RE-094",
+      "title": "The Verb Pauses Itself. Self-Germination",
+      "layer": "canopy",
+      "keystone": true
+    },
+    {
+      "id": "RE-095",
+      "title": "Click Into the Fractal. Every Element Has Its Own Density Map",
+      "layer": "trunk",
+      "keystone": true
+    },
+    {
+      "id": "RE-102",
+      "title": "Depth-Matching. Navigate Down to Find the Connection. Deep Thread Division",
+      "layer": "canopy",
+      "keystone": true
+    },
+    {
+      "id": "RE-104",
+      "title": "Not Branch. Division. What Grows Behind Is the Branch",
+      "layer": "canopy",
+      "keystone": true
+    },
+    {
+      "id": "RE-105",
+      "title": "Multiple Metaphors Are Valid. But Need a Term Map",
+      "layer": "trunk",
+      "keystone": false
+    },
+    {
+      "id": "RE-106",
+      "title": "Turn It Inside Out. JTBD Perspective on the Cross-Section",
+      "layer": "trunk",
+      "keystone": true
+    },
+    {
+      "id": "RE-107",
+      "title": "Depth Panel. The Right Rail Shows What Is Beneath the Fiber",
+      "layer": "canopy",
+      "keystone": true
+    },
+    {
+      "id": "RE-108",
+      "title": "Every Fractal Has Installed Category Ports You Can Dive Into",
+      "layer": "canopy",
+      "keystone": true
+    },
+    {
+      "id": "RE-109",
+      "title": "Mapping Metaphor Categories Is a Novel Operation. This Has Never Been Done Before",
+      "layer": "trunk",
+      "keystone": false
+    }
+  ],
+  "RE-111": [
+    {
+      "id": "RE-015",
+      "title": "The Three-Layer Architecture \u2014 Event Horizon, Mesh, Heartwood",
+      "layer": "trunk",
+      "keystone": false
+    },
+    {
+      "id": "RE-038",
+      "title": "Spark Zero \u2014 The Domain Identification Event Before the Spark",
+      "layer": "trunk",
+      "keystone": false
+    },
+    {
+      "id": "RE-068",
+      "title": "Not Up or Down \u2014 Inward or Outward. Compression and Expansion.",
+      "layer": "trunk",
+      "keystone": false
+    },
+    {
+      "id": "RE-072",
+      "title": "The Canopy Is the Air of the Universe \u2014 Scale Closure",
+      "layer": "canopy",
+      "keystone": false
+    },
+    {
+      "id": "RE-079",
+      "title": "Fractalizing Books Is Spark Zero \u2014 System Ports vs. Local Ports",
+      "layer": "trunk",
+      "keystone": false
+    },
+    {
+      "id": "RE-080",
+      "title": "Port Growth Trajectory. Local Ports Become System Ports Through Compression",
+      "layer": "canopy",
+      "keystone": true
+    },
+    {
+      "id": "RE-081",
+      "title": "Port-Match Intake. Fractals Enter Wherever They Fit",
+      "layer": "canopy",
+      "keystone": true
+    },
+    {
+      "id": "RE-095",
+      "title": "Click Into the Fractal. Every Element Has Its Own Density Map",
+      "layer": "trunk",
+      "keystone": true
+    },
+    {
+      "id": "RE-105",
+      "title": "Multiple Metaphors Are Valid. But Need a Term Map",
+      "layer": "trunk",
+      "keystone": false
+    },
+    {
+      "id": "RE-106",
+      "title": "Turn It Inside Out. JTBD Perspective on the Cross-Section",
+      "layer": "trunk",
+      "keystone": true
+    },
+    {
+      "id": "RE-107",
+      "title": "Depth Panel. The Right Rail Shows What Is Beneath the Fiber",
+      "layer": "canopy",
+      "keystone": true
+    },
+    {
+      "id": "RE-108",
+      "title": "Every Fractal Has Installed Category Ports You Can Dive Into",
+      "layer": "canopy",
+      "keystone": true
+    },
+    {
+      "id": "RE-109",
+      "title": "Mapping Metaphor Categories Is a Novel Operation. This Has Never Been Done Before",
+      "layer": "trunk",
+      "keystone": false
+    }
+  ],
+  "RE-112": [
+    {
+      "id": "RE-078",
+      "title": "Every Fractal Is a Fiber Under Tension \u2014 Cell Division as the Mechanism of Compression",
+      "layer": "canopy",
+      "keystone": false
+    },
+    {
+      "id": "RE-079",
+      "title": "Fractalizing Books Is Spark Zero \u2014 System Ports vs. Local Ports",
+      "layer": "trunk",
+      "keystone": false
+    },
+    {
+      "id": "RE-080",
+      "title": "Port Growth Trajectory. Local Ports Become System Ports Through Compression",
+      "layer": "canopy",
+      "keystone": true
+    },
+    {
+      "id": "RE-082",
+      "title": "The Tree as Biographical Self-Understanding Tool",
+      "layer": "canopy",
+      "keystone": true
+    },
+    {
+      "id": "RE-083",
+      "title": "Horizon Event. The Branch",
+      "layer": "canopy",
+      "keystone": true
+    },
+    {
+      "id": "RE-084",
+      "title": "Home-Grown Branches. Decisions and Self-Understanding",
+      "layer": "trunk",
+      "keystone": true
+    },
+    {
+      "id": "RE-085",
+      "title": "Prune or Branch? The Seed Question",
+      "layer": "canopy",
+      "keystone": true
+    },
+    {
+      "id": "RE-087",
+      "title": "External Feedback Determines Branch or Seed. Forced Compression Into Seed",
+      "layer": "canopy",
+      "keystone": true
+    },
+    {
+      "id": "RE-088",
+      "title": "Seed Ports. The Third Compression Level of Ports",
+      "layer": "canopy",
+      "keystone": true
+    },
+    {
+      "id": "RE-091",
+      "title": "Verbs Pausing Verbs to Make Nouns. The Origin of Structure",
+      "layer": "canopy",
+      "keystone": true
+    },
+    {
+      "id": "RE-094",
+      "title": "The Verb Pauses Itself. Self-Germination",
+      "layer": "canopy",
+      "keystone": true
+    },
+    {
+      "id": "RE-095",
+      "title": "Click Into the Fractal. Every Element Has Its Own Density Map",
+      "layer": "trunk",
+      "keystone": true
+    },
+    {
+      "id": "RE-097",
+      "title": "Top Bisection Looking Down. The Trunk Density Map IS the Cross-Section View",
+      "layer": "trunk",
+      "keystone": false
+    },
+    {
+      "id": "RE-099",
+      "title": "The Cross-Section Shows Active Fiber Tips. No Searching Required",
+      "layer": "canopy",
+      "keystone": true
+    },
+    {
+      "id": "RE-102",
+      "title": "Depth-Matching. Navigate Down to Find the Connection. Deep Thread Division",
+      "layer": "canopy",
+      "keystone": true
+    },
+    {
+      "id": "RE-104",
+      "title": "Not Branch. Division. What Grows Behind Is the Branch",
+      "layer": "canopy",
+      "keystone": true
+    },
+    {
+      "id": "RE-107",
+      "title": "Depth Panel. The Right Rail Shows What Is Beneath the Fiber",
+      "layer": "canopy",
+      "keystone": true
+    },
+    {
+      "id": "RE-108",
+      "title": "Every Fractal Has Installed Category Ports You Can Dive Into",
+      "layer": "canopy",
+      "keystone": true
+    },
+    {
+      "id": "RE-109",
+      "title": "Mapping Metaphor Categories Is a Novel Operation. This Has Never Been Done Before",
+      "layer": "trunk",
+      "keystone": false
+    },
+    {
+      "id": "RE-110",
+      "title": "This IS a Division. And It Should Seed as a Business Solution",
+      "layer": "canopy",
+      "keystone": true
+    }
+  ],
+  "RE-113": [
+    {
+      "id": "RE-027",
+      "title": "The Fractal IS the Cell \u2014 No Deletion, Accretion Layers, Timestamped Atoms",
+      "layer": "trunk",
+      "keystone": false
+    },
+    {
+      "id": "RE-068",
+      "title": "Not Up or Down \u2014 Inward or Outward. Compression and Expansion.",
+      "layer": "trunk",
+      "keystone": false
+    },
+    {
+      "id": "RE-079",
+      "title": "Fractalizing Books Is Spark Zero \u2014 System Ports vs. Local Ports",
+      "layer": "trunk",
+      "keystone": false
+    },
+    {
+      "id": "RE-080",
+      "title": "Port Growth Trajectory. Local Ports Become System Ports Through Compression",
+      "layer": "canopy",
+      "keystone": true
+    },
+    {
+      "id": "RE-082",
+      "title": "The Tree as Biographical Self-Understanding Tool",
+      "layer": "canopy",
+      "keystone": true
+    },
+    {
+      "id": "RE-095",
+      "title": "Click Into the Fractal. Every Element Has Its Own Density Map",
+      "layer": "trunk",
+      "keystone": true
+    },
+    {
+      "id": "RE-097",
+      "title": "Top Bisection Looking Down. The Trunk Density Map IS the Cross-Section View",
+      "layer": "trunk",
+      "keystone": false
+    },
+    {
+      "id": "RE-105",
+      "title": "Multiple Metaphors Are Valid. But Need a Term Map",
+      "layer": "trunk",
+      "keystone": false
+    },
+    {
+      "id": "RE-106",
+      "title": "Turn It Inside Out. JTBD Perspective on the Cross-Section",
+      "layer": "trunk",
+      "keystone": true
+    },
+    {
+      "id": "RE-107",
+      "title": "Depth Panel. The Right Rail Shows What Is Beneath the Fiber",
+      "layer": "canopy",
+      "keystone": true
+    },
+    {
+      "id": "RE-108",
+      "title": "Every Fractal Has Installed Category Ports You Can Dive Into",
+      "layer": "canopy",
+      "keystone": true
+    }
+  ]
+};
+
+// END DATA
+
+const canvas = document.getElementById('ring-canvas');
+const ctx = canvas.getContext('2d');
+const nodesContainer = document.getElementById('nodes-container');
+const svg = document.getElementById('connections-svg');
+const panel = document.getElementById('detail-panel');
+const panelContent = document.getElementById('panel-content');
+
+let activeElement = null;
+let nodePositions = {};
+let centerX, centerY, maxRadius;
+
+function init() {
+  // Stats
+  const total = ELEMENTS.length;
+  const ks = ELEMENTS.filter(e => e.keystone).length;
+  const canopy = ELEMENTS.filter(e => e.ring === 'canopy').length;
+  document.getElementById('stat-total').textContent = total;
+  document.getElementById('stat-ks').textContent = ks;
+  document.getElementById('stat-canopy').textContent = canopy;
+
+  resize();
+  window.addEventListener('resize', resize);
+}
+
+function resize() {
+  const dpr = window.devicePixelRatio || 1;
+  canvas.width = window.innerWidth * dpr;
+  canvas.height = window.innerHeight * dpr;
+  canvas.style.width = window.innerWidth + 'px';
+  canvas.style.height = window.innerHeight + 'px';
+  ctx.scale(dpr, dpr);
+
+  centerX = window.innerWidth / 2 - (panel.classList.contains('open') ? 200 : 0);
+  centerY = window.innerHeight / 2;
+  maxRadius = Math.min(window.innerWidth * 0.38, window.innerHeight * 0.42);
+
+  drawRings();
+  placeNodes();
+  if (activeElement) drawConnections(activeElement);
+}
+
+function drawRings() {
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+  const rings = [
+    { r: maxRadius * 0.95, label: 'TRUNK (ATOMIC)', color: 'rgba(250,248,244,0.03)' },
+    { r: maxRadius * 0.65, label: 'TRUNK (KEYSTONE)', color: 'rgba(196,144,48,0.04)' },
+    { r: maxRadius * 0.35, label: 'CANOPY', color: 'rgba(168,80,80,0.05)' },
+  ];
+
+  rings.forEach(ring => {
+    ctx.beginPath();
+    ctx.arc(centerX, centerY, ring.r, 0, Math.PI * 2);
+    ctx.strokeStyle = 'rgba(250,248,244,0.06)';
+    ctx.lineWidth = 1;
+    ctx.stroke();
+
+    // Fill zone
+    ctx.beginPath();
+    ctx.arc(centerX, centerY, ring.r, 0, Math.PI * 2);
+    ctx.fillStyle = ring.color;
+    ctx.fill();
+  });
+
+  // Center dot
+  ctx.beginPath();
+  ctx.arc(centerX, centerY, 4, 0, Math.PI * 2);
+  ctx.fillStyle = 'rgba(168,80,80,0.3)';
+  ctx.fill();
+}
+
+function placeNodes() {
+  nodesContainer.innerHTML = '';
+  nodePositions = {};
+
+  const canopyEls = ELEMENTS.filter(e => e.ring === 'canopy');
+  const trunkKsEls = ELEMENTS.filter(e => e.ring === 'trunk_keystone');
+  const atomicEls = ELEMENTS.filter(e => e.ring === 'trunk_atomic');
+
+  function placeRing(els, radiusMin, radiusMax) {
+    const count = els.length;
+    if (!count) return;
+    // Determine how many rows we need
+    const circumference = 2 * Math.PI * ((radiusMin + radiusMax) / 2);
+    const nodeWidth = 140;
+    const perRow = Math.max(Math.floor(circumference / (nodeWidth + 20)), 8);
+    const rows = Math.ceil(count / perRow);
+
+    els.forEach((el, i) => {
+      const row = Math.floor(i / perRow);
+      const posInRow = i % perRow;
+      const rowTotal = Math.min(perRow, count - row * perRow);
+      const r = radiusMin + (radiusMax - radiusMin) * ((row + 0.5) / rows);
+      const angleStep = (2 * Math.PI) / rowTotal;
+      const angleOffset = (row * 0.3); // stagger rows
+      const angle = angleStep * posInRow + angleOffset;
+
+      const x = centerX + r * Math.cos(angle);
+      const y = centerY + r * Math.sin(angle);
+
+      nodePositions[el.id] = { x, y };
+
+      const node = document.createElement('div');
+      const ringClass = el.ring === 'canopy' ? 'canopy' : el.ring === 'trunk_keystone' ? 'trunk-ks' : 'atomic';
+      node.className = `node ${ringClass}`;
+      if (activeElement && activeElement.id === el.id) node.classList.add('active');
+      node.style.left = (x - 65) + 'px';
+      node.style.top = (y - 16) + 'px';
+      node.innerHTML = `<div class="node-id">${el.id}</div><div class="node-title">${el.title.substring(0, 45)}${el.title.length > 45 ? '...' : ''}</div>`;
+      node.addEventListener('click', () => selectElement(el));
+      nodesContainer.appendChild(node);
+    });
+  }
+
+  placeRing(canopyEls, maxRadius * 0.12, maxRadius * 0.33);
+  placeRing(trunkKsEls, maxRadius * 0.38, maxRadius * 0.62);
+  placeRing(atomicEls, maxRadius * 0.67, maxRadius * 0.93);
+}
+
+function selectElement(el) {
+  activeElement = el;
+  openPanel(el);
+  resize(); // Reposition with panel offset
+}
+
+function drawConnections(el) {
+  svg.innerHTML = '';
+  const pos = nodePositions[el.id];
+  if (!pos) return;
+
+  // Draw lines to direct connections (surface)
+  const allConns = [...(el.connections || []), ...(el.referenced_by || [])];
+  allConns.forEach(connId => {
+    const connPos = nodePositions[connId];
+    if (!connPos) return;
+    const line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+    line.setAttribute('x1', pos.x);
+    line.setAttribute('y1', pos.y);
+    line.setAttribute('x2', connPos.x);
+    line.setAttribute('y2', connPos.y);
+    line.setAttribute('stroke', 'rgba(196,144,48,0.15)');
+    line.setAttribute('stroke-width', '1');
+    svg.appendChild(line);
+  });
+}
+
+function openPanel(el) {
+  panel.classList.add('open');
+  const ringClass = el.ring === 'canopy' ? 'canopy' : el.ring === 'trunk_keystone' ? 'trunk-ks' : 'atomic';
+  const layerLabel = el.ring === 'canopy' ? 'Canopy' : el.ring === 'trunk_keystone' ? 'Trunk Keystone' : 'Trunk Atomic';
+
+  // Get depth chain
+  const depthChain = DEPTH_MAP[el.id] || [];
+  const maxDepth = Math.max(...Object.values(DEPTH_MAP).map(d => d.length), 1);
+  const depthPct = Math.round((depthChain.length / maxDepth) * 100);
+
+  // Surface connections (referenced_by = elements that came AFTER and reference this one)
+  const surfaceRefs = (el.referenced_by || []).map(id => {
+    const found = ELEMENTS.find(e => e.id === id);
+    return found ? found : null;
+  }).filter(Boolean);
+
+  let html = `
+    <div class="panel-header">
+      <div class="panel-id" style="color: ${ringClass === 'canopy' ? '#c46a6a' : ringClass === 'trunk-ks' ? '#d4a843' : '#8a8580'}">${el.id}</div>
+      <div class="panel-title">${el.title}</div>
+      <span class="panel-layer ${ringClass}">${layerLabel}${el.keystone ? ' / Keystone' : ''}</span>
+    </div>`;
+
+  if (el.quote) {
+    html += `<div class="panel-quote">${el.quote}</div>`;
+  }
+
+  if (el.tags && el.tags.length) {
+    html += `<div class="panel-tags">${el.tags.map(t => `<span class="tag">#${t}</span>`).join('')}</div>`;
+  }
+
+  // DEPTH VIEW (primary axis)
+  html += `
+    <div class="axis-label">
+      DEPTH / SUPPORT BENEATH
+      <span class="axis-desc">What this fiber is built on. Compression ancestry.</span>
+    </div>
+    <div class="depth-bar"><div class="depth-bar-fill" style="width: ${depthPct}%"></div></div>
+    <div class="depth-bar-label">${depthChain.length} layers of support (${depthPct}% of max depth)</div>`;
+
+  if (depthChain.length > 0) {
+    html += '<div class="depth-stack">';
+    depthChain.forEach(item => {
+      const dc = item.layer === 'canopy' ? 'canopy' : item.keystone ? 'trunk-ks' : 'atomic';
+      html += `
+        <div class="depth-item ${dc}" onclick="navigateTo('${item.id}')">
+          <span class="di-id">${item.id}</span>
+          <span class="di-title">${item.title.substring(0, 50)}${item.title.length > 50 ? '...' : ''}</span>
+          ${item.keystone ? '<span class="di-ks">KS</span>' : ''}
+        </div>`;
+    });
+    html += '</div>';
+  } else {
+    html += '<div class="empty-depth">Foundation element. No deeper support chain.</div>';
+  }
+
+  // SURFACE VIEW (secondary axis)
+  if (surfaceRefs.length > 0) {
+    html += `
+      <div class="axis-label" style="margin-top: 20px;">
+        SURFACE / REFERENCED BY
+        <span class="axis-desc">Later elements that build on this fiber tip.</span>
+      </div>
+      <div class="surface-section">`;
+    surfaceRefs.forEach(ref => {
+      html += `
+        <div class="surface-item" onclick="navigateTo('${ref.id}')">
+          <span class="si-id">${ref.id}</span>
+          <span>${ref.title.substring(0, 45)}${ref.title.length > 45 ? '...' : ''}</span>
+        </div>`;
+    });
+    html += '</div>';
+  }
+
+  panelContent.innerHTML = html;
+}
+
+function navigateTo(id) {
+  const el = ELEMENTS.find(e => e.id === id);
+  if (el) selectElement(el);
+}
+
+function closePanel() {
+  panel.classList.remove('open');
+  activeElement = null;
+  resize();
+}
+
+init();
+</script>
+</body>
+</html>

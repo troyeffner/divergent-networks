@@ -1,0 +1,2268 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>NDD</title>
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body {
+  font-family: 'Segoe UI', system-ui, sans-serif;
+  background: #2a2520;
+  color: #faf8f4;
+  min-height: 100vh;
+  display: flex; flex-direction: column;
+}
+
+/* ---- MODE BAR ---- */
+.mode-bar {
+  display: flex; align-items: center; gap: 0;
+  background: #1e1a16;
+  border-bottom: 2px solid rgba(255,255,255,0.06);
+  padding: 0 24px;
+  height: 48px;
+  flex-shrink: 0;
+}
+.mode-btn {
+  padding: 12px 20px;
+  font: 600 12px/1 'Segoe UI', system-ui, sans-serif;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+  color: #6a6560;
+  cursor: pointer;
+  border-bottom: 2px solid transparent;
+  margin-bottom: -2px;
+  transition: all 0.15s;
+  user-select: none;
+}
+.mode-btn:hover { color: #b0aaa4; }
+.mode-btn.active { color: #faf8f4; border-bottom-color: #c49030; }
+.mode-btn .mode-icon { margin-right: 6px; font-size: 14px; }
+.mode-label {
+  margin-left: auto;
+  font-size: 10px;
+  color: #5a5550;
+  letter-spacing: 0.3px;
+}
+
+/* ---- MAIN LAYOUT ---- */
+.main-layout {
+  display: flex; flex: 1; overflow: hidden;
+}
+
+/* ---- LEFT PANEL: COLLECT + ANALYZE SIDE BY SIDE ---- */
+.left-panel {
+  width: 50%;
+  min-width: 440px;
+  background: #241f1b;
+  border-right: 1px solid rgba(255,255,255,0.06);
+  display: flex;
+  flex-direction: column;
+  flex-shrink: 0;
+}
+
+/* Two-column split inside left panel */
+.left-split {
+  display: flex;
+  flex: 1;
+  overflow: hidden;
+}
+
+/* COLLECTOR COLUMN (left-left) */
+.collector-col {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  border-right: 1px solid rgba(255,255,255,0.04);
+  overflow: hidden;
+}
+.col-header {
+  padding: 10px 14px;
+  border-bottom: 1px solid rgba(255,255,255,0.06);
+  display: flex; align-items: center; gap: 8px;
+}
+.col-header h3 {
+  font: 600 11px/1 'Segoe UI', system-ui, sans-serif;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: #c49030;
+}
+.col-header .col-count { font-size: 9px; color: #6a6560; margin-left: auto; }
+
+.collector-content {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  padding: 10px;
+  gap: 8px;
+  overflow-y: auto;
+}
+
+/* Input area */
+.collect-input {
+  display: flex; gap: 6px; align-items: flex-end;
+}
+.collect-input textarea {
+  flex: 1;
+  min-height: 48px; max-height: 100px;
+  background: rgba(255,255,255,0.06);
+  border: 1px solid rgba(255,255,255,0.12);
+  border-radius: 8px;
+  padding: 8px 10px;
+  color: #faf8f4;
+  font: 12px/1.5 'Segoe UI', system-ui, sans-serif;
+  resize: vertical;
+  outline: none;
+}
+.collect-input textarea:focus { border-color: rgba(196,144,48,0.4); }
+.voice-btn {
+  width: 38px; height: 38px;
+  background: rgba(196,106,106,0.12);
+  border: 1px solid rgba(196,106,106,0.25);
+  border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  cursor: pointer; flex-shrink: 0;
+  transition: all 0.15s;
+  font-size: 16px; color: #c4786a; opacity: 0.7;
+}
+.voice-btn:hover { background: rgba(196,106,106,0.2); }
+
+/* Drop zone (compact) */
+.drop-compact {
+  border: 1px dashed rgba(196,144,48,0.2);
+  border-radius: 8px;
+  padding: 10px;
+  text-align: center;
+  color: #5a5550;
+  font-size: 10px;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+.drop-compact:hover { border-color: rgba(196,144,48,0.4); background: rgba(196,144,48,0.03); }
+.drop-actions-row {
+  display: flex; gap: 4px;
+}
+.drop-mini-btn {
+  flex: 1;
+  background: rgba(255,255,255,0.04);
+  border: 1px solid rgba(255,255,255,0.06);
+  border-radius: 5px;
+  padding: 6px 4px;
+  color: #8a8580;
+  font-size: 9px;
+  cursor: pointer;
+  text-align: center;
+  transition: all 0.15s;
+}
+.drop-mini-btn:hover { background: rgba(255,255,255,0.07); }
+.drop-mini-btn .btn-ico { display: block; font-size: 12px; margin-bottom: 2px; opacity: 0.4; }
+
+/* Inbox items */
+.inbox-label {
+  font: 600 9px/1 'Segoe UI', system-ui, sans-serif;
+  color: #5a5550;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  padding: 6px 2px 2px;
+}
+.inbox-item {
+  background: rgba(255,255,255,0.04);
+  border: 1px solid rgba(255,255,255,0.08);
+  border-radius: 7px;
+  padding: 10px 12px;
+  cursor: pointer;
+  transition: all 0.15s;
+  position: relative;
+}
+.inbox-item:hover { background: rgba(255,255,255,0.07); border-color: rgba(255,255,255,0.15); }
+.inbox-item.selected { border-color: #c49030; background: rgba(196,144,48,0.06); }
+.inbox-item .item-type {
+  font-size: 8px; font-weight: 700; text-transform: uppercase;
+  letter-spacing: 0.4px; color: #8a8580;
+  margin-bottom: 3px;
+}
+.inbox-item .item-title { font: 600 11px/1.3 Georgia, serif; color: #faf8f4; margin-bottom: 3px; }
+.inbox-item .item-preview { font-size: 10px; color: #8a8580; line-height: 1.4; }
+.inbox-item .item-badge {
+  position: absolute; top: 8px; right: 10px;
+  font-size: 7px; font-weight: 700; text-transform: uppercase;
+  letter-spacing: 0.4px; padding: 2px 5px; border-radius: 3px;
+}
+.item-badge.unprocessed { background: rgba(196,144,48,0.15); color: #c49030; }
+.item-badge.tagged { background: rgba(106,154,106,0.15); color: #6a9a6a; }
+.item-badge.external { background: rgba(90,138,180,0.15); color: #5a8ab4; }
+.item-badge.event-type { background: rgba(196,106,106,0.15); color: #c4786a; }
+
+/* Maturity indicator */
+.maturity-indicator {
+  display: inline-flex; align-items: center; gap: 3px;
+  font-size: 8px; font-weight: 600; color: #6a6560;
+  margin-top: 4px;
+}
+.maturity-dot {
+  width: 5px; height: 5px; border-radius: 50%;
+}
+.maturity-dot.filled { background: #c49030; }
+.maturity-dot.empty { background: rgba(255,255,255,0.1); }
+
+/* Framework selector (replaces quick-tags, RE-196) */
+.framework-selector {
+  margin-top: 6px;
+  padding-top: 5px;
+  border-top: 1px solid rgba(255,255,255,0.04);
+}
+.fw-select-label {
+  font-size: 7px; font-weight: 600; color: #5a5550;
+  text-transform: uppercase; letter-spacing: 0.4px;
+  margin-bottom: 3px;
+}
+.fw-chips {
+  display: flex; gap: 3px; flex-wrap: wrap;
+}
+.fw-chip {
+  padding: 2px 7px;
+  border-radius: 10px;
+  font-size: 7px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.15s;
+  border: 1px solid transparent;
+  position: relative;
+}
+.fw-chip:hover { opacity: 0.8; }
+.fw-chip.selected { border-color: currentColor; }
+
+/* Framework prompt (appears in analyzer when framework selected) */
+.fw-prompt {
+  background: rgba(255,255,255,0.03);
+  border-left: 3px solid;
+  border-radius: 0 6px 6px 0;
+  padding: 8px 10px;
+  font-size: 10px;
+  line-height: 1.5;
+  color: #b0aaa4;
+  font-style: italic;
+}
+.fw-prompt .fw-prompt-label {
+  font-size: 7px; font-weight: 700; text-transform: uppercase;
+  letter-spacing: 0.4px; font-style: normal;
+  margin-bottom: 3px;
+}
+
+/* Synthesis result card (born in collector) */
+.synth-result {
+  background: rgba(90,180,160,0.06);
+  border: 1px solid rgba(90,180,160,0.2);
+  border-radius: 7px;
+  padding: 10px 12px;
+}
+.synth-result .sr-label {
+  font-size: 7px; font-weight: 700; text-transform: uppercase;
+  letter-spacing: 0.4px; color: #5ab4a0; margin-bottom: 3px;
+}
+.synth-result .sr-origin {
+  font-size: 8px; color: #5a5550; margin-top: 4px;
+}
+.synth-result textarea {
+  width: 100%; min-height: 36px; max-height: 80px;
+  background: rgba(255,255,255,0.04);
+  border: 1px solid rgba(255,255,255,0.08);
+  border-radius: 5px;
+  padding: 6px 8px;
+  color: #faf8f4;
+  font: 11px/1.5 'Segoe UI', system-ui, sans-serif;
+  resize: vertical; outline: none;
+}
+.synth-result textarea:focus { border-color: rgba(90,180,160,0.4); }
+
+/* ANALYZER COLUMN (left-right) */
+.analyzer-col {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.analyzer-content {
+  flex: 1; padding: 10px; overflow-y: auto;
+  display: flex; flex-direction: column; gap: 8px;
+}
+.analyzer-instruction {
+  background: rgba(196,144,48,0.06);
+  border: 1px solid rgba(196,144,48,0.15);
+  border-radius: 7px;
+  padding: 10px 12px;
+  font-size: 11px; line-height: 1.5; color: #b0aaa4;
+}
+.analyzer-instruction strong { color: #c49030; font-weight: 600; }
+
+/* Analyzer sub-tabs */
+.analyzer-tabs {
+  display: flex; gap: 0;
+  border-bottom: 1px solid rgba(255,255,255,0.06);
+}
+.analyzer-tab {
+  flex: 1; padding: 8px 10px;
+  font-size: 9px; font-weight: 600;
+  text-transform: uppercase; letter-spacing: 0.4px;
+  color: #5a5550; text-align: center;
+  cursor: pointer; border-bottom: 2px solid transparent;
+  margin-bottom: -1px; transition: all 0.15s;
+}
+.analyzer-tab:hover { color: #8a8580; }
+.analyzer-tab.active { color: #c49030; border-bottom-color: #c49030; }
+
+/* Synth link (connect two inbox items) */
+.synth-link-zone {
+  border: 1px dashed rgba(90,180,160,0.25);
+  border-radius: 7px;
+  padding: 10px;
+  text-align: center;
+  font-size: 10px;
+  color: #5ab4a0;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+.synth-link-zone:hover { border-color: rgba(90,180,160,0.5); background: rgba(90,180,160,0.03); }
+
+/* Decompose alert */
+.decompose-alert {
+  background: rgba(196,106,106,0.08);
+  border: 1px solid rgba(196,106,106,0.2);
+  border-radius: 7px;
+  padding: 8px 10px;
+  font-size: 10px;
+  color: #c4786a;
+  line-height: 1.4;
+}
+
+/* Tag pills in analyzer */
+.tag-cloud {
+  display: flex; flex-wrap: wrap; gap: 5px;
+}
+.tag-pill {
+  padding: 3px 9px;
+  border-radius: 12px;
+  font-size: 9px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.15s;
+  border: 1px solid transparent;
+}
+.tag-pill:hover { opacity: 0.8; }
+.tag-pill.selected { border-color: #faf8f4; box-shadow: 0 0 6px rgba(255,255,255,0.1); }
+
+/* Sub-fractal mini cards */
+.subfractal-card {
+  background: rgba(255,255,255,0.03);
+  border: 1px solid rgba(255,255,255,0.06);
+  border-radius: 6px;
+  padding: 8px 10px;
+  font-size: 10px;
+  color: #b0aaa4;
+  line-height: 1.4;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+.subfractal-card:hover { background: rgba(255,255,255,0.06); }
+.subfractal-card .sf-label {
+  font-size: 7px; font-weight: 700; text-transform: uppercase;
+  letter-spacing: 0.4px; color: #6a6560; margin-bottom: 2px;
+}
+
+/* Event fractal indicator */
+.event-indicator {
+  background: rgba(196,144,48,0.08);
+  border: 1px solid rgba(196,144,48,0.2);
+  border-radius: 7px;
+  padding: 8px 10px;
+  font-size: 10px;
+  color: #c49030;
+  line-height: 1.4;
+  font-style: italic;
+}
+
+/* INTEGRATOR VIEW (replaces left-split when active) */
+.integrator-view {
+  flex: 1;
+  display: none;
+  flex-direction: column;
+  padding: 12px;
+  gap: 10px;
+  overflow-y: auto;
+}
+.integrator-view.active { display: flex; }
+
+.integrate-item {
+  background: rgba(255,255,255,0.04);
+  border: 1px solid rgba(255,255,255,0.08);
+  border-radius: 8px;
+  padding: 12px 14px;
+  cursor: grab;
+  transition: all 0.15s;
+  position: relative;
+}
+.integrate-item:hover { background: rgba(255,255,255,0.07); }
+.integrate-item .mesh-weight {
+  position: absolute; top: 10px; right: 12px;
+  font-size: 9px; font-weight: 600; color: #c49030;
+}
+.integrate-actions {
+  display: flex; gap: 6px; margin-top: 10px;
+}
+.integrate-btn {
+  flex: 1;
+  background: rgba(255,255,255,0.04);
+  border: 1px solid rgba(255,255,255,0.08);
+  border-radius: 6px;
+  padding: 8px 10px;
+  color: #b0aaa4;
+  font-size: 10px;
+  cursor: pointer;
+  text-align: center;
+  transition: all 0.15s;
+}
+.integrate-btn:hover { background: rgba(255,255,255,0.07); border-color: rgba(255,255,255,0.15); }
+.integrate-btn .ib-icon { display: block; font-size: 14px; margin-bottom: 3px; opacity: 0.5; }
+
+/* ---- RIGHT PANEL (NDD) ---- */
+.right-panel {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  overflow-y: auto;
+}
+
+/* ---- HEADER ---- */
+.header {
+  padding: 16px 24px 12px;
+  border-bottom: 1px solid rgba(255,255,255,0.06);
+}
+.header h1 { font: 700 18px/1.2 Georgia, serif; color: #faf8f4; margin-bottom: 4px; }
+.header .sub { font-size: 10px; color: #8a8580; }
+.breadcrumb { display: flex; align-items: center; gap: 8px; margin-top: 8px; font-size: 10px; color: #8a8580; }
+.breadcrumb a { color: #c49030; text-decoration: none; cursor: pointer; }
+.breadcrumb a:hover { text-decoration: underline; }
+.breadcrumb .sep { color: #5a5550; }
+
+/* ---- STATS BAR ---- */
+.stats-bar {
+  display: flex; gap: 16px; padding: 8px 24px;
+  background: rgba(255,255,255,0.02);
+  border-bottom: 1px solid rgba(255,255,255,0.06);
+  font-size: 9px; color: #8a8580;
+}
+.stat-item span { color: #c49030; font-weight: 600; }
+
+/* ---- CATEGORY GRID ---- */
+.category-grid {
+  display: flex; flex-direction: column;
+  gap: 0; padding: 12px 24px;
+}
+.origin-section { margin-bottom: 16px; }
+.origin-header {
+  display: flex; align-items: center; gap: 10px;
+  margin-bottom: 10px; padding-bottom: 6px;
+  border-bottom: 1px solid rgba(255,255,255,0.06);
+}
+.origin-label {
+  font: 600 10px/1 'Segoe UI', system-ui, sans-serif;
+  text-transform: uppercase; letter-spacing: 0.8px;
+}
+.origin-label.structured { color: #5a8ab4; }
+.origin-label.homegrown { color: #5ab4a0; }
+.origin-label.individual { color: #c4786a; }
+.origin-count { font-size: 9px; color: #6a6560; }
+.origin-desc { font-size: 8px; color: #5a5550; font-style: italic; margin-left: auto; }
+.origin-cards {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: 10px;
+}
+.category-card {
+  background: rgba(255,255,255,0.04);
+  border: 2px solid rgba(255,255,255,0.08);
+  border-radius: 10px; padding: 16px;
+  cursor: pointer; transition: all 0.2s; position: relative;
+  overflow: hidden;
+}
+.category-card:hover {
+  background: rgba(255,255,255,0.07);
+  border-color: rgba(255,255,255,0.15);
+  transform: translateY(-1px);
+}
+.category-card .cat-color {
+  width: 4px; height: 100%; position: absolute;
+  left: 0; top: 0; border-radius: 10px 0 0 10px;
+}
+.category-card .cat-name { font: 600 14px/1.2 Georgia, serif; margin-bottom: 4px; }
+.category-card .cat-count { font-size: 11px; color: #8a8580; margin-bottom: 4px; }
+.category-card .cat-hint { font-size: 9px; color: #6a6560; margin-bottom: 10px; }
+
+.cat-metrics {
+  display: flex; gap: 12px; margin-top: 4px;
+  padding-top: 8px; border-top: 1px solid rgba(255,255,255,0.06);
+}
+.cat-metric {
+  display: flex; align-items: center; gap: 3px;
+  font-size: 8px; color: #8a8580;
+}
+.cat-metric .m-val { color: #c49030; font-weight: 700; font-size: 11px; }
+.cat-metric .m-icon { font-size: 9px; opacity: 0.5; }
+
+.cat-density-bar {
+  height: 3px; border-radius: 2px; margin-top: 6px;
+  background: rgba(255,255,255,0.06); overflow: hidden;
+}
+.cat-density-fill { height: 100%; border-radius: 2px; transition: width 0.3s; }
+
+/* ---- FAMILY VIEW ---- */
+.family-view { display: none; padding: 20px 24px; }
+.family-view.active { display: block; }
+.family-title-row { display: flex; align-items: center; gap: 10px; margin-bottom: 14px; }
+.family-dot { width: 12px; height: 12px; border-radius: 50%; }
+.family-title { font: 600 16px/1.2 Georgia, serif; }
+.family-count { font-size: 10px; color: #8a8580; margin-left: auto; }
+
+.term-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 10px;
+}
+
+/* ---- TERM CARDS ---- */
+.term-card {
+  background: rgba(255,255,255,0.04);
+  border: 1px solid rgba(255,255,255,0.08);
+  border-radius: 8px; padding: 12px 14px;
+  cursor: pointer; transition: all 0.15s; position: relative;
+}
+.term-card:hover { background: rgba(255,255,255,0.07); border-color: rgba(255,255,255,0.15); }
+.term-card.expanded { background: rgba(255,255,255,0.06); border-color: rgba(255,255,255,0.18); }
+.term-card .term-name { font: 600 12px/1.2 Georgia, serif; margin-bottom: 3px; }
+.term-card .term-re { font-size: 8px; font-weight: 700; color: #8a8580; margin-bottom: 4px; }
+.term-card .term-meaning { font-size: 10px; line-height: 1.5; color: #b0aaa4; }
+.term-card .term-status {
+  position: absolute; top: 8px; right: 10px;
+  font-size: 7px; font-weight: 700; letter-spacing: 0.5px; text-transform: uppercase;
+}
+.term-card .term-status.corrected { color: #c46a6a; }
+.term-card .term-status.extended { color: #5a8ab4; }
+.term-card .term-status.new { color: #5ab4a0; }
+
+.term-metrics {
+  display: flex; gap: 10px; margin-top: 6px;
+  padding-top: 5px; border-top: 1px solid rgba(255,255,255,0.04);
+}
+.term-metric {
+  display: flex; align-items: center; gap: 3px;
+  font-size: 8px; color: #6a6560;
+}
+.term-metric .tv { color: #8a8580; font-weight: 600; }
+
+/* ---- EXPANDED DETAIL ---- */
+.term-detail {
+  display: none; margin-top: 10px; padding-top: 10px;
+  border-top: 1px solid rgba(255,255,255,0.06);
+  font-size: 10px; line-height: 1.6; color: #8a8580;
+}
+.term-card.expanded .term-detail { display: block; }
+.detail-label {
+  color: #c49030; font-weight: 600; font-size: 8px;
+  text-transform: uppercase; letter-spacing: 0.5px;
+  margin-top: 8px; margin-bottom: 2px;
+}
+.detail-label:first-child { margin-top: 0; }
+.correction-note { color: #c46a6a; font-style: italic; }
+.connection-tag {
+  display: inline-block; background: rgba(196,144,48,0.15);
+  color: #c49030; padding: 2px 7px; border-radius: 4px;
+  font-size: 9px; margin: 2px 3px 2px 0; cursor: pointer;
+}
+.connection-tag:hover { background: rgba(196,144,48,0.25); }
+
+/* ---- SYNTHESIS PATH (fractal tree redesign) ---- */
+.synthesis-path { margin-top: 6px; display: flex; flex-direction: column; gap: 8px; }
+
+/* Level 1: Hero synthesis cards */
+.synth-hero {
+  background: rgba(196,144,48,0.06);
+  border: 1px solid rgba(196,144,48,0.15);
+  border-radius: 8px;
+  padding: 10px 12px;
+}
+.synth-hero-text {
+  font: 400 11px/1.55 'Segoe UI', system-ui, sans-serif;
+  color: #e8e2d8;
+  letter-spacing: 0.1px;
+}
+.synth-hero-badge {
+  display: inline-block;
+  font: 700 7px/1 'Segoe UI', system-ui, sans-serif;
+  text-transform: uppercase; letter-spacing: 0.5px;
+  padding: 2px 6px; border-radius: 3px;
+  margin-bottom: 6px;
+}
+.synth-hero-badge.synth { background: rgba(196,144,48,0.2); color: #c49030; }
+.synth-hero-badge.book { background: rgba(106,154,106,0.2); color: #6a9a6a; }
+.synth-hero-badge.personal { background: rgba(138,122,90,0.25); color: #b0a080; }
+.synth-hero-badge.external { background: rgba(90,138,180,0.2); color: #5a8ab4; }
+
+/* Below indicator on hero cards */
+.synth-hero-meta {
+  display: flex; align-items: center; justify-content: space-between;
+  margin-top: 8px; padding-top: 6px;
+  border-top: 1px solid rgba(255,255,255,0.04);
+}
+.synth-depth-hint {
+  font: 400 8px/1 'Segoe UI', system-ui, sans-serif;
+  color: #6a6560; letter-spacing: 0.2px;
+}
+.synth-depth-hint span { color: #8a8580; font-weight: 600; }
+
+/* ---- LATERAL AFFINITY (self-grown driven) ---- */
+.lateral-section { margin-top: 10px; }
+.lateral-row {
+  display: flex; align-items: center; gap: 8px;
+  padding: 6px 0;
+  border-bottom: 1px solid rgba(255,255,255,0.03);
+}
+.lateral-row:last-child { border-bottom: none; }
+.lateral-term-name {
+  font: 500 10px/1.3 'Segoe UI', system-ui, sans-serif;
+  color: #c8c2b8;
+  flex: 1;
+}
+.lateral-shared-tags { display: flex; gap: 3px; flex-shrink: 0; }
+.lateral-tag {
+  font: 700 7px/1 'Segoe UI', system-ui, sans-serif;
+  text-transform: uppercase; letter-spacing: 0.3px;
+  padding: 2px 5px; border-radius: 3px;
+  background: rgba(90,180,160,0.15); color: #5ab4a0;
+}
+.lateral-strength {
+  font: 600 8px/1 'Segoe UI', system-ui, sans-serif;
+  color: #6a6560; flex-shrink: 0; min-width: 20px; text-align: right;
+}
+.lateral-arrow {
+  color: #4a4540; font-size: 10px; flex-shrink: 0;
+}
+
+/* Legacy classes kept for backward compat but hidden */
+.fractal-tree { display: none; }
+.fn-children { display: none; }
+
+/* ---- HORIZON STAGE INDICATOR ---- */
+.horizon-stage {
+  display: inline-flex; align-items: center; gap: 4px;
+  font-size: 7px; font-weight: 600; text-transform: uppercase;
+  letter-spacing: 0.3px; padding: 2px 5px; border-radius: 3px;
+  margin-left: 5px;
+}
+.horizon-stage.new-h { background: rgba(90,180,160,0.15); color: #5ab4a0; }
+.horizon-stage.stable-h { background: rgba(106,154,106,0.15); color: #6a9a6a; }
+.horizon-stage.mature-h { background: rgba(196,144,48,0.15); color: #c49030; }
+.horizon-stage.bigbang-h { background: rgba(196,106,106,0.15); color: #c46a6a; }
+
+/* ---- INHERITED vs SELF-GROWN (RE-201) ---- */
+.fw-origin-rows {
+  margin-top: 6px; padding-top: 6px;
+  border-top: 1px solid rgba(255,255,255,0.04);
+}
+.fw-origin-row {
+  display: flex; align-items: center; gap: 4px;
+  margin-bottom: 3px;
+}
+.fw-origin-label {
+  font-size: 7px; font-weight: 600; text-transform: uppercase;
+  letter-spacing: 0.3px; width: 52px; flex-shrink: 0;
+}
+.fw-origin-label.inherited { color: #6a6560; }
+.fw-origin-label.self-grown { color: #5ab4a0; }
+.fw-origin-chips {
+  display: flex; gap: 3px; flex-wrap: wrap;
+}
+.fw-origin-chip {
+  padding: 1px 6px; border-radius: 8px;
+  font-size: 7px; font-weight: 600;
+}
+.fw-origin-chip.inherited {
+  background: rgba(255,255,255,0.04);
+  color: #6a6560;
+  border: 1px dashed rgba(255,255,255,0.08);
+}
+.fw-origin-chip.self-grown {
+  background: rgba(90,180,160,0.1);
+  color: #5ab4a0;
+  border: 1px solid rgba(90,180,160,0.25);
+}
+.fw-ratio {
+  font-size: 7px; color: #5a5550; margin-left: auto; flex-shrink: 0;
+}
+
+/* ---- STRUCTURING CONTINUUM (RE-199) ---- */
+.structuring-bar {
+  height: 3px; border-radius: 2px; margin-top: 5px;
+  background: rgba(255,255,255,0.06); overflow: hidden;
+  position: relative;
+}
+.structuring-fill {
+  height: 100%; border-radius: 2px;
+  background: linear-gradient(90deg, #5a5550 0%, #c49030 50%, #5ab4a0 100%);
+  transition: width 0.3s;
+}
+.structuring-label {
+  font-size: 7px; color: #5a5550; margin-top: 2px;
+  display: flex; justify-content: space-between;
+}
+
+/* ---- SELF-AWARENESS RATIO (RE-202) ---- */
+.awareness-stat {
+  display: inline-flex; align-items: center; gap: 4px;
+}
+.awareness-bar {
+  width: 40px; height: 5px; border-radius: 3px;
+  background: rgba(255,255,255,0.06); overflow: hidden;
+  display: inline-block;
+}
+.awareness-fill-inherited {
+  height: 100%; float: left;
+  background: #6a6560;
+}
+.awareness-fill-selfgrown {
+  height: 100%; float: left;
+  background: #5ab4a0;
+}
+
+/* ---- FOOTER ---- */
+.footer {
+  padding: 12px 24px; border-top: 1px solid rgba(255,255,255,0.06);
+  font-size: 9px; color: #5a5550; text-align: center;
+}
+</style>
+</head>
+<body>
+
+<!-- MODE BAR -->
+<div class="mode-bar">
+  <div class="mode-btn active" onclick="setMode('collect-analyze')" id="modeCA">
+    <span class="mode-icon">&#9675;</span>Collect + Analyze
+  </div>
+  <div class="mode-btn" onclick="setMode('integrate')" id="modeInt">
+    <span class="mode-icon">&#9656;</span>Integrate
+  </div>
+  <div class="mode-label" id="modeStatus">Environment Manager: Left puts the words together. Right places at best maturity location.</div>
+</div>
+
+<!-- MAIN LAYOUT -->
+<div class="main-layout">
+
+  <!-- LEFT PANEL -->
+  <div class="left-panel" id="leftPanel">
+
+    <!-- COLLECT + ANALYZE SIDE BY SIDE -->
+    <div class="left-split" id="leftSplit">
+
+      <!-- COLLECTOR COLUMN -->
+      <div class="collector-col">
+        <div class="col-header">
+          <h3>Collector</h3>
+          <div class="col-count">5 items</div>
+        </div>
+        <div class="collector-content">
+          <!-- Input -->
+          <div class="collect-input">
+            <textarea placeholder="Type a thought, a hunch, a fragment..." onfocus="this.style.borderColor='rgba(196,144,48,0.4)'" onblur="this.style.borderColor='rgba(255,255,255,0.12)'"></textarea>
+            <div class="voice-btn" title="Voice recorder">&#9679;</div>
+          </div>
+
+          <!-- Drop zone compact -->
+          <div class="drop-compact">+ Drop files, paste URLs, screenshot</div>
+          <div class="drop-actions-row">
+            <div class="drop-mini-btn"><span class="btn-ico">&#128247;</span>Screenshot</div>
+            <div class="drop-mini-btn"><span class="btn-ico">&#128279;</span>URL</div>
+            <div class="drop-mini-btn"><span class="btn-ico">&#128196;</span>Upload</div>
+            <div class="drop-mini-btn"><span class="btn-ico">&#127760;</span>Wayback</div>
+          </div>
+
+          <!-- Inbox items -->
+          <div class="inbox-label">Inbox</div>
+
+          <div class="inbox-item" onclick="selectItem(this, 0)" id="item-0">
+            <div class="item-type">URL Import</div>
+            <div class="item-title">KJ Method: Affinity Diagramming</div>
+            <div class="item-preview">Grouping qualitative data into natural clusters. Emergent categorization...</div>
+            <div class="maturity-indicator">
+              <span class="maturity-dot filled"></span>
+              <span class="maturity-dot empty"></span>
+              <span class="maturity-dot empty"></span>
+              <span>Air (raw)</span>
+            </div>
+            <div class="framework-selector">
+              <div class="fw-select-label">What is this?</div>
+              <div class="fw-chips" id="fwChips-0"></div>
+            </div>
+          </div>
+
+          <div class="inbox-item" onclick="selectItem(this, 1)" id="item-1">
+            <div class="item-type">AI Pre-populated</div>
+            <div class="item-title">Grounded Theory Overview</div>
+            <div class="item-preview">Glaser and Strauss: open coding, axial coding, theoretical saturation...</div>
+            <div class="maturity-indicator">
+              <span class="maturity-dot filled"></span>
+              <span class="maturity-dot filled"></span>
+              <span class="maturity-dot empty"></span>
+              <span>Soil (pre-synthesized)</span>
+            </div>
+            <div class="framework-selector">
+              <div class="fw-select-label">What is this?</div>
+              <div class="fw-chips" id="fwChips-1"></div>
+            </div>
+          </div>
+
+          <div class="inbox-item" onclick="selectItem(this, 2)" id="item-2">
+            <div class="item-type">Screenshot</div>
+            <div class="item-title">Company homepage (March 2026)</div>
+            <div class="item-preview">Step zero capture. Navigation, hero copy, visual identity...</div>
+            <div class="maturity-indicator">
+              <span class="maturity-dot filled"></span>
+              <span class="maturity-dot empty"></span>
+              <span class="maturity-dot empty"></span>
+              <span>Air (raw capture)</span>
+            </div>
+            <div class="framework-selector">
+              <div class="fw-select-label">What is this?</div>
+              <div class="fw-chips" id="fwChips-2"></div>
+            </div>
+          </div>
+
+          <div class="inbox-item" onclick="selectItem(this, 3)" id="item-3" style="border-left:2px solid rgba(196,120,106,0.3);">
+            <div class="item-type">Voice Note (0:42)</div>
+            <div class="item-title">Thought on seed compression</div>
+            <div class="item-preview">"Before you compress to a seed you want to go wide..."</div>
+            <div class="maturity-indicator">
+              <span class="maturity-dot filled"></span>
+              <span class="maturity-dot filled"></span>
+              <span class="maturity-dot filled"></span>
+              <span>Trunk (3 rounds deep)</span>
+            </div>
+            <div class="framework-selector">
+              <div class="fw-select-label">What is this?</div>
+              <div class="fw-chips" id="fwChips-3"></div>
+            </div>
+          </div>
+
+          <div class="inbox-item" onclick="selectItem(this, 4)" id="item-4" style="border-left:2px solid rgba(250,248,244,0.1);">
+            <div class="item-type">Typed Thought</div>
+            <div class="item-title">Frameworks are parent fractals coded</div>
+            <div class="item-preview">The scaffolding IS compressed heartwood from the parent tree.</div>
+            <div class="maturity-indicator">
+              <span class="maturity-dot filled"></span>
+              <span class="maturity-dot filled"></span>
+              <span class="maturity-dot filled"></span>
+              <span>Trunk (stands alone)</span>
+            </div>
+            <div class="framework-selector">
+              <div class="fw-select-label">What is this?</div>
+              <div class="fw-chips" id="fwChips-4"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ANALYZER COLUMN -->
+      <div class="analyzer-col">
+        <div class="col-header">
+          <h3>Analyzer</h3>
+          <div class="col-count" id="analyzerStatus">Select an item</div>
+        </div>
+        <div class="analyzer-tabs" id="analyzerTabs">
+          <div class="analyzer-tab active" onclick="setAnalyzerState('tag', this)">Tag</div>
+          <div class="analyzer-tab" onclick="setAnalyzerState('decompose', this)">Decompose</div>
+          <div class="analyzer-tab" onclick="setAnalyzerState('link', this)">Link</div>
+          <div class="analyzer-tab" onclick="setAnalyzerState('synth', this)">Synth</div>
+        </div>
+        <div class="analyzer-content" id="analyzerContent">
+          <div class="analyzer-instruction">
+            <strong>Select an inbox item</strong> to begin analysis. You can also select multiple items and use the Synth tab to connect them before integrating into the NDD.
+          </div>
+
+          <!-- Rapid synth zone (RE-186) -->
+          <div class="synth-link-zone" onclick="showSynthView()">
+            Rapid Synth: select 2+ items in the collector to synthesize them together before integration
+          </div>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- INTEGRATOR VIEW (replaces left-split) -->
+    <div class="integrator-view" id="integratorView">
+      <div class="analyzer-instruction">
+        <strong>Integrator.</strong> Pre-synthesized clusters from Collect + Analyze arrive here at their maturity level (RE-187). Drag to the NDD. Strengthen existing structure or create new horizons.
+      </div>
+
+      <div class="integrate-item" style="border-left: 3px solid #5ab4a0;">
+        <span class="mesh-weight">Weight: 3.2</span>
+        <div class="item-type">Synthesized Cluster (2 items, 3 rounds)</div>
+        <div class="item-title">KJ Method + Grounded Theory Synthesis</div>
+        <div class="item-preview">Affinity diagramming IS grounded theory's open coding applied to visual space. Both produce emergent categories from raw data.</div>
+        <div class="maturity-indicator" style="margin-top:6px;">
+          <span class="maturity-dot filled"></span>
+          <span class="maturity-dot filled"></span>
+          <span class="maturity-dot filled"></span>
+          <span>Trunk level entry (pre-synthesized)</span>
+        </div>
+      </div>
+
+      <div class="integrate-item" style="border-left: 3px solid #c49030;">
+        <span class="mesh-weight">Event</span>
+        <div class="item-type">Event Fractal (RE-189, stands alone)</div>
+        <div class="item-title">Frameworks are parent fractals coded</div>
+        <div class="item-preview">No internal synthesis. This fractal stands on its own. It is an event.</div>
+        <div class="maturity-indicator" style="margin-top:6px;">
+          <span class="maturity-dot filled"></span>
+          <span class="maturity-dot filled"></span>
+          <span class="maturity-dot filled"></span>
+          <span>Trunk level (event, no decomposition)</span>
+        </div>
+      </div>
+
+      <div class="integrate-item" style="border-left: 3px solid #c4786a;">
+        <span class="mesh-weight">5+ conn</span>
+        <div class="item-type">Needs Compression (RE-190)</div>
+        <div class="item-title">Company homepage analysis</div>
+        <div class="item-preview">Connected to 6 internal fractals. Decompose further before integration, or declare as event.</div>
+        <div class="decompose-alert" style="margin-top:8px;">
+          6 internal connections detected. Compress internally first, or declare as standalone event (RE-190).
+        </div>
+      </div>
+
+      <div class="integrate-actions">
+        <div class="integrate-btn" style="border-color: rgba(106,154,106,0.3);">
+          <span class="ib-icon" style="color:#6a9a6a;">&#8615;</span>
+          Strengthen
+          <div style="font-size:8px; color:#5a5550; margin-top:2px;">Add as support</div>
+        </div>
+        <div class="integrate-btn" style="border-color: rgba(196,144,48,0.3);">
+          <span class="ib-icon" style="color:#c49030;">&#10038;</span>
+          Horizon
+          <div style="font-size:8px; color:#5a5550; margin-top:2px;">New seed or thread</div>
+        </div>
+        <div class="integrate-btn">
+          <span class="ib-icon">&#43;</span>
+          New Category
+          <div style="font-size:8px; color:#5a5550; margin-top:2px;">Within-framework</div>
+        </div>
+        <div class="integrate-btn">
+          <span class="ib-icon">&#10070;</span>
+          New Framework
+          <div style="font-size:8px; color:#5a5550; margin-top:2px;">Cross-framework</div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- RIGHT PANEL (NDD) -->
+  <div class="right-panel" id="rightPanel">
+    <div class="header">
+      <h1 id="pageTitle">NDD</h1>
+      <p class="sub" id="pageSub"></p>
+      <div class="breadcrumb" id="breadcrumb">
+        <span style="color:#6a6560;">You are here:</span>
+        <a onclick="showHome()">Frameworks</a>
+      </div>
+    </div>
+    <div class="stats-bar" id="statsBar"></div>
+    <div class="category-grid" id="categoryGrid"></div>
+    <div id="familyContainer"></div>
+    <div class="footer">
+      NDD is a digital tree (RE-168). Data enters at its maturity level (RE-187). High connectivity triggers decomposition (RE-188).
+    </div>
+  </div>
+
+</div>
+
+<script>
+// ============================================================
+//  MODE SWITCHING
+// ============================================================
+let currentMode = 'collect-analyze';
+
+function setMode(mode) {
+  currentMode = mode;
+  document.querySelectorAll('.mode-btn').forEach(b => b.classList.remove('active'));
+  if (mode === 'collect-analyze') {
+    document.getElementById('modeCA').classList.add('active');
+    document.getElementById('modeStatus').textContent = 'Left: put the words together. Right: place at best maturity location.';
+    document.getElementById('leftSplit').style.display = 'flex';
+    document.getElementById('integratorView').classList.remove('active');
+  } else {
+    document.getElementById('modeInt').classList.add('active');
+    document.getElementById('modeStatus').textContent = 'Integrator: connect pre-synthesized clusters to the NDD. Strengthen or horizon.';
+    document.getElementById('leftSplit').style.display = 'none';
+    document.getElementById('integratorView').classList.add('active');
+  }
+}
+
+// ============================================================
+//  ITEM SELECTION
+// ============================================================
+let selectedItems = [];
+
+// ============================================================
+//  FRAMEWORK PROMPTS (RE-198)
+// ============================================================
+const FRAMEWORK_PROMPTS = [
+  { id: 'tree-biology', abbr: 'Bio', name: 'Tree Biology', color: '#6a9a6a',
+    prompt: 'Where is the growth happening? What is the core (heartwood) vs. the surface (bark)? What layers have formed? What is alive vs. dead? Where are the roots drawing from?',
+    keywords: 'growth, organic, layers, rings, core, surface, seed, root, bark, heartwood' },
+  { id: 'network', abbr: 'Net', name: 'Network Architecture', color: '#5a8ab4',
+    prompt: 'What is connecting to what? Where is the mesh dense vs. sparse? What signals are being sent? Where are the gaps? What bridges are needed?',
+    keywords: 'connection, mesh, signal, path, node, link, topology, density, bridge' },
+  { id: 'physics', abbr: 'Phys', name: 'Physics', color: '#b47a5a',
+    prompt: 'What forces are acting here? Where is pressure building? Is there a threshold about to be crossed? What is attracting what? Is this an event horizon moment?',
+    keywords: 'force, threshold, boundary, pressure, gravity, density, event, horizon' },
+  { id: 'linguistics', abbr: 'Ling', name: 'Linguistics', color: '#9a6a9a',
+    prompt: 'What is being named here? Is this a verb (process) or noun (entity)? What gets compressed when named? What is lost in the naming?',
+    keywords: 'name, word, label, verb, noun, meaning, translate, define, term' },
+  { id: 'horizoning', abbr: 'Hor', name: 'Horizoning', color: '#5ab4a0',
+    prompt: 'Where on the horizon? New (do not understand), Stable (get it, get why), Mature (makes sense), or Nearing Big Bang (use it, origin gone)? What just became visible?',
+    keywords: 'new, unknown, understand, origin, lost, familiar, horizon, maturity, shift' },
+  { id: 'operations', abbr: 'Ops', name: 'Operations', color: '#c49030',
+    prompt: 'What is the process here? Collection, analysis, integration, or engineering? What are the steps? What role does this serve in the workflow?',
+    keywords: 'process, step, workflow, collect, analyze, integrate, build, method, system' },
+  { id: 'propagation', abbr: 'Prop', name: 'Propagation', color: '#b4a05a',
+    prompt: 'How does this spread? What makes it rise or get pruned? Is this within-framework (horizontal) or cross-framework (vertical) synthesis? What gets inherited?',
+    keywords: 'spread, rise, rank, use, synthesize, merge, emerge, category, inherit' },
+  { id: 'biographical', abbr: 'Ther', name: 'Biographical / Therapeutic', color: '#c4786a',
+    prompt: 'What is stuck here? What is being protected, from what? Where is the included bark? What would need to dissolve? Is this a repeating pattern?',
+    keywords: 'stuck, protect, hide, dissolve, safe, vulnerable, defense, therapy, heal' },
+  { id: 'jtbd', abbr: 'JTBD', name: 'Jobs to Be Done', color: '#4a9ab4',
+    prompt: 'What job is the person trying to get done? What are they hiring this to do? What is the struggling moment? What pushes away from current? What pulls toward new? What anxieties block the switch?',
+    keywords: 'job, hire, fire, struggle, switch, outcome, workaround, push, pull, anxiety' },
+  { id: 'meme', abbr: 'Meme', name: 'Meme (Compressed Information)', color: '#d45d79',
+    prompt: 'Is this compressed information that propagates? At what compression level does it invade? Is it inherited (memetic colonization) or self-grown? What is the mid-horizon vulnerability? How does making this visible immunize against it?',
+    keywords: 'meme, virus, compress, propagate, invade, infect, replicate, inherit, colonize, immunize, nam-shub' },
+  { id: 'ooux', abbr: 'OOUX', name: 'Object-Oriented UX', color: '#7a6ab4',
+    prompt: 'What are the objects here (nouns)? What relationships exist between them? What can users do with them (CTAs)? What attributes define each object? Are there nested objects (objects within objects)? Does the structure mirror the user mental model?',
+    keywords: 'object, noun, relationship, CTA, attribute, nested, ORCA, structure, mental model, noun foraging' },
+];
+
+// Track which frameworks are selected per item
+const itemFrameworks = { 0: ['horizoning'], 1: ['propagation','operations'], 2: ['tree-biology','operations'], 3: [], 4: ['operations'] };
+
+function renderFrameworkChips(itemIdx) {
+  const container = document.getElementById('fwChips-' + itemIdx);
+  if (!container) return;
+  const selected = itemFrameworks[itemIdx] || [];
+  container.innerHTML = FRAMEWORK_PROMPTS.map(fp => {
+    const isSel = selected.includes(fp.id);
+    return `<span class="fw-chip ${isSel ? 'selected' : ''}" style="background:${fp.color}22; color:${fp.color};${isSel ? ' border-color:'+fp.color+';' : ''}" onclick="event.stopPropagation(); toggleFramework(${itemIdx}, '${fp.id}', this)" title="${fp.keywords}">${fp.abbr}</span>`;
+  }).join('');
+}
+
+function toggleFramework(itemIdx, fwId, el) {
+  const sel = itemFrameworks[itemIdx] || [];
+  const pos = sel.indexOf(fwId);
+  if (pos > -1) { sel.splice(pos, 1); }
+  else { sel.push(fwId); }
+  itemFrameworks[itemIdx] = sel;
+  renderFrameworkChips(itemIdx);
+  // If this item is currently selected in analyzer, refresh the prompt
+  if (selectedItems.length === 1 && selectedItems[0] === itemIdx) {
+    showSingleAnalysis(ITEM_DATA[itemIdx]);
+  }
+}
+
+const ITEM_DATA = [
+  {
+    id: 0, title: 'KJ Method: Affinity Diagramming', type: 'URL Import',
+    preview: 'External article on grouping qualitative data into natural clusters. Emergent categorization without preconception.',
+    maturity: 1, maturityLabel: 'Air (raw)', connections: 1, structPct: 15,
+    subfractals: [
+      { label: 'Sub-fractal 1', text: 'Grouping without preconception. Data arranged by perceived similarity before labeling.' },
+      { label: 'Sub-fractal 2', text: 'Silent organization before verbal naming. Structure exists before the name.' },
+      { label: 'Sub-fractal 3', text: 'Individual synthesis produces unique understanding. Only the sorter gets the insight.' },
+    ]
+  },
+  {
+    id: 1, title: 'Grounded Theory Overview', type: 'AI Pre-populated',
+    preview: 'Glaser and Strauss methodology: open coding, axial coding, selective coding, theoretical saturation.',
+    maturity: 2, maturityLabel: 'Soil (pre-synthesized)', connections: 2, structPct: 35, subfractals: []
+  },
+  {
+    id: 2, title: 'Company homepage (March 2026)', type: 'Screenshot',
+    preview: 'Step zero capture. Navigation, hero copy, visual identity, calls to action.',
+    maturity: 1, maturityLabel: 'Air (raw capture)', connections: 6, structPct: 22,
+    subfractals: [
+      { label: 'Sub-fractal 1', text: 'Navigation structure reveals organizational mental model.' },
+      { label: 'Sub-fractal 2', text: 'Hero copy reveals value proposition priority.' },
+      { label: 'Sub-fractal 3', text: 'CTA placement reveals conversion assumptions.' },
+    ]
+  },
+  {
+    id: 3, title: 'Thought on seed compression', type: 'Voice Note',
+    preview: '"Before you compress to a seed you want to go wide, capture all the data first."',
+    maturity: 3, maturityLabel: 'Trunk (3 rounds deep)', connections: 2, structPct: 68, subfractals: []
+  },
+  {
+    id: 4, title: 'Frameworks are parent fractals coded', type: 'Typed Thought',
+    preview: 'The scaffolding IS compressed heartwood from the parent tree. Seed contains genetic material.',
+    maturity: 3, maturityLabel: 'Trunk (stands alone, event)', connections: 1, structPct: 75, subfractals: [],
+    isEvent: true
+  }
+];
+
+function selectItem(el, idx) {
+  // Toggle selection
+  el.classList.toggle('selected');
+  const pos = selectedItems.indexOf(idx);
+  if (pos > -1) {
+    selectedItems.splice(pos, 1);
+  } else {
+    selectedItems.push(idx);
+  }
+
+  // Update analyzer
+  document.getElementById('analyzerStatus').textContent = selectedItems.length > 0
+    ? selectedItems.length + ' selected'
+    : 'Select an item';
+
+  if (selectedItems.length === 1) {
+    showSingleAnalysis(ITEM_DATA[selectedItems[0]]);
+  } else if (selectedItems.length > 1) {
+    showMultiAnalysis();
+  } else {
+    showEmptyAnalysis();
+  }
+}
+
+function showEmptyAnalysis() {
+  document.getElementById('analyzerContent').innerHTML = `
+    <div class="analyzer-instruction">
+      <strong>Select an inbox item</strong> to begin analysis. Select multiple items and use the Synth tab to connect them before integrating.
+    </div>
+    <div class="synth-link-zone">
+      Rapid Synth: select 2+ items to synthesize together
+    </div>
+  `;
+}
+
+function showSingleAnalysis(item) {
+  const connAlert = item.connections >= 5
+    ? `<div class="decompose-alert">${item.connections} internal connections detected. Compress internally before external linking, or declare as event (RE-190).</div>`
+    : '';
+
+  const eventNote = item.isEvent
+    ? `<div class="event-indicator">Event fractal. No internal synthesis. Stands alone. It owns its position (RE-189).</div>`
+    : '';
+
+  // Build framework prompting questions for selected frameworks
+  const selFW = itemFrameworks[item.id] || [];
+  let promptsHTML = '';
+  if (selFW.length > 0) {
+    promptsHTML = selFW.map(fwId => {
+      const fp = FRAMEWORK_PROMPTS.find(f => f.id === fwId);
+      if (!fp) return '';
+      return `<div class="fw-prompt" style="border-color:${fp.color};">
+        <div class="fw-prompt-label" style="color:${fp.color};">${fp.name}</div>
+        ${fp.prompt}
+      </div>`;
+    }).join('');
+  } else {
+    promptsHTML = '<div style="font-size:9px; color:#5a5550; font-style:italic;">Select a framework on the item to activate thinking prompts.</div>';
+  }
+
+  // Synthesis area (RE-197: stays in collector if external)
+  const synthHTML = selFW.length > 0 ? `
+    <div class="synth-result">
+      <div class="sr-label">Your synthesis (stays in collector)</div>
+      <textarea placeholder="Answer the prompting questions above. What do you see through this lens?"></textarea>
+      <div class="sr-origin">Origin: external (collector). Will stay here until you integrate.</div>
+    </div>
+  ` : '';
+
+  const sfHTML = item.subfractals.length > 0
+    ? item.subfractals.map(sf => `<div class="subfractal-card"><div class="sf-label">${sf.label}</div>${sf.text}</div>`).join('')
+    : '<div style="font-size:9px; color:#5a5550;">No sub-fractals yet. Use Decompose tab.</div>';
+
+  document.getElementById('analyzerContent').innerHTML = `
+    <div class="inbox-item" style="margin-bottom:4px;">
+      <div class="item-type">${item.type}</div>
+      <div class="item-title">${item.title}</div>
+      <div class="item-preview">${item.preview}</div>
+      <div class="maturity-indicator">
+        ${renderMaturityDots(item.maturity)} <span>${item.maturityLabel}</span>
+      </div>
+    </div>
+    ${connAlert}
+    ${eventNote}
+    <div class="inbox-label" style="margin-top:4px;">Thinking Prompts (from selected frameworks)</div>
+    ${promptsHTML}
+    ${synthHTML}
+    <div class="inbox-label" style="margin-top:8px;">Sub-fractals (${item.subfractals.length})</div>
+    ${sfHTML}
+  `;
+}
+
+function showMultiAnalysis() {
+  const items = selectedItems.map(i => ITEM_DATA[i]);
+  const cards = items.map(item => `
+    <div class="inbox-item" style="padding:8px 10px;">
+      <div class="item-type">${item.type}</div>
+      <div class="item-title" style="font-size:10px;">${item.title}</div>
+      <div class="maturity-indicator">${renderMaturityDots(item.maturity)} <span>${item.maturityLabel}</span></div>
+    </div>
+  `).join('');
+
+  document.getElementById('analyzerContent').innerHTML = `
+    <div class="analyzer-instruction">
+      <strong>${items.length} items selected.</strong> Use Synth tab to connect these before integration. External-to-external synthesis first, then integrate the cluster at higher mesh weight (RE-186).
+    </div>
+    ${cards}
+    <div class="synth-link-zone" style="margin-top:4px;">
+      Synthesize these ${items.length} items into a cluster. What do they have in common? What new understanding emerges?
+    </div>
+    <div style="font-size:9px; color:#5a5550; text-align:center; margin-top:4px;">
+      The synthesized cluster enters the NDD at the highest maturity level among selected items.
+    </div>
+  `;
+}
+
+function renderMaturityDots(level) {
+  let dots = '';
+  for (let i = 0; i < 3; i++) {
+    dots += `<span class="maturity-dot ${i < level ? 'filled' : 'empty'}"></span>`;
+  }
+  return dots;
+}
+
+function setAnalyzerState(state, el) {
+  document.querySelectorAll('.analyzer-tab').forEach(t => t.classList.remove('active'));
+  el.classList.add('active');
+
+  if (selectedItems.length === 0) {
+    showEmptyAnalysis();
+    return;
+  }
+
+  if (state === 'synth') {
+    if (selectedItems.length < 2) {
+      document.getElementById('analyzerContent').innerHTML = `
+        <div class="analyzer-instruction">
+          <strong>Synth requires 2+ items.</strong> Select more items in the collector to synthesize them together. External-to-external synthesis creates pre-integrated clusters at higher mesh weight.
+        </div>
+      `;
+    } else {
+      showMultiAnalysis();
+    }
+  } else if (state === 'tag') {
+    if (selectedItems.length === 1) {
+      showSingleAnalysis(ITEM_DATA[selectedItems[0]]);
+    } else {
+      showMultiAnalysis();
+    }
+  } else if (state === 'decompose') {
+    const item = ITEM_DATA[selectedItems[0]];
+    const sfHTML = item.subfractals.length > 0
+      ? item.subfractals.map(sf => `<div class="subfractal-card"><div class="sf-label">${sf.label}</div>${sf.text}</div>`).join('')
+      : '<div style="font-size:9px; color:#5a5550;">No sub-fractals yet.</div>';
+
+    document.getElementById('analyzerContent').innerHTML = `
+      <div class="analyzer-instruction">
+        <strong>Decompose.</strong> Break into sub-fractals. Analysis = creating sub-fractals within a fractal (RE-174). Each sub-fractal becomes a connectable unit.
+      </div>
+      <div class="inbox-item" style="margin-bottom:8px; border-left:3px solid #5ab4a0;">
+        <div class="item-type">${item.type}</div>
+        <div class="item-title">${item.title}</div>
+      </div>
+      <div class="inbox-label">Sub-fractals (${item.subfractals.length})</div>
+      ${sfHTML}
+      <div class="subfractal-card" style="border-style:dashed; text-align:center; color:#6a6560;">
+        + Create new sub-fractal
+      </div>
+    `;
+  } else if (state === 'link') {
+    const item = ITEM_DATA[selectedItems[0]];
+    document.getElementById('analyzerContent').innerHTML = `
+      <div class="analyzer-instruction">
+        <strong>Link sub-fractals</strong> to existing NDD terms. Tags create the connection from grandparent to child (RE-175). Drag to the right panel, or select targets.
+      </div>
+      ${item.subfractals.map((sf, i) => `
+        <div class="subfractal-card" style="border-left:3px solid #c49030;">
+          <div class="sf-label">${sf.label} &#8594; ?</div>
+          ${sf.text}
+        </div>
+      `).join('')}
+      ${item.subfractals.length === 0 ? '<div style="font-size:9px; color:#5a5550;">Decompose first to create linkable sub-fractals.</div>' : ''}
+    `;
+  }
+}
+
+function renderTagCloud() {
+  const cloud = document.getElementById('tagCloud');
+  if (!cloud) return;
+  cloud.innerHTML = FAMILIES.map(f =>
+    `<span class="tag-pill" style="background:${f.color}22; color:${f.color};" onclick="this.classList.toggle('selected')">${f.name}</span>`
+  ).join('');
+}
+
+// ============================================================
+//  DATA
+// ============================================================
+const FAMILIES = [
+  {
+    id: 'metaphors', name: 'Metaphors', color: '#6a9a6a', origin: 'framework',
+    terms: [
+      { name: 'Tree Biology', re: 'RE-054', meaning: 'Metaphorical lens borrowed from tree biology. 20 sub-concepts. Apply tree biology structures and ask its native questions against your data.',
+        connections: ['RE-075','RE-058','RE-059','RE-097','RE-072','RE-104'],
+        inherited: ['tree-biology'], selfGrown: ['horizoning','physics','network','propagation','linguistics','biographical','tree-biology','operations'],
+        fractal: [
+          { type: 'synth', text: 'Air (RE-054): Raw unfixed data. Outermost ring. The atmosphere. Also: the practitioner themselves (RE-075).', weight: 0.85, children: [
+            { type: 'synth', text: 'Air is the raw unprocessed environment surrounding the trunk', weight: 0.7 },
+            { type: 'synth', text: 'The practitioner IS air before they fix into soil', weight: 0.8 }
+          ] },
+          { type: 'synth', text: 'Soil (RE-054): Fixed observations. Single domain. First compression event.', weight: 0.85, children: [
+            { type: 'synth', text: 'First fixing event converts air to soil', weight: 0.8 }
+          ] },
+          { type: 'synth', text: 'Roots (RE-054): Clustered within-domain patterns. Multiple soil observations binding together.', weight: 0.85 },
+          { type: 'synth', text: 'Trunk (RE-054): Cross-domain structural connections. Where real structural insight happens.', weight: 0.85 },
+          { type: 'synth', text: 'Canopy (RE-054): Keystones. Theory-level convergence. Innermost core. Also: the air of the universe at next scale (RE-072).', weight: 0.85, children: [
+            { type: 'synth', text: 'Canopy keystones become air at the next scale', weight: 0.9 }
+          ] },
+          { type: 'synth', text: 'Rings (RE-068): Consolidation artifacts. Concentric layers formed by compression events.', weight: 0.85 },
+          { type: 'synth', text: 'Branch (RE-083): The artifact that grows behind a division. Past tense record, not active event.', weight: 0.85 },
+          { type: 'synth', text: 'Fiber / Thread (RE-078): Every fractal in the trunk. A long thread spanning multiple rings under tension.', weight: 0.85, children: [
+            { type: 'synth', text: 'Fibers are the longitudinal structure while rings are lateral', weight: 0.85 },
+            { type: 'synth', text: 'Every fractal in the trunk IS a fiber under tension', weight: 0.9 }
+          ] },
+          { type: 'synth', text: 'Synapse (RE-117): The noun for connection points at the surface. Where fibers meet external data.', weight: 0.85 },
+          { type: 'synth', text: 'Heartwood (RE-013): Dense compressed core. Dead cells (paused verbs) providing structural support. Density = heartwood (RE-135).', weight: 0.85, children: [
+            { type: 'synth', text: 'Heartwood is compressed history that became structural', weight: 0.95 },
+            { type: 'synth', text: 'Density = heartwood. The denser, the more compressed history.', weight: 0.85 }
+          ] },
+          { type: 'synth', text: 'Bark (RE-135): Protective boundary on the outside. Surface, new growth, low density. Bark INSIDE heartwood = included bark (RE-140).', weight: 0.85 },
+          { type: 'synth', text: 'Included Bark (RE-140): A bark layer that grew inside heartwood where it should not be. The protector pattern. Prevents fusion.', weight: 0.85 },
+          { type: 'synth', text: 'Meristem (RE-077): The growth tip. The irreducible subject. We are the meristem (RE-118).', weight: 0.85 },
+          { type: 'synth', text: 'Phloem / Sugar (RE-073): Internal circulatory loop. Canopy feeds roots. Compressed insights flow inward.', weight: 0.85 },
+          { type: 'synth', text: 'Fruit (RE-074): Structured seed for others. One of five forms of canopy release.', weight: 0.85 },
+          { type: 'synth', text: 'Fallen Leaf (RE-074): Compost to local soil. One of five forms of canopy release.', weight: 0.85 },
+          { type: 'synth', text: 'Leaf (RE-157): External-facing surface that makes internal structure visible. Engineers produce leaves. Output layer of the trunk.', weight: 0.85 },
+          { type: 'synth', text: 'Seed (RE-085): A pruned branch compressed to minimum viable form. Contains both verb and noun. Self-germinating.', weight: 0.85 },
+          { type: 'synth', text: 'Pruning (RE-014): Organic removal. Compaction as growth. Detaching a branch/seed from the parent tree.', weight: 0.85 },
+          { type: 'synth', text: 'Cross-Section (RE-097): Top view looking down through concentric rings. The app IS this view (RE-132).', weight: 0.85 }
+        ]},
+      { name: 'Network Architecture', re: 'RE-008', meaning: 'Metaphorical lens borrowed from network architecture. 7 sub-concepts. Apply network architecture structures and ask its native questions against your data.',
+        connections: ['RE-056','RE-116','RE-175'],
+        inherited: ['network','biographical'], selfGrown: ['tree-biology','linguistics','operations','network','physics','propagation'],
+        fractal: [
+          { type: 'synth', text: 'Mesh (RE-008): The connective tissue between all fractals. The substrate, not a router.', weight: 0.85 },
+          { type: 'synth', text: 'Pulse (RE-009): Ambient propagation through known topology. Broadcast signal.', weight: 0.85 },
+          { type: 'synth', text: 'Packet (RE-010): Direct address via tag. Targeted signal.', weight: 0.85 },
+          { type: 'synth', text: 'Connection (fka Port) (RE-079): Universal connection point. Tags create the connection from grandparent to child (RE-175). Tagging IS connecting.', weight: 0.85 },
+          { type: 'synth', text: 'Connection Match (RE-081): Intake mechanism. Fractals enter wherever their connections match. No sequential pipeline.', weight: 0.85 },
+          { type: 'synth', text: 'Connection Growth (RE-080): Local > System > Seed. Connections are not types, they are compression levels.', weight: 0.85 },
+          { type: 'synth', text: 'Pre-Installed Connections (RE-090): Factory firmware. Emotion blends and need blends a human arrives with at birth.', weight: 0.85 }
+        ]},
+      { name: 'Physics', re: 'RE-017', meaning: 'Metaphorical lens borrowed from physics. 5 sub-concepts. Apply physics structures and ask its native questions against your data.',
+        connections: ['RE-120','RE-142','RE-083','RE-141','RE-135'],
+        inherited: ['physics'], selfGrown: ['biographical','physics','linguistics','network','tree-biology'],
+        fractal: [
+          { type: 'synth', text: 'Event Horizon (RE-017): Compression boundary. Forms when density crosses threshold. Every decision is one (RE-120).', weight: 0.85 },
+          { type: 'synth', text: 'Division (RE-104): The active event of splitting. Present tense. The branch grows behind it.', weight: 0.85 },
+          { type: 'synth', text: 'Mesh Gravity (RE-071): Mesh generates its own pull as it densifies. Four phases from weak to event horizon.', weight: 0.85 },
+          { type: 'synth', text: 'Compression (RE-054): Inward movement. Data moving toward the core. The fundamental operation.', weight: 0.85 },
+          { type: 'synth', text: 'Density (RE-135): How compressed and supported an element is. Heartwood vs bark. NOT thread length.', weight: 0.85 }
+        ]},
+      { name: 'Linguistics', re: 'RE-076', meaning: 'Metaphorical lens borrowed from linguistics. 5 sub-concepts. Apply linguistics structures and ask its native questions against your data.',
+        connections: ['RE-118','RE-147','RE-117'],
+        inherited: ['linguistics'], selfGrown: ['physics','linguistics','horizoning','operations'],
+        fractal: [
+          { type: 'synth', text: 'Verb (RE-076): Process. Action. Operation. Fixing. We ARE verbs.', weight: 0.85 },
+          { type: 'synth', text: 'Noun (RE-076): Fixed entity. Structure. Paused verb.', weight: 0.85 },
+          { type: 'synth', text: 'Naming (RE-089): IS compression. Every quotable phrase is an event horizon artifact.', weight: 0.85 },
+          { type: 'synth', text: 'The Horizoner (RE-077): We are neither verb nor noun. We are the one who crosses the horizon. Previously: The Comparator.', weight: 0.85 },
+          { type: 'synth', text: 'Connecting (RE-117): The user-facing verb for making links between elements. Settled vocabulary.', weight: 0.85 }
+        ]}
+    ]
+  },
+  {
+    id: 'horizoning', name: 'Horizoning', color: '#5ab4a0', origin: 'homegrown',
+    terms: [
+      { name: 'New Horizon', re: 'RE-170', meaning: 'I do not understand that. Seed on soil surface. Zero depth, zero connections.', status: 'new', horizonStage: 'new-h', connections: ['RE-170'],
+        inherited: [], selfGrown: ['horizoning'] },
+      { name: 'Stable Horizon', re: 'RE-170', meaning: 'I get it, and I get why. Sapling with visible roots. Traceable reasoning.', status: 'new', horizonStage: 'stable-h', connections: ['RE-170'],
+        inherited: [], selfGrown: ['horizoning','tree-biology'] },
+      { name: 'Mature Horizon', re: 'RE-170', meaning: 'It makes sense. Heartwood. Compressed into structure. No longer examined.', status: 'new', horizonStage: 'mature-h', connections: ['RE-170'],
+        inherited: [], selfGrown: ['horizoning','tree-biology'] },
+      { name: 'Nearing Big Bang', re: 'RE-170', meaning: 'I use it, but the origin is gone. Petrified wood. Maximum density, zero traceable source.', status: 'new', horizonStage: 'bigbang-h', connections: ['RE-170'],
+        inherited: ['physics'], selfGrown: ['horizoning'] },
+      { name: 'Continuous Field', re: 'RE-171', meaning: 'The horizon is always happening. It depends where you are in it. Too broad to see at once.', status: 'new', connections: ['RE-171','RE-008'],
+        inherited: ['physics'], selfGrown: ['horizoning'] },
+      { name: 'Go Wide', re: 'RE-100', meaning: 'Scan full cross-section surface. All synapses. Orientation pass.', connections: ['RE-123'],
+        inherited: [], selfGrown: ['operations','horizoning'] },
+      { name: 'Crawl', re: 'RE-100', meaning: 'Click into one element. Follow depth. Depth-first.', connections: [],
+        inherited: [], selfGrown: ['operations'] },
+      { name: 'Comb', re: 'RE-100', meaning: 'One level deep in two sections. Find hidden connections. Synthesis tool.', connections: ['RE-123'],
+        inherited: [], selfGrown: ['operations','network'] },
+      { name: 'Multi-Fractal Traversal', re: 'RE-139', meaning: 'Jumping between two distinct fractal systems. Not drilling within, but crossing to another.', status: 'new', connections: ['RE-139'],
+        inherited: [], selfGrown: ['horizoning','network'] },
+      { name: 'Self-Blindness', re: 'RE-177', meaning: 'You cannot see your own fractal. Only above and below it. Others see what you cannot.', status: 'new', connections: ['RE-177','RE-143'],
+        inherited: [], selfGrown: ['horizoning','biographical'] },
+    ]
+  },
+  {
+    id: 'operations', name: 'Operations', color: '#c49030', origin: 'homegrown',
+    terms: [
+      { name: 'Collector Mode', re: 'RE-153', meaning: 'Go out and gather. Root hairs absorbing from environment. Drop in whatever you think works.', status: 'new', connections: ['RE-153','RE-154'],
+        inherited: [], selfGrown: ['operations','tree-biology'] },
+      { name: 'Analyzer Mode', re: 'RE-153', meaning: 'Internal validity. What does this say about us? Tag, decompose, link. Three iterative states.', status: 'new', connections: ['RE-153','RE-155','RE-174'],
+        inherited: [], selfGrown: ['operations'] },
+      { name: 'Integrator Mode', re: 'RE-153', meaning: 'Connect external to internal. Strengthen or horizon. Trunk vascular system.', status: 'new', connections: ['RE-153','RE-156'],
+        inherited: [], selfGrown: ['operations','tree-biology'] },
+      { name: 'Engineer / Leaves', re: 'RE-157', meaning: 'Build external-facing surfaces. Produce leaves. Make internal structure visible to others.', status: 'new', connections: ['RE-157'],
+        inherited: [], selfGrown: ['operations','tree-biology'] },
+      { name: 'Step Zero', re: 'RE-154', meaning: 'Screenshot the website. Pull pages. Capture visual identity. Pure collection, zero interpretation.', status: 'new', connections: ['RE-154'],
+        inherited: [], selfGrown: ['operations'] },
+      { name: 'Wayback Temporal', re: 'RE-163', meaning: 'Pull Wayback Machine snapshots across history. Each snapshot = one ring. What persisted = heartwood.', status: 'new', connections: ['RE-163','RE-135'],
+        inherited: [], selfGrown: ['operations','tree-biology'] },
+      { name: 'External Seeding', re: 'RE-145', meaning: 'Pre-populate from AI, mark as unprocessed. Solves cold-start. Four states: External/Internal x Unprocessed/Processed.', status: 'new', connections: ['RE-145'],
+        inherited: [], selfGrown: ['operations','propagation'] },
+      { name: 'Scaffolding', re: 'RE-164', meaning: 'Proposed frameworks are starting points, not structure. Your data overwrites them. Earned through use, not imposed.', status: 'new', connections: ['RE-164','RE-162'],
+        inherited: ['propagation'], selfGrown: ['operations'] },
+    ]
+  },
+  {
+    id: 'propagation', name: 'Propagation', color: '#b4a05a', origin: 'homegrown',
+    terms: [
+      { name: 'Within-Framework Synthesis', re: 'RE-158', meaning: 'Combine sub-fractals into a new category. Horizontal. Open coding.', status: 'new', connections: ['RE-158','RE-162'],
+        inherited: ['propagation'], selfGrown: ['operations'] },
+      { name: 'Cross-Framework Synthesis', re: 'RE-159', meaning: 'Combine patterns across frameworks into a new framework. Can happen from any depth (RE-161).', status: 'new', connections: ['RE-159','RE-161'],
+        inherited: [], selfGrown: ['propagation','network'] },
+      { name: 'Usage-Based Ranking', re: 'RE-160', meaning: 'If it gets used, it rises. If not, it gets pruned. Natural selection applied to knowledge.', status: 'new', connections: ['RE-160','RE-014'],
+        inherited: ['propagation'], selfGrown: ['tree-biology'] },
+      { name: 'Depth-Agnostic Creation', re: 'RE-161', meaning: 'Framework creation from anywhere. A branch deep in the canopy can produce a seed for a new tree.', status: 'new', connections: ['RE-161','RE-158'],
+        inherited: [], selfGrown: ['propagation','tree-biology'] },
+      { name: 'Maturity-Level Entry', re: 'RE-187', meaning: 'Data enters at its synthesis depth. 3 rounds deep = trunk level. Not everything starts at air. The "data download."', status: 'new', connections: ['RE-187','RE-170'],
+        inherited: [], selfGrown: ['propagation','horizoning'] },
+      { name: 'Adaptive Decomposition', re: 'RE-188', meaning: 'High internal connectivity triggers deeper breakdown. Many internal fractals want a piece, so the data gets decomposed.', status: 'new', connections: ['RE-188','RE-187'],
+        inherited: [], selfGrown: ['propagation','physics'] },
+      { name: 'Connection Types', re: 'RE-189', meaning: 'Framework assignment (whole fractal, event) vs. synthesis connection (sub-fractals link out). Event fractals stand alone.', status: 'new', connections: ['RE-189','RE-160'],
+        inherited: [], selfGrown: ['propagation','network'] },
+      { name: 'Compression Threshold', re: 'RE-190', meaning: '5+ connections = compress internally first or declare as event. Prevents shallow high-connectivity degradation.', status: 'new', connections: ['RE-190','RE-071'],
+        inherited: [], selfGrown: ['propagation','physics'] },
+      { name: 'Inherited Connections', re: 'RE-176', meaning: 'Your connections were made by your grandparents. Inner rings formed by earlier growth. Structural inheritance.', status: 'new', connections: ['RE-176','RE-170'],
+        inherited: [], selfGrown: ['propagation','biographical'] },
+      { name: 'Personal Views', re: 'RE-165', meaning: 'Each user has their own view. Draft fractals for building a case. Draft > Proposed > Established.', status: 'new', connections: ['RE-165','RE-143'],
+        inherited: [], selfGrown: ['propagation','operations'] },
+      { name: 'Silent Rising', re: 'RE-166', meaning: 'You do not have to tell anyone. If coherent enough, it surfaces through accumulated connections.', status: 'new', connections: ['RE-166','RE-160'],
+        inherited: [], selfGrown: ['propagation'] },
+      { name: 'Everyone Contributes', re: 'RE-167', meaning: 'No passive users. Collecting, exploring, ignoring: all contributions. Ecosystem, not tool.', status: 'new', connections: ['RE-167'],
+        inherited: [], selfGrown: ['propagation','operations'] },
+      { name: 'Grounded Theory', re: 'RE-162', meaning: 'The methodological lineage. Open coding, axial coding, theoretical saturation. Extended with spatial biological model.', status: 'new', connections: ['RE-162','RE-158','RE-160'],
+        inherited: ['propagation'], selfGrown: ['tree-biology'] },
+    ]
+  },
+  {
+    id: 'biographical', name: 'Biographical / Therapeutic', color: '#c4786a', origin: 'individual',
+    terms: [
+      { name: 'The Stuck Thread', re: 'RE-121', meaning: 'Young thread in heartwood, still alive, reaching to roots where it got stuck. Maximum depth, zero density.', connections: ['RE-121','RE-136'],
+        inherited: [], selfGrown: ['biographical','tree-biology'] },
+      { name: 'The Lost Child', re: 'RE-137', meaning: 'Thin fiber buried in heartwood. Hard to find. Surrounded by included bark (the protector).', status: 'new', connections: ['RE-137','RE-138','RE-140'],
+        inherited: ['biographical'], selfGrown: ['tree-biology'] },
+      { name: 'The Protector', re: 'RE-138', meaning: 'Dense rigid fiber. All external connections route through. IS included bark.', status: 'new', connections: ['RE-138','RE-140','RE-141'],
+        inherited: ['biographical'], selfGrown: ['tree-biology','network'] },
+      { name: 'Bark Dissolution', re: 'RE-142', meaning: 'A horizon event dissolves the bark. Not force. A shift that makes protection unnecessary. That is what therapy is.', status: 'new', connections: ['RE-142'],
+        inherited: ['biographical'], selfGrown: ['physics','horizoning'] },
+      { name: 'Common Ground', re: 'RE-143', meaning: 'Two fractals, one shared space. Built, not won. The natural answer comes over time with compression.', status: 'new', connections: ['RE-143'],
+        inherited: [], selfGrown: ['biographical','network'] },
+      { name: 'NDD = Digital Tree', re: 'RE-168', meaning: 'NDD IS a digital representation of a tree. The tree is the computational model, not a metaphor.', status: 'new', connections: ['RE-168','RE-169'],
+        inherited: [], selfGrown: ['tree-biology','operations'] },
+    ]
+  },
+  {
+    id: 'jtbd', name: 'Jobs to Be Done', color: '#4a9ab4', origin: 'framework',
+    terms: [
+      { name: 'Capture Without Losing Context', re: 'RE-203', meaning: 'When I encounter something relevant, I want to capture it immediately with source and framework associations intact, so I can process it later without losing the original signal.',
+        status: 'new', connections: ['RE-153','RE-154','RE-187'],
+        inherited: ['jtbd'], selfGrown: ['operations','tree-biology'],
+        fractal: [
+          { type: 'synth', text: 'J1.1: When I have a fleeting thought during synthesis, I want to capture it in under 3 seconds, so I can stay in flow.', weight: 0.9, children: [
+            { type: 'synth', text: 'J1.1.1: When I am mid-sentence in synthesis, I want a persistent input field visible without navigation.', weight: 0.85, children: [
+              { type: 'personal', text: 'Physical: Text box anchored to bottom of screen. No click-to-expand. No modal. Always there.', weight: 0.8 },
+              { type: 'personal', text: 'Physical: Character count visible to signal "this is a note, not an essay." Constrains scope.', weight: 0.7 },
+            ]},
+            { type: 'synth', text: 'J1.1.2: When I am away from my desk, I want voice-to-text capture with the same fidelity as typed input.', weight: 0.8, children: [
+              { type: 'personal', text: 'Physical: Microphone button adjacent to text input. Transcription appears in real-time. One tap.', weight: 0.75 },
+              { type: 'personal', text: 'Physical: Mobile companion app mirrors the capture interface exactly. Same inbox destination.', weight: 0.7 },
+            ]},
+            { type: 'synth', text: 'J1.1.3: When my thought references an existing term, I want that connection created at capture time.', weight: 0.75, children: [
+              { type: 'personal', text: 'Physical: Auto-suggest dropdown triggers on @ or term-name match. One tap to link. Connection weight = 0.5 (unverified).', weight: 0.7 },
+            ]},
+          ]},
+          { type: 'synth', text: 'J1.2: When I find an external source, I want to import it with original context preserved, so I can trace provenance.', weight: 0.85, children: [
+            { type: 'synth', text: 'J1.2.1: When I paste a URL, I want the system to extract title, author, date, and domain automatically.', weight: 0.8, children: [
+              { type: 'personal', text: 'Physical: Paste URL into capture box. System fetches Open Graph metadata. Preview card appears with title, image, date. One-click confirm.', weight: 0.75 },
+            ]},
+            { type: 'synth', text: 'J1.2.2: When I read a physical book, I want to capture page number and surrounding context.', weight: 0.8, children: [
+              { type: 'personal', text: 'Physical: Book mode. Title and author persist across captures. Page number field. Photo of page option.', weight: 0.75 },
+              { type: 'personal', text: 'Physical: Highlighted text OCR from photo. Camera points at page, system extracts highlighted passage.', weight: 0.7 },
+            ]},
+            { type: 'synth', text: 'J1.2.3: When I screenshot a UI or diagram, I want the image preserved alongside any annotation I add.', weight: 0.75, children: [
+              { type: 'personal', text: 'Physical: Screenshot drops into capture. Annotation overlay for circles, arrows, text notes. Saved as compound capture.', weight: 0.7 },
+            ]},
+          ]},
+          { type: 'synth', text: 'J1.3: When I start a new domain, I want to seed with external frameworks, so I can overcome cold-start.', weight: 0.8, children: [
+            { type: 'synth', text: 'J1.3.1: When I select an inherited framework, I want its prompt questions pre-loaded but clearly labeled as scaffolding.', weight: 0.75, children: [
+              { type: 'personal', text: 'Physical: Framework picker shows available methodologies. Selected ones appear in right panel with "SCAFFOLD" badge. Grey until data validates them.', weight: 0.7 },
+            ]},
+            { type: 'external', text: 'External seeding (RE-145). AI pre-populated scaffolding (RE-164). Provisional until earned through use.', weight: 0.7 },
+          ]},
+          { type: 'synth', text: 'J1.4: When I capture, I want to mark maturity level at intake (air/soil/bark), so I can place appropriately.', weight: 0.75, children: [
+            { type: 'synth', text: 'J1.4.1: When I know a capture is already well-synthesized from prior work, I want to mark it at soil or bark.', weight: 0.7, children: [
+              { type: 'personal', text: 'Physical: Maturity slider or segmented control: Air | Soil | Bark. Default = Air. Visual changes color intensity based on selection.', weight: 0.65 },
+              { type: 'personal', text: 'Physical: Pre-synthesized material from another project shows "imported at Bark" badge. Provenance trail to source project.', weight: 0.6 },
+            ]},
+          ]},
+          { type: 'synth', text: 'J1.5: When I revisit old captures, I want to see collected vs. synthesized, so I can distinguish inherited from my own.', weight: 0.7, children: [
+            { type: 'synth', text: 'J1.5.1: When I scan the inbox, I want a visual indicator showing which items I collected and which I created through synthesis.', weight: 0.65, children: [
+              { type: 'personal', text: 'Physical: Inbox items show origin badge. "Collected" (external arrow icon) vs "Synthesized" (merge icon). Color-coded.', weight: 0.6 },
+            ]},
+          ]},
+        ]},
+      { name: 'Make Sense Through Multiple Lenses', re: 'RE-203', meaning: 'When I have collected items sitting unprocessed, I want to examine each through the right analytical framework, so I can create structured understanding from raw material.',
+        status: 'new', connections: ['RE-153','RE-191','RE-193','RE-190'],
+        inherited: ['jtbd'], selfGrown: ['operations','linguistics'],
+        fractal: [
+          { type: 'synth', text: 'J2.1: When I select an item, I want to answer "What is this?" with a keyword that activates the right framework.', weight: 0.9, children: [
+            { type: 'synth', text: 'J2.1.1: When I look at a capture, I want framework chips visible so I can tag with one tap.', weight: 0.85, children: [
+              { type: 'personal', text: 'Physical: Row of colored framework chips below each inbox item. Tap to toggle. Selected chips glow. Multi-select supported.', weight: 0.8 },
+              { type: 'personal', text: 'Physical: Chip abbreviations visible at a glance (JTBD, OOUX, META, HOR, OPS, PROP). No expanding menus required.', weight: 0.75 },
+            ]},
+            { type: 'synth', text: 'J2.1.2: When I type a keyword (Spark Zero), I want the system to suggest matching frameworks automatically.', weight: 0.8, children: [
+              { type: 'personal', text: 'Physical: Type "growth" and system highlights Tree Biology, Propagation. Type "object" and OOUX lights up. Keyword-to-framework mapping.', weight: 0.75 },
+            ]},
+          ]},
+          { type: 'synth', text: 'J2.2: When a framework is activated, I want to see its prompting questions automatically.', weight: 0.85, children: [
+            { type: 'synth', text: 'J2.2.1: When I select a framework chip, the analyzer panel should show that framework\'s methodology questions.', weight: 0.8, children: [
+              { type: 'personal', text: 'Physical: Right panel switches to show framework prompt. Questions appear as checklist. User answers each. Answers become fractal children.', weight: 0.75 },
+              { type: 'personal', text: 'Physical: Multiple frameworks selected = tabbed prompt view. "You tagged Tree Bio and JTBD. Here are both question sets."', weight: 0.7 },
+            ]},
+            { type: 'synth', text: 'J2.2.2: When I see the questions, I want them phrased as verbs that guide my thinking, not nouns I must categorize.', weight: 0.75, children: [
+              { type: 'personal', text: 'Physical: "Where does this grow?" not "Growth stage." "Who does this job for?" not "Job performer." Framework as verb (RE-192).', weight: 0.7 },
+            ]},
+          ]},
+          { type: 'synth', text: 'J2.3: When I decompose into sub-fractals, I want each to become a connectable unit.', weight: 0.8, children: [
+            { type: 'synth', text: 'J2.3.1: When I write a sub-observation under a term, I want it to have its own linkable identity.', weight: 0.75, children: [
+              { type: 'personal', text: 'Physical: Each fractal child node gets a unique ID. Hover shows link icon. Drag to another term to create connection. The sub-observation IS a node.', weight: 0.7 },
+            ]},
+            { type: 'synth', text: 'J2.3.2: When a sub-fractal grows large enough, I want the system to suggest promoting it to its own term.', weight: 0.7, children: [
+              { type: 'personal', text: 'Physical: Node count badge on fractal children. When children exceed 5, amber glow + "Promote to Term?" prompt. Working Title splitting (RE-208).', weight: 0.65 },
+            ]},
+          ]},
+          { type: 'synth', text: 'J2.4: When an item has 5+ connections but shallow fractal depth, I want to be alerted to compress internally first.', weight: 0.75, children: [
+            { type: 'synth', text: 'J2.4.1: When I keep linking without deepening, the system should flag the imbalance.', weight: 0.7, children: [
+              { type: 'personal', text: 'Physical: Connection count vs fractal depth ratio displayed. Red indicator when connections > 5 and fractal depth < 2. "Deepen before linking."', weight: 0.65 },
+            ]},
+          ]},
+          { type: 'synth', text: 'J2.5: When something stands alone (event fractal), I want to mark it without forcing decomposition.', weight: 0.7, children: [
+            { type: 'synth', text: 'J2.5.1: When I encounter a discrete event with no internal structure, I want to register it as-is.', weight: 0.65, children: [
+              { type: 'personal', text: 'Physical: "Event" toggle on term card. Disables decomposition prompts. Term sits at its horizon level. No fractal children expected or encouraged.', weight: 0.6 },
+            ]},
+          ]},
+        ]},
+      { name: 'Synthesize Across Items', re: 'RE-203', meaning: 'When I see patterns across multiple items, I want to connect them into new understanding that did not exist in any single source, so I can produce genuine insight.',
+        status: 'new', connections: ['RE-186','RE-197','RE-158','RE-159'],
+        inherited: ['jtbd'], selfGrown: ['propagation','network'],
+        fractal: [
+          { type: 'synth', text: 'J3.1: When I have 2+ external items, I want to synthesize in collector first (external-to-external).', weight: 0.9, children: [
+            { type: 'personal', text: 'Synthesis placement (RE-197). Build mesh weight before integrating.', weight: 0.85 },
+          ]},
+          { type: 'synth', text: 'J3.2: When synthesis reaches maturity, I want it to enter NDD at appropriate depth.', weight: 0.85, children: [
+            { type: 'personal', text: 'Maturity-level entry (RE-187). Pre-synthesized = trunk level.', weight: 0.8 },
+          ]},
+          { type: 'synth', text: 'J3.3: When I synthesize, I want to see which frameworks I am using and which I am ignoring.', weight: 0.8, children: [
+            { type: 'personal', text: 'Framework selector shows active lenses. Blind spots visible (RE-177).', weight: 0.7 },
+          ]},
+          { type: 'synth', text: 'J3.4: When two frameworks converge on same insight, I want that visible as high mesh weight.', weight: 0.75, children: [
+            { type: 'personal', text: 'Cross-framework synthesis (RE-159). Convergence = canopy level.', weight: 0.7 },
+          ]},
+        ]},
+      { name: 'Integrate Into Living Structure', re: 'RE-203', meaning: 'When my synthesized clusters are ready, I want to integrate them into my evolving knowledge tree at the right location and depth, so I can build on prior work.',
+        status: 'new', connections: ['RE-153','RE-156','RE-158','RE-161'],
+        inherited: ['jtbd'], selfGrown: ['operations','tree-biology'],
+        fractal: [
+          { type: 'synth', text: 'J4.1: When I have a pre-synthesized cluster, I want to strengthen existing or create new horizon.', weight: 0.9, children: [
+            { type: 'personal', text: 'Integrator actions: Strengthen, Horizon, New Category, New Framework.', weight: 0.85 },
+          ]},
+          { type: 'synth', text: 'J4.2: When I integrate, I want to see where new material connects to existing fibers.', weight: 0.85, children: [
+            { type: 'personal', text: 'Connection match (RE-081). Fractals enter where connections match.', weight: 0.7 },
+          ]},
+          { type: 'synth', text: 'J4.3: When I create a new category, I want it to carry synthesis history.', weight: 0.8, children: [
+            { type: 'personal', text: 'Within-framework synthesis (RE-158). Provenance preserved.', weight: 0.7 },
+          ]},
+          { type: 'synth', text: 'J4.4: When integration creates a new framework, I want it labeled as self-grown.', weight: 0.75, children: [
+            { type: 'personal', text: 'Inherited vs self-grown (RE-201). My creation, not absorbed structure.', weight: 0.8 },
+          ]},
+        ]},
+      { name: 'Navigate and Orient', re: 'RE-203', meaning: 'When I am lost in the complexity of my own knowledge structure, I want to see where I am relative to what I know and do not know, so I can decide where to invest attention.',
+        status: 'new', connections: ['RE-100','RE-170','RE-177','RE-139'],
+        inherited: ['jtbd'], selfGrown: ['horizoning'],
+        fractal: [
+          { type: 'synth', text: 'J5.1: When I go wide (scan cross-section), I want to see all active synapses at surface.', weight: 0.9, children: [
+            { type: 'personal', text: 'Go Wide (RE-100). Orientation pass across all frameworks.', weight: 0.85 },
+          ]},
+          { type: 'synth', text: 'J5.2: When I crawl (follow one thread deep), I want to see fiber length and connections.', weight: 0.85, children: [
+            { type: 'personal', text: 'Crawl (RE-100). Depth-first exploration.', weight: 0.7 },
+          ]},
+          { type: 'synth', text: 'J5.3: When I comb (one level in two sections), I want to find hidden connections.', weight: 0.8, children: [
+            { type: 'personal', text: 'Comb (RE-100). Synthesis tool for cross-domain discovery.', weight: 0.7 },
+          ]},
+          { type: 'synth', text: 'J5.4: When I have been on one thread too long, I want to be reminded to look elsewhere.', weight: 0.7, children: [
+            { type: 'personal', text: 'Self-blindness (RE-177). Cannot see own fractal. Need prompts.', weight: 0.65 },
+          ]},
+        ]},
+      { name: 'Make the Invisible Visible', re: 'RE-203', meaning: 'When I have deep internal structure that others cannot see, I want to externalize it as navigable surfaces, so others can engage with my understanding.',
+        status: 'new', connections: ['RE-157','RE-153','RE-074'],
+        inherited: ['jtbd'], selfGrown: ['operations','tree-biology'],
+        fractal: [
+          { type: 'synth', text: 'J6.1: When I have completed synthesis, I want to produce leaves (external-facing artifacts).', weight: 0.9, children: [
+            { type: 'personal', text: 'Engineer / Leaves (RE-157). Make internal structure visible.', weight: 0.85 },
+          ]},
+          { type: 'synth', text: 'J6.2: When I share, I want others to enter at their own maturity level.', weight: 0.8, children: [
+            { type: 'personal', text: 'Maturity-level entry (RE-187) applies to recipients too.', weight: 0.7 },
+          ]},
+          { type: 'synth', text: 'J6.3: When I engineer outputs, I want to seed downstream work, not just transfer conclusions.', weight: 0.75, children: [
+            { type: 'personal', text: 'Fruit, seed, fallen leaf (RE-074). Five forms of canopy release.', weight: 0.7 },
+          ]},
+        ]},
+      { name: 'Start from Somewhere', re: 'RE-203', meaning: 'When I face a blank canvas in a new domain, I want inherited frameworks to scaffold my initial structure, so I can begin synthesis immediately rather than from zero.',
+        status: 'new', connections: ['RE-145','RE-164','RE-195'],
+        inherited: ['jtbd','propagation'], selfGrown: ['operations'],
+        fractal: [
+          { type: 'synth', text: 'J7.1: When I start a new project, I want to select which methodologies to import.', weight: 0.9, children: [
+            { type: 'external', text: 'JTBD, grounded theory, systems thinking, design thinking. Seed with analytical DNA.', weight: 0.8 },
+          ]},
+          { type: 'synth', text: 'J7.2: When I use scaffolding, I want to know it is provisional and my data will overwrite it.', weight: 0.85, children: [
+            { type: 'personal', text: 'Scaffolding (RE-164). Proposed, not structure. Earned through use.', weight: 0.8 },
+          ]},
+          { type: 'synth', text: 'J7.3: When I inherit a framework, I want it labeled as inherited.', weight: 0.8, children: [
+            { type: 'personal', text: 'Inherited vs self-grown (RE-201). What was given vs what was created.', weight: 0.75 },
+          ]},
+        ]},
+      { name: 'Know Myself as Thinker', re: 'RE-203', meaning: 'When I use frameworks to understand the world, I want to see which I inherited versus created, so I can understand my cognitive identity and where I rely on borrowed structure.',
+        status: 'new', connections: ['RE-202','RE-201','RE-200','RE-177'],
+        inherited: ['jtbd'], selfGrown: ['biographical','horizoning'],
+        fractal: [
+          { type: 'synth', text: 'J8.1: When I compare frameworks, I want four zones: confirmed, created, blind spots, unique contribution.', weight: 0.9, children: [
+            { type: 'personal', text: 'Self-awareness (RE-202). Four comparison zones.', weight: 0.85 },
+          ]},
+          { type: 'synth', text: 'J8.2: When I notice a framework I always use but never created, I want to examine why.', weight: 0.8, children: [
+            { type: 'personal', text: 'The structure is the illusion (RE-200). Most understanding is inherited.', weight: 0.75 },
+          ]},
+          { type: 'synth', text: 'J8.3: When I create new frameworks, I want them visible as self-grown alongside inherited.', weight: 0.85, children: [
+            { type: 'personal', text: 'Inherited vs self-grown (RE-201). Measure intellectual contribution.', weight: 0.8 },
+          ]},
+        ]},
+    ]
+  },
+  {
+    id: 'meme', name: 'Meme (Compressed Information)', color: '#d45d79', origin: 'individual',
+    terms: [
+      { name: 'Meme as Compressed Information Unit', re: 'RE-207', meaning: 'The meme is information compressed to maximum replicative efficiency. It sits at the critical compression threshold on the structuring continuum: dense enough to propagate autonomously, simple enough to bypass conscious evaluation. In tree biology terms, a meme has reached Bark stage.',
+        status: 'new', connections: ['RE-054','RE-058','RE-075','RE-199'],
+        inherited: ['meme'], selfGrown: ['tree-biology','horizoning'],
+        fractal: [
+          { type: 'book', text: 'Snow Crash (Stephenson 1992): Dual-form virus operating on both biological and digital substrates simultaneously.', weight: 0.95, children: [
+            { type: 'book', text: 'Sumerian "me" as cultural subroutines: firmware programming language for the brainstem.', weight: 0.9 },
+            { type: 'book', text: 'Nam-shub of Enki: linguistic fragmentation as immunization (Tower of Babel as viral inoculation).', weight: 0.9 },
+            { type: 'book', text: 'Metaverse as high-velocity meme propagation medium: information becomes visible, tangible, transmissible.', weight: 0.85 },
+          ]},
+          { type: 'synth', text: 'Compression creates propagation potential: Air has no viral capacity, but Bark does.', weight: 0.9, children: [
+            { type: 'personal', text: 'The structuring continuum IS a meme visibility system. Making compression stages visible = making meme entry points visible.', weight: 0.85 },
+          ]},
+        ]},
+      { name: 'Mid-Horizon Invasion', re: 'RE-207', meaning: 'The meme operates at mid-horizon: past Air (raw), compressed through synthesis (Soil to Bark), but NOT yet Heartwood (full integration). At this intermediate stage, maximum viral potential: structured enough to replicate, unintegrated enough to bypass critical evaluation.',
+        status: 'new', connections: ['RE-187','RE-188','RE-199','RE-201'],
+        inherited: ['meme'], selfGrown: ['horizoning','tree-biology'],
+        fractal: [
+          { type: 'synth', text: 'Mid-horizon = maximum vulnerability window. The thinker has absorbed the pattern but has not interrogated it against their own frameworks.', weight: 0.95, children: [
+            { type: 'book', text: 'Snow Crash targets the brainstem: beneath conscious thought, rewrites the operating system of the mind.', weight: 0.9 },
+            { type: 'personal', text: 'This is why inherited vs self-grown matters (RE-201): high inherited % may indicate memetic colonization rather than genuine synthesis.', weight: 0.85 },
+          ]},
+          { type: 'synth', text: 'The vulnerability is structural, not intellectual. Even smart people are hosts for self-replicating information.', weight: 0.85, children: [
+            { type: 'book', text: 'Stephenson: "No matter how smart we get, there is always this deep irrational part that makes us potential hosts."', weight: 0.8 },
+          ]},
+        ]},
+      { name: 'NDD as Meme Immunization System', re: 'RE-207', meaning: 'The NDD structuring continuum is a meme immunization system. By making the compression process visible and deliberate (Air > Soil > Bark > Heartwood), the thinker can identify when external memes enter at mid-horizon before they colonize.',
+        status: 'new', connections: ['RE-199','RE-201','RE-202','RE-205'],
+        inherited: [], selfGrown: ['meme','tree-biology','operations'],
+        fractal: [
+          { type: 'synth', text: 'Enki fragmented language to prevent unified memetic control. NDD fragments compression into visible stages to prevent invisible colonization.', weight: 0.95, children: [
+            { type: 'personal', text: 'The Environment Manager (RE-206) manages your memetic environment. You choose what compresses and what stays Air.', weight: 0.9 },
+          ]},
+          { type: 'synth', text: 'Self-awareness ratio (RE-202) as meme defense metric: measures how much of your framework is genuinely yours vs inherited.', weight: 0.9, children: [
+            { type: 'personal', text: 'The four zones from RE-202 map: confirmed (inherited + verified), created (self-grown), blind spots (inherited + unexamined = meme vulnerability), unique contribution.', weight: 0.85 },
+          ]},
+        ]},
+      { name: 'Rife Infrastructure Play', re: 'RE-207', meaning: 'L. Bob Rife consolidates fiber (telecommunications), franchises (physical distribution), and faith (religious institutions). Three infrastructure layers that parallel NDD capture > synthesis > integration pipeline. Control the medium, control the memes.',
+        status: 'new', connections: ['RE-203','RE-205'],
+        inherited: ['meme'], selfGrown: ['operations','propagation'],
+        fractal: [
+          { type: 'book', text: 'Fiber = capture infrastructure. Franchises = distribution/synthesis infrastructure. Faith = integration infrastructure.', weight: 0.85, children: [
+            { type: 'synth', text: 'The NDD inverts Rife: instead of controlling others meme environments, you control your own.', weight: 0.8 },
+          ]},
+        ]},
+      { name: 'Dual-Form Virus', re: 'RE-207', meaning: 'Snow Crash operates as both biological pathogen and digital virus because both brains and computers are information-processing systems vulnerable to appropriately designed payloads. The boundary between code and consciousness is permeable.',
+        status: 'new', connections: ['RE-054','RE-187'],
+        inherited: ['meme','network-architecture'], selfGrown: [],
+        fractal: [
+          { type: 'book', text: 'Digital form: hypercard in Metaverse crashes hackers (exploits binary thinking patterns).', weight: 0.85, children: [
+            { type: 'book', text: 'Biological form: drug + infected blood distributed through Reverend Wayne church.', weight: 0.8 },
+          ]},
+          { type: 'synth', text: 'Both forms work because "brains are like hardware and ideas are like software."', weight: 0.9 },
+        ]},
+    ]
+  },
+  {
+    id: 'ooux', name: 'Object-Oriented UX', color: '#7a6ab4', origin: 'framework',
+    terms: [
+      { name: 'Capture', re: 'RE-217', meaning: 'The raw input entering the NDD system. An unprocessed observation, quote, note, or idea. Has no structure yet. Exists in the inbox as potential. Every knowledge journey begins here. The Capture is the seed before it touches soil.',
+        status: 'new', connections: ['RE-153','RE-154','RE-187','RE-203'],
+        inherited: ['ooux','jtbd'], selfGrown: ['operations','tree-biology'],
+        fractal: [
+          { type: 'synth', text: 'Source Context: where this Capture originated.', weight: 0.9, children: [
+            { type: 'synth', text: 'URL Source: link with extracted metadata (title, author, date, domain).', weight: 0.8, children: [
+              { type: 'personal', text: 'Physical: Paste URL, system fetches Open Graph data. Preview card shows title and image.', weight: 0.7 },
+            ]},
+            { type: 'synth', text: 'Book Source: title, author, page number, edition. Persists across a reading session.', weight: 0.8, children: [
+              { type: 'personal', text: 'Physical: Book mode. Author/title fields persist. Page number field per capture. Photo-of-page option with OCR.', weight: 0.7 },
+            ]},
+            { type: 'synth', text: 'Conversation Source: who said it, when, what context.', weight: 0.75 },
+            { type: 'synth', text: 'Thought Source: internal origin. No external provenance. Timestamped.', weight: 0.7 },
+          ]},
+          { type: 'synth', text: 'Raw Content: the actual captured material before any processing.', weight: 0.9, children: [
+            { type: 'synth', text: 'Text Note: typed or voice-to-text transcription.', weight: 0.85, children: [
+              { type: 'personal', text: 'Physical: Persistent text box, always visible. Microphone button for voice. Character count visible.', weight: 0.75 },
+            ]},
+            { type: 'synth', text: 'Image: screenshot, photo, diagram. Annotatable.', weight: 0.8, children: [
+              { type: 'personal', text: 'Physical: Drop image into capture. Annotation overlay for circles, arrows, text. Saved as compound capture.', weight: 0.7 },
+            ]},
+            { type: 'synth', text: 'File Attachment: document, PDF, data file linked to this capture.', weight: 0.7 },
+          ]},
+          { type: 'synth', text: 'Intake Metadata: initial classification at the moment of capture.', weight: 0.85, children: [
+            { type: 'synth', text: 'Maturity Guess: air (default), soil, or bark. Where the thinker believes this sits.', weight: 0.8, children: [
+              { type: 'personal', text: 'Physical: Segmented control Air | Soil | Bark. Color intensity shifts with selection. Default = Air.', weight: 0.7 },
+            ]},
+            { type: 'synth', text: 'Framework Hints: which lenses seem relevant at first glance. Provisional tagging.', weight: 0.75, children: [
+              { type: 'personal', text: 'Physical: Framework chip row below capture. Tap to suggest. Not committed. Grey until confirmed in analysis.', weight: 0.65 },
+            ]},
+          ]},
+          { type: 'synth', text: 'Sub-Captures: a single source (book, article, conversation) can yield multiple Captures, each independently processable.', weight: 0.8 },
+        ]},
+      { name: 'Term', re: 'RE-217', meaning: 'The structured knowledge unit. A Capture that has been processed through at least one framework lens. Has a name, meaning, connections, maturity level, and fractal depth. The Term is the atom of the NDD: independently meaningful, connectable, nestable.',
+        status: 'new', connections: ['RE-054','RE-058','RE-075','RE-187','RE-188'],
+        inherited: ['ooux'], selfGrown: ['tree-biology','operations','linguistics'],
+        fractal: [
+          { type: 'synth', text: 'Identity: the Term as a named, addressable object.', weight: 0.9, children: [
+            { type: 'synth', text: 'Name: the working title (RE-208). Temporary compression label. Has carrying capacity.', weight: 0.85, children: [
+              { type: 'personal', text: 'Physical: Editable title field. Character limit suggests compression. Rename tracked in history.', weight: 0.75 },
+            ]},
+            { type: 'synth', text: 'RE Number: unique identifier. Sequential. Immutable once assigned.', weight: 0.8 },
+            { type: 'synth', text: 'Meaning: the definition paragraph. What this term IS in the context of the NDD.', weight: 0.85 },
+            { type: 'synth', text: 'Status: new (first synthesis) or corrected (revised through deeper synthesis).', weight: 0.75 },
+          ]},
+          { type: 'synth', text: 'Position: where this Term sits in the larger structure.', weight: 0.85, children: [
+            { type: 'synth', text: 'Horizon Level: which maturity stage (Air through Canopy) this Term currently occupies.', weight: 0.8 },
+            { type: 'synth', text: 'Framework Membership: which Framework(s) this Term belongs to. Can be multi-framework.', weight: 0.8, children: [
+              { type: 'personal', text: 'Physical: Framework chips on term card. Multiple selected = term lives at intersection of lenses.', weight: 0.7 },
+            ]},
+            { type: 'synth', text: 'Origin Markers: inherited array (which frameworks are borrowed) vs selfGrown array (which emerged from this NDD).', weight: 0.75 },
+          ]},
+          { type: 'synth', text: 'Depth: the fractal children that decompose this Term internally.', weight: 0.9, children: [
+            { type: 'synth', text: 'Fractal Nodes: the recursive sub-observations, synthesis notes, evidence, and personal insights nested within.', weight: 0.85, children: [
+              { type: 'personal', text: 'Physical: Expandable tree view. Each node indented. Type badge (synth/personal/external/book). Click to expand children.', weight: 0.75 },
+            ]},
+            { type: 'synth', text: 'Splitting Threshold: when fractal depth or child count exceeds capacity, promote sub-fractal to its own Term (RE-208).', weight: 0.8, children: [
+              { type: 'personal', text: 'Physical: Amber glow on node when children > 5. "Promote to Term?" prompt. One-click extraction.', weight: 0.7 },
+            ]},
+          ]},
+          { type: 'synth', text: 'Connections Array: outbound links to other Terms (internal and cross-framework).', weight: 0.8 },
+        ]},
+      { name: 'Framework', re: 'RE-217', meaning: 'A way of thinking with an attached methodology. The lens that transforms Captures into Terms. Each Framework IS its question set (RE-212). Without methodology, it is not a Framework. Three origins: structured (inherited), home grown (emerged), individual (personal).',
+        status: 'new', connections: ['RE-212','RE-214','RE-210','RE-201'],
+        inherited: ['ooux','jtbd'], selfGrown: ['operations','horizoning'],
+        fractal: [
+          { type: 'synth', text: 'Methodology: the process/verb that makes this a Framework, not just a category.', weight: 0.95, children: [
+            { type: 'synth', text: 'Question Set: the prompting questions that guide analysis through this lens.', weight: 0.9, children: [
+              { type: 'personal', text: 'Physical: When framework chip is selected, right panel shows its questions as interactive checklist. Answers become fractal children.', weight: 0.8 },
+            ]},
+            { type: 'synth', text: 'Gate Criterion (RE-214): no methodology = not a framework. A set of categories without a method of inquiry is just a taxonomy.', weight: 0.85 },
+          ]},
+          { type: 'synth', text: 'Origin: where this Framework came from.', weight: 0.9, children: [
+            { type: 'synth', text: 'Structured: inherited from external discipline. JTBD from Christensen/Ulwick. OOUX from Prater. Metaphors from science.', weight: 0.85 },
+            { type: 'synth', text: 'Home Grown: emerged from working within the NDD itself. Horizoning, Operations, Propagation.', weight: 0.85 },
+            { type: 'synth', text: 'Individual: personal theories. Biographical patterns, Meme awareness. Shareable to advertise for consolidation.', weight: 0.8 },
+          ]},
+          { type: 'synth', text: 'Term Collection: the set of Terms that have been produced by applying this Framework.', weight: 0.85, children: [
+            { type: 'synth', text: 'Term Count and Depth: how many terms, average fractal depth, connection density. Measures framework maturity.', weight: 0.8 },
+          ]},
+          { type: 'synth', text: 'Visual Identity: color, abbreviation, position in the origin group. The recognizable "chip" in the interface.', weight: 0.7 },
+        ]},
+      { name: 'Connection', re: 'RE-217', meaning: 'The link between two Terms, potentially across Frameworks. Connections carry weight based on synthesis depth. Internal connections (within one Framework) differ from external connections (cross-Framework). High connection count with low fractal depth signals shallow linking.',
+        status: 'new', connections: ['RE-188','RE-190','RE-159','RE-197'],
+        inherited: ['ooux','network-architecture'], selfGrown: ['propagation','operations'],
+        fractal: [
+          { type: 'synth', text: 'Endpoints: the two Terms this Connection links.', weight: 0.9, children: [
+            { type: 'synth', text: 'Source Term: where the connection originates. The "from" side.', weight: 0.85 },
+            { type: 'synth', text: 'Target Term: where the connection points. The "to" side.', weight: 0.85 },
+            { type: 'synth', text: 'Direction: unidirectional (A informs B) or bidirectional (A and B mutually inform).', weight: 0.8, children: [
+              { type: 'personal', text: 'Physical: Arrow shows direction on connection line. Double-arrow for bidirectional. Click to toggle.', weight: 0.7 },
+            ]},
+          ]},
+          { type: 'synth', text: 'Weight: how strong this Connection is based on synthesis evidence.', weight: 0.9, children: [
+            { type: 'synth', text: 'Mesh Strength: computed from how many synthesis events reference both endpoints. More co-occurrence = heavier weight.', weight: 0.85, children: [
+              { type: 'personal', text: 'Physical: Line thickness maps to weight. Thin = weak/new. Thick = heavily synthesized. Opacity also scales.', weight: 0.75 },
+            ]},
+            { type: 'synth', text: 'Initial weight = 0.5 (auto-linked at capture). Weight increases through deliberate synthesis only.', weight: 0.8 },
+          ]},
+          { type: 'synth', text: 'Type: the scope of this Connection.', weight: 0.85, children: [
+            { type: 'synth', text: 'Internal: both endpoints in the same Framework. Within-framework coherence.', weight: 0.8 },
+            { type: 'synth', text: 'External: endpoints in different Frameworks. Cross-framework synthesis. Higher value for mesh integration.', weight: 0.8 },
+          ]},
+          { type: 'synth', text: 'Compression Alert: when a Term has 5+ connections but fractal depth < 2, flag as shallow linking (RE-190).', weight: 0.8, children: [
+            { type: 'personal', text: 'Physical: Red indicator badge on term card. Ratio displayed. "Deepen before linking" prompt.', weight: 0.7 },
+          ]},
+        ]},
+      { name: 'Fractal Node', re: 'RE-217', meaning: 'The recursive depth unit within a Term. Each node carries type (synthesis, personal, external, book), text content, weight, and optional children. Fractal Nodes nest to arbitrary depth, creating the tree rings of understanding. The pattern repeats at every scale.',
+        status: 'new', connections: ['RE-188','RE-199','RE-208','RE-174'],
+        inherited: ['ooux'], selfGrown: ['tree-biology','physics'],
+        fractal: [
+          { type: 'synth', text: 'Type Badge: what kind of knowledge this node represents.', weight: 0.9, children: [
+            { type: 'synth', text: 'Synthesis: a conclusion drawn from connecting multiple inputs. The thinker\'s own compression.', weight: 0.85, children: [
+              { type: 'personal', text: 'Physical: Blue badge. This is where genuine understanding lives. The product of the NDD process.', weight: 0.75 },
+            ]},
+            { type: 'synth', text: 'Personal: lived experience, intuition, embodied knowledge. Not from a source, from the self.', weight: 0.85, children: [
+              { type: 'personal', text: 'Physical: Green badge. Marks self-grown content. Contributes to inherited vs self-grown ratio.', weight: 0.75 },
+            ]},
+            { type: 'synth', text: 'External: imported observation from an outside source. Citation-level content.', weight: 0.8, children: [
+              { type: 'personal', text: 'Physical: Orange badge. Links back to source Capture for provenance tracking.', weight: 0.7 },
+            ]},
+            { type: 'synth', text: 'Book: specific literary or academic reference. A form of external with richer citation metadata.', weight: 0.75, children: [
+              { type: 'personal', text: 'Physical: Purple badge. Shows author, title, page. Clusters with other captures from same source.', weight: 0.7 },
+            ]},
+          ]},
+          { type: 'synth', text: 'Content: the text of this node plus its weight (0 to 1 confidence/relevance score).', weight: 0.85, children: [
+            { type: 'personal', text: 'Physical: Node text displayed inline. Weight shown as opacity or small number badge. Editable in place.', weight: 0.75 },
+          ]},
+          { type: 'synth', text: 'Children: the recursive nesting. Each child is itself a Fractal Node with type, content, weight, and children.', weight: 0.9, children: [
+            { type: 'synth', text: 'This recursion IS fractal cognition. The same pattern (type + content + weight + children) repeats at every depth level.', weight: 0.85, children: [
+              { type: 'personal', text: 'Physical: Indented tree view. Collapse/expand chevrons. Depth number shown in gutter. No max depth enforced.', weight: 0.75 },
+            ]},
+            { type: 'synth', text: 'Splitting threshold (RE-208): when children count exceeds carrying capacity of parent, promote to independent Term.', weight: 0.8 },
+          ]},
+        ]},
+      { name: 'Horizon', re: 'RE-217', meaning: 'The maturity stage of a Term on the structuring continuum (RE-199). Five levels: Air (raw, unprocessed), Soil (initial synthesis), Bark (structured, compressed), Heartwood (deep integration), Canopy (externally visible output). Determines where content lives and what actions are available.',
+        status: 'new', connections: ['RE-187','RE-199','RE-207','RE-074'],
+        inherited: ['ooux'], selfGrown: ['tree-biology','horizoning','meme'],
+        fractal: [
+          { type: 'synth', text: 'Air: raw, unprocessed. The capture has entered but no framework has touched it.', weight: 0.9, children: [
+            { type: 'personal', text: 'Physical: Lightest color intensity. No framework chips active. Sits in inbox. Actions available: Tag, Discard.', weight: 0.8 },
+          ]},
+          { type: 'synth', text: 'Soil: initial synthesis begun. At least one framework lens applied. Decomposition started.', weight: 0.9, children: [
+            { type: 'personal', text: 'Physical: Medium color intensity. Framework chips glow. Fractal children appearing. Actions: Decompose further, Connect, Promote.', weight: 0.8 },
+          ]},
+          { type: 'synth', text: 'Bark: structured and compressed. Multiple lenses applied. Connections established. Internal depth built.', weight: 0.9, children: [
+            { type: 'synth', text: 'Maximum memetic vulnerability (RE-207). Compressed enough to propagate, unintegrated enough to bypass critical evaluation.', weight: 0.85, children: [
+              { type: 'personal', text: 'Physical: High color intensity. Meme warning indicator for imported content with high inherited ratio. "Is this yours or absorbed?"', weight: 0.75 },
+            ]},
+          ]},
+          { type: 'synth', text: 'Heartwood: deeply integrated into the living structure. Cross-framework connections verified. Part of the thinker\'s core understanding.', weight: 0.85, children: [
+            { type: 'personal', text: 'Physical: Full color saturation. Multiple cross-framework connections shown as mesh lines. Stable position in tree.', weight: 0.75 },
+          ]},
+          { type: 'synth', text: 'Canopy: externally visible output. Ready to produce leaves, fruit, seed, pollen, fallen leaf (RE-074).', weight: 0.85, children: [
+            { type: 'synth', text: 'Five forms of release: Leaf (document), Fruit (tool), Seed (framework for others), Pollen (question), Fallen Leaf (deprecated output).', weight: 0.8, children: [
+              { type: 'personal', text: 'Physical: Export options appear at Canopy. "Produce Leaf" = generate document. "Drop Seed" = share as inheritable framework.', weight: 0.7 },
+            ]},
+          ]},
+        ]},
+      { name: 'Environment', re: 'RE-217', meaning: 'The complete NDD instance. Contains all Frameworks, Terms, Connections, and Horizons for one domain or one thinker. The Environment is the tree itself. Two products operate on it: Environment Manager (read-write gardener) and NDD Viewer (read-only bird).',
+        status: 'new', connections: ['RE-206','RE-209','RE-202','RE-205'],
+        inherited: ['ooux'], selfGrown: ['tree-biology','operations'],
+        fractal: [
+          { type: 'synth', text: 'Framework Collection: the set of all Frameworks active in this Environment, grouped by origin.', weight: 0.9, children: [
+            { type: 'synth', text: 'Structured Frameworks: inherited methodologies (JTBD, OOUX, Metaphors).', weight: 0.85 },
+            { type: 'synth', text: 'Home Grown Frameworks: emerged from this NDD (Horizoning, Operations, Propagation).', weight: 0.85 },
+            { type: 'synth', text: 'Individual Frameworks: personal theories (Biographical, Meme).', weight: 0.8 },
+          ]},
+          { type: 'synth', text: 'Term Registry: all Terms across all Frameworks. The full knowledge base.', weight: 0.9, children: [
+            { type: 'synth', text: 'Metrics: total count, per-framework distribution, average depth, connection density.', weight: 0.8 },
+            { type: 'synth', text: 'Inherited vs Self-Grown Ratio (RE-202): global measure of cognitive originality. How much is yours.', weight: 0.85, children: [
+              { type: 'personal', text: 'Physical: Ratio bar in Environment header. Percentage display. Four-zone breakdown on hover.', weight: 0.75 },
+            ]},
+          ]},
+          { type: 'synth', text: 'Connection Mesh: all Connections between Terms. The topology of understanding.', weight: 0.85, children: [
+            { type: 'personal', text: 'Physical: Visualizable as network graph. Node = Term. Edge = Connection. Thickness = weight. Color = framework origin.', weight: 0.75 },
+          ]},
+          { type: 'synth', text: 'Inbox: the queue of unprocessed Captures awaiting framework application.', weight: 0.85, children: [
+            { type: 'personal', text: 'Physical: Left panel in prototype. Count badge. Sorted by arrival or maturity guess. Oldest-first default.', weight: 0.75 },
+          ]},
+          { type: 'synth', text: 'Product Interfaces: two ways to interact with this Environment.', weight: 0.8, children: [
+            { type: 'synth', text: 'Environment Manager (RE-206): read-write. The gardener. Tends, prunes, grows the tree.', weight: 0.85 },
+            { type: 'synth', text: 'NDD Viewer (RE-209): read-only. The bird. Surveys from above. Navigates without modifying.', weight: 0.85 },
+          ]},
+        ]},
+      { name: 'Synthesis', re: 'RE-217', meaning: 'The compression event that transforms raw material into structured understanding. Not a thing you store, but a thing that happens. The verb that produces Terms from Captures, Connections from proximity, depth from surface. The Synthesis is the NDD recipe in action.',
+        status: 'new', connections: ['RE-186','RE-197','RE-158','RE-215'],
+        inherited: ['ooux','jtbd'], selfGrown: ['operations','propagation'],
+        fractal: [
+          { type: 'synth', text: 'Inputs: what goes into this Synthesis event.', weight: 0.9, children: [
+            { type: 'synth', text: 'Source Captures/Terms: the 2+ items being combined. Can be Capture-to-Capture, Term-to-Term, or mixed.', weight: 0.85 },
+            { type: 'synth', text: 'Active Frameworks: which lenses the thinker is applying during this synthesis.', weight: 0.8, children: [
+              { type: 'personal', text: 'Physical: Framework chips shown during synthesis. Which lenses active. Which ignored (blind spots visible).', weight: 0.7 },
+            ]},
+          ]},
+          { type: 'synth', text: 'Outputs: what this Synthesis event produces.', weight: 0.9, children: [
+            { type: 'synth', text: 'New Term: when synthesis creates something that did not exist in any single input.', weight: 0.85, children: [
+              { type: 'personal', text: 'Physical: "Create Term" action. Pre-populated with synthesis context. Framework membership inherited from inputs.', weight: 0.75 },
+            ]},
+            { type: 'synth', text: 'New Connection: when synthesis reveals a relationship between existing Terms.', weight: 0.85, children: [
+              { type: 'personal', text: 'Physical: Drag-to-connect gesture between terms. Connection created with synthesis provenance stamped.', weight: 0.75 },
+            ]},
+            { type: 'synth', text: 'Deepened Fractal: when synthesis adds depth to an existing Term rather than creating new.', weight: 0.8 },
+          ]},
+          { type: 'synth', text: 'Compression Ratio: how much raw material was condensed into the output. Higher ratio = more synthesis achieved.', weight: 0.8, children: [
+            { type: 'personal', text: 'Physical: Input count vs output count displayed. "5 captures synthesized into 1 term at Bark level."', weight: 0.7 },
+          ]},
+          { type: 'synth', text: 'Provenance Trail: the synthesis event itself is logged. Who, when, what inputs, what frameworks, what outputs.', weight: 0.75, children: [
+            { type: 'personal', text: 'Physical: Synthesis history viewable per Term. "This term was created on [date] by synthesizing [inputs] through [frameworks]."', weight: 0.7 },
+          ]},
+        ]},
+    ]
+  },
+];
+
+// ============================================================
+//  COMPUTED METRICS
+// ============================================================
+const allTermsByRE = {};
+FAMILIES.forEach(f => {
+  f.terms.forEach(t => {
+    const re = t.re;
+    if (!allTermsByRE[re]) allTermsByRE[re] = [];
+    allTermsByRE[re].push({ family: f.id, term: t.name });
+  });
+});
+
+FAMILIES.forEach(f => {
+  f.terms.forEach(t => {
+    function countNodes(nodes) {
+      if (!nodes) return 0;
+      let n = 0;
+      nodes.forEach(nd => { n += 1 + countNodes(nd.children); });
+      return n;
+    }
+    t._fractalCount = t.fractal ? countNodes(t.fractal) : 0;
+    const familyREs = new Set(f.terms.map(x => x.re));
+    t._internalConn = t.connections.filter(c => familyREs.has(c)).length;
+    t._externalConn = t.connections.filter(c => !familyREs.has(c)).length;
+    // RE-201: count inherited vs self-grown frameworks
+    t._inheritedCount = (t.inherited || []).length;
+    t._selfGrownCount = (t.selfGrown || []).length;
+  });
+  f._totalFractal = f.terms.reduce((s,t) => s + t._fractalCount, 0);
+  f._totalInternal = f.terms.reduce((s,t) => s + t._internalConn, 0);
+  f._totalExternal = f.terms.reduce((s,t) => s + t._externalConn, 0);
+  f._newCount = f.terms.filter(t => t.status === 'new').length;
+  f._correctedCount = f.terms.filter(t => t.status === 'corrected').length;
+  // RE-201/202: inherited vs self-grown totals
+  f._totalInherited = f.terms.reduce((s,t) => s + t._inheritedCount, 0);
+  f._totalSelfGrown = f.terms.reduce((s,t) => s + t._selfGrownCount, 0);
+});
+
+let totalTerms = 0;
+let maxFamilyFractal = 0;
+FAMILIES.forEach(f => {
+  totalTerms += f.terms.length;
+  if (f._totalFractal > maxFamilyFractal) maxFamilyFractal = f._totalFractal;
+});
+
+// ============================================================
+//  RENDER
+// ============================================================
+function renderCategoryGrid() {
+  const grid = document.getElementById('categoryGrid');
+  grid.innerHTML = '';
+
+  // RE-210/214: Three origins. Frameworks all at same peer level.
+  const ORIGIN_META = [
+    { key: 'framework', label: 'Frameworks', cssClass: 'structured', desc: 'A way of thinking with an attached methodology. Different questions to ask through each lens.' },
+    { key: 'homegrown', label: 'Home Grown', cssClass: 'homegrown', desc: 'Emerged from the NDD process itself' },
+    { key: 'individual', label: 'Individual', cssClass: 'individual', desc: 'Personal theories, shareable to advertise for consolidation' },
+  ];
+
+  function buildCard(f) {
+    const card = document.createElement('div');
+    card.className = 'category-card';
+    card.onclick = () => showFamily(f.id);
+    const densityPct = maxFamilyFractal > 0 ? Math.round((f._totalFractal / maxFamilyFractal) * 100) : 0;
+    const newBadge = f._newCount > 0 ? `<span style="color:#5ab4a0; font-size:9px; margin-left:3px;">${f._newCount} new</span>` : '';
+    const catTotal = f._totalInherited + f._totalSelfGrown;
+    const catSgPct = catTotal > 0 ? Math.round((f._totalSelfGrown / catTotal) * 100) : 0;
+    const catInhPct = 100 - catSgPct;
+    card.innerHTML = `
+      <div class="cat-color" style="background:${f.color}"></div>
+      <div class="cat-name" style="color:${f.color}">${f.name}</div>
+      <div class="cat-count">${f.terms.length} terms${newBadge}</div>
+      <div class="cat-hint">Click to enter</div>
+      <div class="cat-metrics">
+        <div class="cat-metric"><span class="m-icon">&#9670;</span> <span class="m-val">${f._totalFractal}</span> depth</div>
+        <div class="cat-metric"><span class="m-icon">&#8596;</span> <span class="m-val">${f._totalInternal}</span> internal</div>
+        <div class="cat-metric"><span class="m-icon">&#8694;</span> <span class="m-val">${f._totalExternal}</span> external</div>
+        <div class="cat-metric awareness-stat"><span class="m-icon" style="color:#5ab4a0;">&#9733;</span> <span class="m-val" style="color:#5ab4a0;">${catSgPct}%</span>
+          <div class="awareness-bar" style="width:30px;">
+            <div class="awareness-fill-inherited" style="width:${catInhPct}%"></div>
+            <div class="awareness-fill-selfgrown" style="width:${catSgPct}%"></div>
+          </div>
+        </div>
+      </div>
+      <div class="cat-density-bar"><div class="cat-density-fill" style="width:${densityPct}%; background:${f.color};"></div></div>
+    `;
+    return card;
+  }
+
+  ORIGIN_META.forEach(om => {
+    const groupFamilies = FAMILIES.filter(f => f.origin === om.key);
+    if (groupFamilies.length === 0) return;
+
+    const section = document.createElement('div');
+    section.className = 'origin-section';
+
+    const groupTerms = groupFamilies.reduce((s, f) => s + f.terms.length, 0);
+    section.innerHTML = `<div class="origin-header">
+      <span class="origin-label ${om.cssClass}">${om.label}</span>
+      <span class="origin-count">${groupFamilies.length} families, ${groupTerms} terms</span>
+      <span class="origin-desc">${om.desc}</span>
+    </div>`;
+
+    {
+      const cardsDiv = document.createElement('div');
+      cardsDiv.className = 'origin-cards';
+      groupFamilies.forEach(f => cardsDiv.appendChild(buildCard(f)));
+      section.appendChild(cardsDiv);
+    }
+    grid.appendChild(section);
+  });
+}
+
+// Count all descendants of a fractal node
+function countDescendants(node) {
+  if (!node.children || node.children.length === 0) return 0;
+  return node.children.reduce((sum, c) => sum + 1 + countDescendants(c), 0);
+}
+function maxNodeDepth(node, d) {
+  if (!node.children || !node.children.length) return d;
+  return Math.max(...node.children.map(c => maxNodeDepth(c, d + 1)));
+}
+
+// Synthesis Path renderer: Level 1 ONLY with below-depth metadata
+function renderSynthesisPath(fractalData) {
+  if (!fractalData || fractalData.length === 0) return '<div style="font-size:8px;color:#5a5550;margin-top:3px;">No synthesis path yet.</div>';
+  const sorted = [...fractalData].sort((a, b) => (b.weight || 0) - (a.weight || 0));
+  const typeLabel = { synth: 'Synth', book: 'Book', personal: 'TroyOS', external: 'External' };
+
+  return '<div class="synthesis-path">' + sorted.map(hero => {
+    const heroType = hero.type || 'synth';
+    const heroLabel = typeLabel[heroType] || heroType;
+    // Below indicator: how much depth exists beneath this Level 1 node
+    const belowCount = countDescendants(hero);
+    const belowDepth = maxNodeDepth(hero, 0);
+    let metaHTML = '';
+    if (belowCount > 0) {
+      metaHTML = `<div class="synth-hero-meta"><span class="synth-depth-hint"><span>${belowCount}</span> below across <span>${belowDepth}</span> level${belowDepth > 1 ? 's' : ''}</span></div>`;
+    }
+    return `<div class="synth-hero"><span class="synth-hero-badge ${heroType}">${heroLabel}</span><div class="synth-hero-text">${hero.text}</div>${metaHTML}</div>`;
+  }).join('') + '</div>';
+}
+
+// RE-221: Compute lateral affinity between sibling terms using shared self-grown tags
+function renderLateralAffinity(currentTerm, family) {
+  const sg = currentTerm.selfGrown || [];
+  if (sg.length === 0) return '';
+  const fwLookup = Object.fromEntries(FRAMEWORK_PROMPTS.map(fp => [fp.id, fp]));
+  const siblings = family.terms.filter(t => t.name !== currentTerm.name);
+  const affinities = siblings.map(sib => {
+    const sibSG = sib.selfGrown || [];
+    const shared = sg.filter(tag => sibSG.includes(tag));
+    return { term: sib, shared, strength: shared.length };
+  }).filter(a => a.strength > 0).sort((a, b) => b.strength - a.strength);
+
+  if (affinities.length === 0) return '';
+
+  const rows = affinities.map(a => {
+    const tagChips = a.shared.map(id => {
+      const fp = fwLookup[id];
+      return fp ? `<span class="lateral-tag">${fp.abbr}</span>` : '';
+    }).join('');
+    return `<div class="lateral-row">
+      <span class="lateral-arrow">&harr;</span>
+      <span class="lateral-term-name">${a.term.name}</span>
+      <span class="lateral-shared-tags">${tagChips}</span>
+      <span class="lateral-strength">${a.strength}</span>
+    </div>`;
+  }).join('');
+
+  return `<div class="detail-label">Lateral (shared tags)</div><div class="lateral-section">${rows}</div>`;
+}
+
+// Legacy wrappers
+function renderFractalNode(node) { return ''; }
+function renderFractalTree(fractalData) { return renderSynthesisPath(fractalData); }
+
+function renderFamilyViews() {
+  const container = document.getElementById('familyContainer');
+  container.innerHTML = '';
+  FAMILIES.forEach(f => {
+    const view = document.createElement('div');
+    view.className = 'family-view';
+    view.id = `family-${f.id}`;
+    let termsHTML = '';
+    f.terms.forEach(t => {
+      const statusHTML = t.status === 'corrected' ? '<div class="term-status corrected">CORRECTED</div>'
+        : t.status === 'new' ? '<div class="term-status new">NEW</div>' : '';
+      const correctionHTML = t.correction ? `<div class="detail-label">Correction</div><div class="correction-note">${t.correction}</div>` : '';
+      const connectionsHTML = t.connections.length > 0
+        ? `<div class="detail-label">Connections</div><div>${t.connections.map(c => `<span class="connection-tag">${c}</span>`).join('')}</div>` : '';
+      const fractalHTML = `<div class="detail-label">Synthesis Path</div>${renderSynthesisPath(t.fractal)}`;
+      const lateralHTML = renderLateralAffinity(t, f);
+      const horizonHTML = t.horizonStage ? `<span class="horizon-stage ${t.horizonStage}">${t.horizonStage.replace('-h','').replace('bigbang','nearing big bang')}</span>` : '';
+
+      // RE-201: inherited vs self-grown framework rows
+      const inh = t.inherited || [];
+      const sg = t.selfGrown || [];
+      const totalFW = inh.length + sg.length;
+      const fwLookup = Object.fromEntries(FRAMEWORK_PROMPTS.map(fp => [fp.id, fp]));
+      const inhChips = inh.map(id => { const fp = fwLookup[id]; return fp ? `<span class="fw-origin-chip inherited">${fp.abbr}</span>` : ''; }).join('');
+      const sgChips = sg.map(id => { const fp = fwLookup[id]; return fp ? `<span class="fw-origin-chip self-grown">${fp.abbr}</span>` : ''; }).join('');
+      const ratioText = totalFW > 0 ? `${sg.length}/${totalFW}` : '';
+      const originRowsHTML = (inh.length > 0 || sg.length > 0) ? `
+        <div class="fw-origin-rows">
+          ${inh.length > 0 ? `<div class="fw-origin-row"><span class="fw-origin-label inherited">Ports</span><div class="fw-origin-chips">${inhChips}</div></div>` : ''}
+          ${sg.length > 0 ? `<div class="fw-origin-row"><span class="fw-origin-label self-grown">Tags</span><div class="fw-origin-chips">${sgChips}</div><span class="fw-ratio">${ratioText}</span></div>` : ''}
+        </div>` : '';
+
+      // RE-199: structuring continuum (approximation from fractal depth + connections)
+      const structPct = Math.min(100, Math.round(((t._fractalCount * 15) + (t._internalConn * 10) + (t._externalConn * 5)) * 1.5));
+
+      termsHTML += `
+        <div class="term-card" style="border-left: 3px solid ${f.color}" onclick="toggleTerm(this)">
+          ${statusHTML}
+          <div class="term-name">${t.name}${horizonHTML}</div>
+          <div class="term-re">${t.re}</div>
+          <div class="term-meaning">${t.meaning}</div>
+          ${originRowsHTML}
+          <div class="structuring-bar"><div class="structuring-fill" style="width:${structPct}%"></div></div>
+          <div class="term-metrics">
+            <div class="term-metric">&#9670; <span class="tv">${t._fractalCount}</span> depth</div>
+            <div class="term-metric">&#8596; <span class="tv">${t._internalConn}</span> internal</div>
+            <div class="term-metric">&#8694; <span class="tv">${t._externalConn}</span> external</div>
+          </div>
+          <div class="term-detail">
+            ${correctionHTML}
+            ${fractalHTML}
+            ${lateralHTML}
+            ${connectionsHTML}
+            <div class="detail-label">Framework</div>
+            <div>${f.name}</div>
+          </div>
+        </div>
+      `;
+    });
+    view.innerHTML = `
+      <div class="family-title-row">
+        <div class="family-dot" style="background:${f.color}"></div>
+        <div class="family-title" style="color:${f.color}">${f.name}</div>
+        <div class="family-count">${f.terms.length} terms</div>
+      </div>
+      <div class="term-grid">${termsHTML}</div>
+    `;
+    container.appendChild(view);
+  });
+}
+
+// ============================================================
+//  NAVIGATION
+// ============================================================
+function showHome() {
+  document.getElementById('categoryGrid').style.display = 'flex';
+  document.querySelectorAll('.family-view').forEach(v => v.classList.remove('active'));
+  document.getElementById('breadcrumb').innerHTML = `
+    <span style="color:#6a6560;">You are here:</span>
+    <a onclick="showHome()">Frameworks</a>
+  `;
+  document.getElementById('pageSub').textContent = `Natural Digital Design. ${totalTerms} terms across ${FAMILIES.length} frameworks. Click a framework to enter.`;
+}
+
+function showFamily(id) {
+  const f = FAMILIES.find(x => x.id === id);
+  document.getElementById('categoryGrid').style.display = 'none';
+  document.querySelectorAll('.family-view').forEach(v => v.classList.remove('active'));
+  document.getElementById(`family-${id}`).classList.add('active');
+  document.getElementById('breadcrumb').innerHTML = `
+    <span style="color:#6a6560;">You are here:</span>
+    <a onclick="showHome()">Frameworks</a>
+    <span class="sep">/</span>
+    <span style="color:${f.color}">${f.name}</span>
+  `;
+  document.getElementById('pageSub').textContent = `${f.terms.length} terms in ${f.name}. Click any term to expand its internal fractal.`;
+}
+
+function toggleTerm(el) { el.classList.toggle('expanded'); }
+
+// ============================================================
+//  INIT
+// ============================================================
+
+// RE-202: Self-awareness ratio (computed first so stats bar can reference it)
+const globalInherited = FAMILIES.reduce((s,f) => s + f._totalInherited, 0);
+const globalSelfGrown = FAMILIES.reduce((s,f) => s + f._totalSelfGrown, 0);
+const globalTotal = globalInherited + globalSelfGrown;
+const inhPct = globalTotal > 0 ? Math.round((globalInherited / globalTotal) * 100) : 50;
+const sgPct = 100 - inhPct;
+
+document.getElementById('statsBar').innerHTML = `
+  <div class="stat-item">Frameworks: <span>${FAMILIES.length}</span></div>
+  <div class="stat-item">Terms: <span>${totalTerms}</span></div>
+  <div class="stat-item">New this session: <span>${FAMILIES.reduce((n,f) => n + f._newCount, 0)}</span></div>
+  <div class="stat-item">Total depth: <span>${FAMILIES.reduce((n,f) => n + f._totalFractal, 0)}</span></div>
+  <div class="stat-item awareness-stat">Self-grown: <span>${sgPct}%</span>
+    <div class="awareness-bar">
+      <div class="awareness-fill-inherited" style="width:${inhPct}%"></div>
+      <div class="awareness-fill-selfgrown" style="width:${sgPct}%"></div>
+    </div>
+  </div>
+`;
+document.getElementById('pageSub').textContent = `Natural Digital Design. ${totalTerms} terms across ${FAMILIES.length} frameworks. Click a framework to enter.`;
+renderCategoryGrid();
+renderFamilyViews();
+// Render framework chips and structuring bars on all inbox items
+for (let i = 0; i < 5; i++) {
+  renderFrameworkChips(i);
+  // RE-199: Add structuring continuum bar to each inbox item
+  const itemEl = document.getElementById('item-' + i);
+  if (itemEl && ITEM_DATA[i]) {
+    const barDiv = document.createElement('div');
+    barDiv.className = 'structuring-bar';
+    barDiv.innerHTML = `<div class="structuring-fill" style="width:${ITEM_DATA[i].structPct}%"></div>`;
+    // Insert before the framework-selector
+    const fwSel = itemEl.querySelector('.framework-selector');
+    if (fwSel) { itemEl.insertBefore(barDiv, fwSel); }
+    else { itemEl.appendChild(barDiv); }
+  }
+}
+</script>
+
+</body>
+</html>

@@ -1,0 +1,609 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>The Synthesis Cycle v2: Dual Direction</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    background: #06060b;
+    color: #e0e0e0;
+    font-family: 'Georgia', serif;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    min-height: 100vh;
+    padding: 30px 20px;
+    overflow-x: hidden;
+  }
+  h1 {
+    font-size: 26px;
+    font-weight: 400;
+    letter-spacing: 3px;
+    margin-bottom: 4px;
+    color: #c8b88a;
+  }
+  .subtitle {
+    font-size: 13px;
+    color: #666;
+    margin-bottom: 30px;
+    font-style: italic;
+  }
+  canvas { display: block; }
+  .bottom-text {
+    margin-top: 30px;
+    max-width: 650px;
+    text-align: center;
+    line-height: 1.7;
+  }
+  .quote {
+    font-style: italic;
+    font-size: 15px;
+    color: #c8b88a;
+    margin-bottom: 20px;
+  }
+  .mechanics {
+    font-size: 12px;
+    color: #666;
+    line-height: 1.8;
+  }
+  .mechanics strong { color: #888; }
+</style>
+</head>
+<body>
+
+<h1>THE SYNTHESIS CYCLE</h1>
+<div class="subtitle">Two directions. One system. No analysis. Only joining at different scales.</div>
+
+<canvas id="c" width="900" height="900"></canvas>
+
+<div class="bottom-text">
+  <div class="quote">"There is no analysis. There is only synthesis at different scales."</div>
+  <div class="mechanics">
+    <strong>Left channel (precipitation):</strong> Air condenses through spark-driven mesh gravity. Data falls. Rain events fix atmosphere into soil.<br>
+    <strong>Right channel (growth):</strong> Soil binds into roots. Roots bridge into trunk. Trunk converges into canopy. The tree reaches new air.<br>
+    <strong>Center (red thread):</strong> One to many to one. The diamond at every altitude. The pulse that drives both directions.<br>
+    <strong>Each revolution:</strong> Deeper soil. Stronger roots. Taller trunk. Wider canopy. More air intercepted. More rain. The system feeds itself.
+  </div>
+</div>
+
+<script>
+const canvas = document.getElementById('c');
+const ctx = canvas.getContext('2d');
+const W = 900, H = 900;
+const cx = W / 2, cy = H / 2;
+let t = 0;
+
+// Layout: vertical figure-eight with five nodes
+// Top = AIR (atmosphere), bottom center = CANOPY (highest abstraction reaching back to air)
+// The loop goes: AIR -> SOIL -> ROOTS -> TRUNK -> CANOPY -> back to AIR
+
+const levels = [
+  { name: 'AIR',    sub: 'raw, ambient, unfixed',         color: [120, 165, 210], y: 0.08 },
+  { name: 'SOIL',   sub: 'fixed, grounded, single domain', color: [140, 110, 60],  y: 0.28 },
+  { name: 'ROOTS',  sub: 'within-domain clusters',         color: [90, 115, 72],   y: 0.48 },
+  { name: 'TRUNK',  sub: 'cross-domain bridges',           color: [108, 92, 62],   y: 0.68 },
+  { name: 'CANOPY', sub: 'keystones, convergence',         color: [58, 122, 90],   y: 0.88 }
+];
+
+// Diamond shapes for one-to-many-to-one at each transition
+const transitions = [
+  { from: 0, to: 1, label: 'RAIN EVENT', sublabel: 'condense \u00b7 fix', side: 'left' },
+  { from: 1, to: 2, label: 'ROOT BINDING', sublabel: 'cluster \u00b7 fix', side: 'right' },
+  { from: 2, to: 3, label: 'VASCULAR BRIDGE', sublabel: 'bridge \u00b7 build', side: 'left' },
+  { from: 3, to: 4, label: 'CONVERGENCE', sublabel: 'converge \u00b7 build', side: 'right' }
+];
+
+// Particles
+let rainParticles = [];
+let growthParticles = [];
+let dispersalParticles = [];
+
+for (let i = 0; i < 40; i++) {
+  rainParticles.push({
+    progress: Math.random(),
+    speed: 0.002 + Math.random() * 0.003,
+    x_offset: (Math.random() - 0.5) * 60,
+    size: 1 + Math.random() * 2,
+    opacity: 0.3 + Math.random() * 0.5
+  });
+}
+
+for (let i = 0; i < 35; i++) {
+  growthParticles.push({
+    progress: Math.random(),
+    speed: 0.001 + Math.random() * 0.002,
+    x_offset: (Math.random() - 0.5) * 50,
+    size: 1 + Math.random() * 1.5,
+    opacity: 0.2 + Math.random() * 0.4
+  });
+}
+
+// Return arc particles (canopy back to air)
+for (let i = 0; i < 20; i++) {
+  dispersalParticles.push({
+    progress: Math.random(),
+    speed: 0.002 + Math.random() * 0.003,
+    spread: 0.5 + Math.random() * 0.5,
+    size: 1 + Math.random() * 1.5,
+    opacity: 0.2 + Math.random() * 0.3
+  });
+}
+
+function rgba(col, a) {
+  return `rgba(${col[0]},${col[1]},${col[2]},${a})`;
+}
+
+function getNodePos(idx) {
+  const l = levels[idx];
+  const nodeY = 60 + l.y * (H - 140);
+  return { x: cx, y: nodeY };
+}
+
+function drawNode(idx) {
+  const l = levels[idx];
+  const pos = getNodePos(idx);
+  const pulse = 1 + 0.12 * Math.sin(t * 0.02 + idx * 1.3);
+  const r = 36 * pulse;
+
+  // Glow
+  const grd = ctx.createRadialGradient(pos.x, pos.y, 0, pos.x, pos.y, r * 3);
+  grd.addColorStop(0, rgba(l.color, 0.15));
+  grd.addColorStop(1, rgba(l.color, 0));
+  ctx.fillStyle = grd;
+  ctx.beginPath();
+  ctx.arc(pos.x, pos.y, r * 3, 0, Math.PI * 2);
+  ctx.fill();
+
+  // Circle
+  ctx.beginPath();
+  ctx.arc(pos.x, pos.y, r, 0, Math.PI * 2);
+  ctx.fillStyle = rgba(l.color, 0.15);
+  ctx.fill();
+  ctx.strokeStyle = rgba(l.color, 0.6);
+  ctx.lineWidth = 2;
+  ctx.stroke();
+
+  // Name
+  ctx.fillStyle = rgba(l.color, 0.9);
+  ctx.font = 'bold 14px Georgia';
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
+  ctx.fillText(l.name, pos.x, pos.y - 6);
+
+  // Sub
+  ctx.fillStyle = rgba(l.color, 0.45);
+  ctx.font = '10px Georgia';
+  ctx.fillText(l.sub, pos.x, pos.y + 10);
+}
+
+function drawDiamond(fromIdx, toIdx, side, phase) {
+  const from = getNodePos(fromIdx);
+  const to = getNodePos(toIdx);
+  const midY = (from.y + to.y) / 2;
+  const sideDir = side === 'left' ? -1 : 1;
+  const spread = 80 + 15 * Math.sin(t * 0.015 + phase);
+
+  const top = { x: cx, y: from.y + 30 };
+  const mid = { x: cx + sideDir * spread, y: midY };
+  const bot = { x: cx, y: to.y - 30 };
+
+  // Diamond path
+  ctx.beginPath();
+  ctx.moveTo(top.x, top.y);
+  ctx.quadraticCurveTo(mid.x, top.y + (midY - top.y) * 0.3, mid.x, midY);
+  ctx.quadraticCurveTo(mid.x, midY + (bot.y - midY) * 0.7, bot.x, bot.y);
+  ctx.strokeStyle = `rgba(200, 160, 100, ${0.12 + 0.06 * Math.sin(t * 0.02 + phase)})`;
+  ctx.lineWidth = 1.5;
+  ctx.stroke();
+
+  // Mirror side (lighter)
+  const mirrorMid = { x: cx - sideDir * spread * 0.3, y: midY };
+  ctx.beginPath();
+  ctx.moveTo(top.x, top.y);
+  ctx.quadraticCurveTo(mirrorMid.x, top.y + (midY - top.y) * 0.3, mirrorMid.x, midY);
+  ctx.quadraticCurveTo(mirrorMid.x, midY + (bot.y - midY) * 0.7, bot.x, bot.y);
+  ctx.strokeStyle = `rgba(200, 160, 100, ${0.05 + 0.03 * Math.sin(t * 0.02 + phase)})`;
+  ctx.lineWidth = 1;
+  ctx.stroke();
+
+  return { top, mid, bot, sideDir };
+}
+
+function drawTransitionLabel(tr, idx) {
+  const from = getNodePos(tr.from);
+  const to = getNodePos(tr.to);
+  const midY = (from.y + to.y) / 2;
+  const sideDir = tr.side === 'left' ? -1 : 1;
+  const labelX = cx + sideDir * 140;
+
+  const alpha = 0.25 + 0.1 * Math.sin(t * 0.018 + idx);
+  ctx.fillStyle = `rgba(200, 180, 140, ${alpha})`;
+  ctx.font = '10px Georgia';
+  ctx.textAlign = tr.side === 'left' ? 'right' : 'left';
+  ctx.fillText(tr.label, labelX, midY - 6);
+  ctx.fillStyle = `rgba(160, 150, 120, ${alpha * 0.7})`;
+  ctx.font = '9px Georgia';
+  ctx.fillText(tr.sublabel, labelX, midY + 8);
+}
+
+function drawReturnArc() {
+  // Arc from CANOPY back to AIR (the closing of the loop)
+  const canopy = getNodePos(4);
+  const air = getNodePos(0);
+
+  // Left return arc
+  const arcSpread = 200 + 20 * Math.sin(t * 0.01);
+
+  ctx.beginPath();
+  ctx.moveTo(canopy.x - 40, canopy.y);
+  ctx.bezierCurveTo(
+    cx - arcSpread, canopy.y - 50,
+    cx - arcSpread, air.y + 50,
+    air.x - 40, air.y
+  );
+  ctx.strokeStyle = `rgba(58, 122, 90, ${0.08 + 0.04 * Math.sin(t * 0.012)})`;
+  ctx.lineWidth = 2;
+  ctx.stroke();
+
+  // Right return arc
+  ctx.beginPath();
+  ctx.moveTo(canopy.x + 40, canopy.y);
+  ctx.bezierCurveTo(
+    cx + arcSpread, canopy.y - 50,
+    cx + arcSpread, air.y + 50,
+    air.x + 40, air.y
+  );
+  ctx.strokeStyle = `rgba(120, 165, 210, ${0.08 + 0.04 * Math.sin(t * 0.012 + 1)})`;
+  ctx.lineWidth = 2;
+  ctx.stroke();
+
+  // Labels on arcs
+  const arcAlpha = 0.2 + 0.08 * Math.sin(t * 0.015);
+  ctx.fillStyle = `rgba(58, 122, 90, ${arcAlpha})`;
+  ctx.font = 'italic 10px Georgia';
+  ctx.textAlign = 'right';
+  ctx.fillText('canopy reaches', cx - arcSpread + 30, cy);
+  ctx.fillText('new atmosphere', cx - arcSpread + 30, cy + 14);
+
+  ctx.fillStyle = `rgba(120, 165, 210, ${arcAlpha})`;
+  ctx.textAlign = 'left';
+  ctx.fillText('event horizon', cx + arcSpread - 30, cy);
+  ctx.fillText('crossing resets', cx + arcSpread - 30, cy + 14);
+  ctx.fillText('compression to air', cx + arcSpread - 30, cy + 28);
+
+  // Dispersal particles along the arcs
+  dispersalParticles.forEach(p => {
+    p.progress += p.speed;
+    if (p.progress > 1) p.progress = 0;
+
+    const prog = p.progress;
+    const side = p.spread > 0.75 ? 1 : -1;
+    const as = arcSpread * (0.8 + p.spread * 0.4);
+
+    // Bezier interpolation (approximate)
+    const startX = canopy.x + side * 40;
+    const startY = canopy.y;
+    const cp1x = cx + side * as;
+    const cp1y = canopy.y - 50;
+    const cp2x = cx + side * as;
+    const cp2y = air.y + 50;
+    const endX = air.x + side * 40;
+    const endY = air.y;
+
+    const u = prog;
+    const u2 = u * u;
+    const u3 = u2 * u;
+    const inv = 1 - u;
+    const inv2 = inv * inv;
+    const inv3 = inv2 * inv;
+
+    const px = inv3 * startX + 3 * inv2 * u * cp1x + 3 * inv * u2 * cp2x + u3 * endX;
+    const py = inv3 * startY + 3 * inv2 * u * cp1y + 3 * inv * u2 * cp2y + u3 * endY;
+
+    const fadeIn = prog < 0.1 ? prog * 10 : 1;
+    const fadeOut = prog > 0.85 ? (1 - prog) * 6.67 : 1;
+    const a = p.opacity * fadeIn * fadeOut;
+
+    ctx.beginPath();
+    ctx.arc(px, py, p.size, 0, Math.PI * 2);
+    const col = side === -1 ? [58, 122, 90] : [120, 165, 210];
+    ctx.fillStyle = rgba(col, a);
+    ctx.fill();
+  });
+}
+
+function drawRedThread() {
+  // Vertical red thread through center
+  const air = getNodePos(0);
+  const canopy = getNodePos(4);
+
+  const pulse = 0.15 + 0.1 * Math.sin(t * 0.012);
+
+  // Thread line
+  const grad = ctx.createLinearGradient(cx, air.y, cx, canopy.y);
+  grad.addColorStop(0, `rgba(180, 55, 55, ${pulse * 0.3})`);
+  grad.addColorStop(0.3, `rgba(180, 55, 55, ${pulse})`);
+  grad.addColorStop(0.7, `rgba(180, 55, 55, ${pulse})`);
+  grad.addColorStop(1, `rgba(180, 55, 55, ${pulse * 0.3})`);
+
+  ctx.beginPath();
+  ctx.moveTo(cx, air.y + 36);
+  ctx.lineTo(cx, canopy.y - 36);
+  ctx.strokeStyle = grad;
+  ctx.lineWidth = 1.5;
+  ctx.stroke();
+
+  // Diamond markers at each transition midpoint
+  for (let i = 0; i < 4; i++) {
+    const from = getNodePos(i);
+    const to = getNodePos(i + 1);
+    const midY = (from.y + to.y) / 2;
+    const dSize = 6 + 2 * Math.sin(t * 0.02 + i * 1.5);
+    const dAlpha = 0.3 + 0.15 * Math.sin(t * 0.02 + i * 1.5);
+
+    ctx.beginPath();
+    ctx.moveTo(cx, midY - dSize);
+    ctx.lineTo(cx + dSize * 0.6, midY);
+    ctx.lineTo(cx, midY + dSize);
+    ctx.lineTo(cx - dSize * 0.6, midY);
+    ctx.closePath();
+    ctx.fillStyle = `rgba(180, 55, 55, ${dAlpha})`;
+    ctx.fill();
+    ctx.strokeStyle = `rgba(180, 55, 55, ${dAlpha + 0.1})`;
+    ctx.lineWidth = 1;
+    ctx.stroke();
+  }
+
+  // Red thread label
+  const rtAlpha = 0.3 + 0.1 * Math.sin(t * 0.015 + 2);
+  ctx.fillStyle = `rgba(180, 55, 55, ${rtAlpha})`;
+  ctx.font = 'bold 10px Georgia';
+  ctx.textAlign = 'left';
+  ctx.fillText('RED THREAD', cx + 12, cy - 4);
+  ctx.font = '9px Georgia';
+  ctx.fillStyle = `rgba(180, 55, 55, ${rtAlpha * 0.7})`;
+  ctx.fillText('one \u2192 many \u2192 one', cx + 12, cy + 9);
+}
+
+function drawRainParticles() {
+  // Rain falls on the LEFT side from AIR toward SOIL
+  const air = getNodePos(0);
+  const soil = getNodePos(1);
+
+  rainParticles.forEach(p => {
+    p.progress += p.speed;
+    if (p.progress > 1) {
+      p.progress = 0;
+      p.x_offset = (Math.random() - 0.5) * 80;
+    }
+
+    const startY = air.y + 30;
+    const endY = soil.y - 30;
+    const py = startY + (endY - startY) * p.progress;
+    const drift = Math.sin(p.progress * Math.PI) * 40;
+    const px = cx - 60 + p.x_offset - drift;
+
+    const fadeIn = p.progress < 0.1 ? p.progress * 10 : 1;
+    const fadeOut = p.progress > 0.8 ? (1 - p.progress) * 5 : 1;
+    const a = p.opacity * fadeIn * fadeOut;
+
+    // Trail
+    const trailY = py - 12;
+    const grd = ctx.createLinearGradient(px, trailY, px, py);
+    grd.addColorStop(0, `rgba(200, 184, 138, 0)`);
+    grd.addColorStop(1, `rgba(200, 184, 138, ${a})`);
+    ctx.beginPath();
+    ctx.moveTo(px, trailY);
+    ctx.lineTo(px, py);
+    ctx.strokeStyle = grd;
+    ctx.lineWidth = 1.2;
+    ctx.stroke();
+
+    ctx.beginPath();
+    ctx.arc(px, py, p.size, 0, Math.PI * 2);
+    ctx.fillStyle = `rgba(200, 184, 138, ${a})`;
+    ctx.fill();
+  });
+
+  // Rain label
+  const rlAlpha = 0.2 + 0.08 * Math.sin(t * 0.02);
+  ctx.fillStyle = `rgba(200, 184, 138, ${rlAlpha})`;
+  ctx.font = 'italic 11px Georgia';
+  ctx.textAlign = 'right';
+  const midRainY = (air.y + soil.y) / 2;
+  ctx.fillText('rain', cx - 120, midRainY);
+  ctx.fillText('events', cx - 120, midRainY + 14);
+}
+
+function drawGrowthParticles() {
+  // Growth rises on the RIGHT side through all levels
+  const soil = getNodePos(1);
+  const canopy = getNodePos(4);
+
+  growthParticles.forEach(p => {
+    p.progress += p.speed;
+    if (p.progress > 1) {
+      p.progress = 0;
+      p.x_offset = (Math.random() - 0.5) * 50;
+    }
+
+    const startY = soil.y;
+    const endY = canopy.y;
+    const py = startY + (endY - startY) * p.progress;
+    const drift = Math.sin(p.progress * Math.PI * 2) * 25;
+    const px = cx + 60 + p.x_offset + drift;
+
+    const fadeIn = p.progress < 0.1 ? p.progress * 10 : 1;
+    const fadeOut = p.progress > 0.85 ? (1 - p.progress) * 6.67 : 1;
+    const a = p.opacity * fadeIn * fadeOut;
+
+    // Color shifts from brown (soil) to green (canopy) as it rises
+    const r = Math.floor(140 + (58 - 140) * p.progress);
+    const g = Math.floor(110 + (122 - 110) * p.progress);
+    const b = Math.floor(60 + (90 - 60) * p.progress);
+
+    ctx.beginPath();
+    ctx.arc(px, py, p.size, 0, Math.PI * 2);
+    ctx.fillStyle = `rgba(${r},${g},${b},${a})`;
+    ctx.fill();
+  });
+
+  // Growth label
+  const glAlpha = 0.2 + 0.08 * Math.sin(t * 0.02 + 1);
+  ctx.fillStyle = `rgba(90, 130, 80, ${glAlpha})`;
+  ctx.font = 'italic 11px Georgia';
+  ctx.textAlign = 'left';
+  ctx.fillText('growth', cx + 120, cy + 20);
+  ctx.fillText('upward', cx + 120, cy + 34);
+}
+
+function drawCausalArrows() {
+  // Small directional indicators between nodes
+  for (let i = 0; i < 4; i++) {
+    const from = getNodePos(i);
+    const to = getNodePos(i + 1);
+    const midY = (from.y + to.y) / 2;
+    const arrowAlpha = 0.2 + 0.1 * Math.sin(t * 0.02 + i);
+
+    // Down arrow (left side for even, right for odd)
+    const side = i % 2 === 0 ? -1 : 1;
+    const arrowX = cx + side * 48;
+
+    ctx.beginPath();
+    ctx.moveTo(arrowX, midY - 8);
+    ctx.lineTo(arrowX + 4, midY - 3);
+    ctx.lineTo(arrowX - 4, midY - 3);
+    ctx.closePath();
+
+    // Actually these should point down (precipitation) or up (growth)
+    // Let's make them all point downward on left, upward on right
+    if (side === -1) {
+      // Downward arrow (precipitation direction)
+      ctx.beginPath();
+      ctx.moveTo(arrowX - 4, midY - 4);
+      ctx.lineTo(arrowX + 4, midY - 4);
+      ctx.lineTo(arrowX, midY + 4);
+      ctx.closePath();
+    } else {
+      // Upward arrow (growth direction)
+      ctx.beginPath();
+      ctx.moveTo(arrowX - 4, midY + 4);
+      ctx.lineTo(arrowX + 4, midY + 4);
+      ctx.lineTo(arrowX, midY - 4);
+      ctx.closePath();
+    }
+    ctx.fillStyle = `rgba(200, 180, 140, ${arrowAlpha})`;
+    ctx.fill();
+  }
+}
+
+function drawFixBuildLabels() {
+  for (let i = 0; i < 4; i++) {
+    const from = getNodePos(i);
+    const to = getNodePos(i + 1);
+    const thirdY = from.y + (to.y - from.y) * 0.35;
+    const twoThirdY = from.y + (to.y - from.y) * 0.65;
+    const alpha = 0.15 + 0.05 * Math.sin(t * 0.015 + i);
+
+    ctx.fillStyle = `rgba(180, 170, 140, ${alpha})`;
+    ctx.font = '8px Georgia';
+    ctx.textAlign = 'center';
+    ctx.fillText('fix', cx, thirdY);
+    ctx.fillText('build', cx, twoThirdY);
+  }
+}
+
+function drawEventHorizonMarkers() {
+  // Dashed horizontal lines at each node level representing event horizons
+  for (let i = 0; i < 5; i++) {
+    const pos = getNodePos(i);
+    const ehAlpha = 0.04 + 0.02 * Math.sin(t * 0.01 + i);
+
+    ctx.setLineDash([3, 8]);
+    ctx.beginPath();
+    ctx.moveTo(cx - 350, pos.y);
+    ctx.lineTo(cx - 50, pos.y);
+    ctx.moveTo(cx + 50, pos.y);
+    ctx.lineTo(cx + 350, pos.y);
+    ctx.strokeStyle = `rgba(200, 200, 200, ${ehAlpha})`;
+    ctx.lineWidth = 0.5;
+    ctx.stroke();
+    ctx.setLineDash([]);
+  }
+}
+
+function draw() {
+  ctx.clearRect(0, 0, W, H);
+  t++;
+
+  // Background
+  ctx.fillStyle = '#06060b';
+  ctx.fillRect(0, 0, W, H);
+
+  // Subtle center column glow
+  const colGrd = ctx.createLinearGradient(cx - 100, 0, cx + 100, 0);
+  colGrd.addColorStop(0, 'rgba(40, 35, 25, 0)');
+  colGrd.addColorStop(0.5, 'rgba(40, 35, 25, 0.15)');
+  colGrd.addColorStop(1, 'rgba(40, 35, 25, 0)');
+  ctx.fillStyle = colGrd;
+  ctx.fillRect(cx - 200, 0, 400, H);
+
+  // Draw layers back to front
+  drawEventHorizonMarkers();
+  drawReturnArc();
+
+  // Draw diamonds for each transition
+  for (let i = 0; i < transitions.length; i++) {
+    const tr = transitions[i];
+    drawDiamond(tr.from, tr.to, tr.side, i * 1.5);
+    drawTransitionLabel(tr, i);
+  }
+
+  drawRainParticles();
+  drawGrowthParticles();
+  drawRedThread();
+  drawCausalArrows();
+  drawFixBuildLabels();
+
+  // Draw nodes on top
+  for (let i = 0; i < 5; i++) {
+    drawNode(i);
+  }
+
+  // Top label: PRECIPITATION
+  const pAlpha = 0.18 + 0.06 * Math.sin(t * 0.015);
+  ctx.fillStyle = `rgba(200, 184, 138, ${pAlpha})`;
+  ctx.font = '10px Georgia';
+  ctx.textAlign = 'right';
+  ctx.fillText('PRECIPITATION', cx - 60, 35);
+  ctx.fillText('(cluster-scale synthesis)', cx - 60, 48);
+
+  // Top label: GROWTH
+  ctx.fillStyle = `rgba(90, 130, 80, ${pAlpha})`;
+  ctx.textAlign = 'left';
+  ctx.fillText('GROWTH', cx + 60, 35);
+  ctx.fillText('(domain-scale synthesis)', cx + 60, 48);
+
+  // "causes" labels along the main flow
+  const cAlpha = 0.12 + 0.04 * Math.sin(t * 0.018);
+  ctx.fillStyle = `rgba(200, 200, 200, ${cAlpha})`;
+  ctx.font = 'italic 8px Georgia';
+  ctx.textAlign = 'center';
+
+  for (let i = 0; i < 4; i++) {
+    const from = getNodePos(i);
+    const to = getNodePos(i + 1);
+    const midY = (from.y + to.y) / 2;
+    const side = transitions[i].side === 'left' ? -1 : 1;
+    ctx.fillText('causes', cx + side * 30, midY);
+  }
+
+  requestAnimationFrame(draw);
+}
+
+draw();
+</script>
+</body>
+</html>

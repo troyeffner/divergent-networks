@@ -1,0 +1,1085 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Mesh Builder: The Flower Cycle</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+    background: #f5f2ed;
+    color: #2a2520;
+    overflow: hidden;
+    height: 100vh;
+    width: 100vw;
+    user-select: none;
+  }
+
+  #app {
+    display: flex;
+    height: 100vh;
+    width: 100vw;
+  }
+
+  /* Left panel: instructions and stage info */
+  #sidebar {
+    width: 320px;
+    min-width: 320px;
+    background: #fff;
+    border-right: 1px solid #d4cfc7;
+    display: flex;
+    flex-direction: column;
+    overflow-y: auto;
+  }
+
+  #sidebar h1 {
+    font-size: 20px;
+    font-weight: 700;
+    padding: 24px 20px 8px;
+    color: #2a2520;
+  }
+
+  #sidebar .subtitle {
+    font-size: 13px;
+    color: #7a7570;
+    padding: 0 20px 16px;
+    line-height: 1.5;
+  }
+
+  .stage-card {
+    margin: 0 12px 8px;
+    padding: 14px 16px;
+    background: #faf8f5;
+    border: 1px solid #e8e4dd;
+    border-radius: 10px;
+    cursor: default;
+  }
+
+  .stage-card.active {
+    background: #fdf8ee;
+    border-color: #d4a843;
+  }
+
+  .stage-card.completed {
+    background: #f0f7f0;
+    border-color: #8cb88c;
+  }
+
+  .stage-card h3 {
+    font-size: 14px;
+    font-weight: 600;
+    margin-bottom: 4px;
+  }
+
+  .stage-card p {
+    font-size: 12px;
+    color: #6a6560;
+    line-height: 1.5;
+  }
+
+  .stage-badge {
+    display: inline-block;
+    font-size: 10px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    padding: 2px 8px;
+    border-radius: 4px;
+    margin-bottom: 6px;
+  }
+
+  .stage-badge.air { background: #e8eef8; color: #4a6fa5; }
+  .stage-badge.soil { background: #f0ece4; color: #8a7a5a; }
+  .stage-badge.roots { background: #e8f0e8; color: #5a7a5a; }
+  .stage-badge.trunk { background: #f0e8e0; color: #8a6a4a; }
+  .stage-badge.canopy { background: #fce8e8; color: #a85a5a; }
+
+  #hint-bar {
+    margin: 12px;
+    padding: 14px 16px;
+    background: linear-gradient(135deg, #fdf8ee, #fef5e0);
+    border: 1px solid #e8d8a8;
+    border-radius: 10px;
+    font-size: 13px;
+    line-height: 1.6;
+    color: #6a5a30;
+  }
+
+  #hint-bar strong {
+    color: #8a6a20;
+  }
+
+  #reset-btn {
+    margin: 12px;
+    padding: 12px;
+    background: #fff;
+    border: 1px solid #d4cfc7;
+    border-radius: 8px;
+    font-size: 13px;
+    font-weight: 600;
+    color: #6a6560;
+    cursor: pointer;
+    transition: all 0.15s;
+  }
+
+  #reset-btn:hover {
+    background: #faf8f5;
+    border-color: #b4afa7;
+  }
+
+  /* Main canvas area */
+  #canvas-area {
+    flex: 1;
+    position: relative;
+    overflow: hidden;
+  }
+
+  canvas {
+    display: block;
+    width: 100%;
+    height: 100%;
+  }
+
+  /* Floating tooltip */
+  #tooltip {
+    position: absolute;
+    display: none;
+    background: #fff;
+    border: 1px solid #d4cfc7;
+    border-radius: 8px;
+    padding: 8px 12px;
+    font-size: 12px;
+    color: #4a4540;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+    pointer-events: none;
+    max-width: 200px;
+    line-height: 1.4;
+    z-index: 100;
+  }
+
+  /* Mesh progress bar */
+  #mesh-progress {
+    position: absolute;
+    bottom: 20px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: #fff;
+    border: 1px solid #d4cfc7;
+    border-radius: 12px;
+    padding: 12px 20px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    box-shadow: 0 4px 16px rgba(0,0,0,0.06);
+    z-index: 50;
+  }
+
+  #mesh-progress .label {
+    font-size: 12px;
+    font-weight: 600;
+    color: #6a6560;
+    white-space: nowrap;
+  }
+
+  #mesh-progress .bar-bg {
+    width: 180px;
+    height: 8px;
+    background: #eae6e0;
+    border-radius: 4px;
+    overflow: hidden;
+  }
+
+  #mesh-progress .bar-fill {
+    height: 100%;
+    background: linear-gradient(90deg, #d4a843, #c47a30);
+    border-radius: 4px;
+    transition: width 0.3s ease;
+    width: 0%;
+  }
+
+  #mesh-progress .bar-text {
+    font-size: 11px;
+    color: #8a8580;
+    min-width: 40px;
+    text-align: right;
+  }
+
+  /* Event horizon flash overlay */
+  #eh-flash {
+    position: absolute;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background: radial-gradient(circle, rgba(212,168,67,0.3), transparent 70%);
+    opacity: 0;
+    pointer-events: none;
+    z-index: 40;
+    transition: opacity 0.1s;
+  }
+
+  /* Legend */
+  #legend {
+    position: absolute;
+    top: 16px;
+    right: 16px;
+    background: rgba(255,255,255,0.95);
+    border: 1px solid #d4cfc7;
+    border-radius: 10px;
+    padding: 12px 16px;
+    font-size: 11px;
+    z-index: 50;
+  }
+
+  #legend h4 {
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    color: #8a8580;
+    margin-bottom: 8px;
+  }
+
+  .legend-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 4px;
+  }
+
+  .legend-dot {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+  }
+
+  .legend-line {
+    width: 20px;
+    height: 2px;
+  }
+</style>
+</head>
+<body>
+<div id="app">
+  <div id="sidebar">
+    <h1>Mesh Builder</h1>
+    <p class="subtitle">Drag data points together to form meshes. When mesh density reaches threshold, gravity pulls inward and an event horizon forms.</p>
+
+    <div id="hint-bar">
+      <strong>Start here:</strong> Drag any two Air-ring nodes close together. When they overlap, a mesh connection forms. Build enough connections and watch gravity take over.
+    </div>
+
+    <div id="stage-list"></div>
+
+    <button id="reset-btn" onclick="resetAll()">Reset Flower Cycle</button>
+  </div>
+
+  <div id="canvas-area">
+    <canvas id="c"></canvas>
+    <div id="tooltip"></div>
+    <div id="mesh-progress">
+      <span class="label">Mesh Density</span>
+      <div class="bar-bg"><div class="bar-fill" id="bar-fill"></div></div>
+      <span class="bar-text" id="bar-text">0%</span>
+    </div>
+    <div id="eh-flash"></div>
+    <div id="legend">
+      <h4>Forces</h4>
+      <div class="legend-row"><div class="legend-dot" style="background:#d4a843"></div> IN (compression)</div>
+      <div class="legend-row"><div class="legend-dot" style="background:#6a9a6a"></div> OUT (expansion)</div>
+      <div class="legend-row"><div class="legend-dot" style="background:#8aaad4; opacity:0.6"></div> AROUND (orbit)</div>
+      <div class="legend-row"><div class="legend-line" style="background:#c47a30"></div> Mesh connection</div>
+      <div class="legend-row"><div class="legend-line" style="background:#d44040"></div> Red thread</div>
+    </div>
+  </div>
+</div>
+
+<script>
+// ============================================================
+// CONFIGURATION
+// ============================================================
+const RINGS = [
+  { name: 'Air',    color: '#8aaad4', radius: 0.88, textColor: '#4a6fa5', bg: 'rgba(138,170,212,0.06)' },
+  { name: 'Soil',   color: '#b8a878', radius: 0.68, textColor: '#8a7a5a', bg: 'rgba(184,168,120,0.06)' },
+  { name: 'Roots',  color: '#7aaa7a', radius: 0.50, textColor: '#5a7a5a', bg: 'rgba(122,170,122,0.06)' },
+  { name: 'Trunk',  color: '#b8906a', radius: 0.34, textColor: '#8a6a4a', bg: 'rgba(184,144,106,0.06)' },
+  { name: 'Canopy', color: '#c46a6a', radius: 0.18, textColor: '#a85a5a', bg: 'rgba(196,106,106,0.08)' },
+];
+
+const MESH_THRESHOLD = 4; // connections needed to trigger event horizon
+const CONNECT_DISTANCE = 70; // px to form a mesh connection
+const GRAVITY_SPEED = 0.4; // px per frame when gravity pulls
+const ORBIT_SPEED = 0.003; // radians per frame for AROUND
+
+// ============================================================
+// FLOWER LIFECYCLE STAGES
+// ============================================================
+const STAGES = [
+  {
+    ring: 0, badge: 'air',
+    title: 'Stage 1: Atmospheric Data',
+    desc: 'Raw elements float in the AROUND. Sunlight, water, minerals, CO2, a seed, wind, warmth, bacteria. Nothing is connected yet.',
+    nodes: [
+      { label: 'Seed', desc: 'A dormant possibility. Genetic blueprint waiting for conditions.' },
+      { label: 'Water', desc: 'H2O molecules in the soil and air. Essential solvent.' },
+      { label: 'Minerals', desc: 'Nitrogen, phosphorus, potassium. Soil nutrients.' },
+      { label: 'Sunlight', desc: 'Photons. Energy source. 400-700nm wavelength.' },
+      { label: 'CO2', desc: 'Carbon dioxide. Building block for sugars.' },
+      { label: 'Soil Bacteria', desc: 'Nitrogen-fixing microbes. The invisible fixers.' },
+      { label: 'Temperature', desc: 'Warmth signals. Spring thaw. Activation energy.' },
+      { label: 'Wind', desc: 'Dispersal force. Carries pollen and seeds.' },
+    ],
+    meshTarget: 'Germination',
+    meshHint: 'Drag Seed + Water + Minerals + Temperature together',
+    meshNodes: ['Seed', 'Water', 'Minerals', 'Temperature'],
+    resultDesc: 'The seed absorbs water, minerals activate, warmth triggers enzymes. Four data points mesh into one fixed event: germination.',
+  },
+  {
+    ring: 1, badge: 'soil',
+    title: 'Stage 2: Soil Fixing',
+    desc: 'Germination is fixed in soil. Remaining air data continues orbiting. New meshes can form.',
+    nodes: [
+      { label: 'Germination', desc: 'FIXED from Air. The seed has cracked open. Radicle emerges.', fixed: true },
+      { label: 'Sunlight', desc: 'Still orbiting. Not yet pulled in.', carried: true },
+      { label: 'CO2', desc: 'Still orbiting. Waiting for leaves.', carried: true },
+      { label: 'Soil Bacteria', desc: 'Nitrogen fixers now relevant. Ready to mesh.', carried: true },
+    ],
+    meshTarget: 'Root System',
+    meshHint: 'Drag Germination + Soil Bacteria together, then pull in Sunlight',
+    meshNodes: ['Germination', 'Soil Bacteria', 'Sunlight'],
+    resultDesc: 'Germination event meets nitrogen fixers and energy. Root system establishes. Fixed into the Roots ring.',
+  },
+  {
+    ring: 2, badge: 'roots',
+    title: 'Stage 3: Root Network',
+    desc: 'Root system is fixed. The plant now has infrastructure. Photosynthesis becomes possible.',
+    nodes: [
+      { label: 'Root System', desc: 'FIXED from Soil. Underground network. Water and mineral transport.', fixed: true },
+      { label: 'CO2', desc: 'Now relevant. Leaves are forming.', carried: true },
+      { label: 'Chlorophyll', desc: 'Green pigment synthesized. Light capture begins.' },
+      { label: 'Stem Growth', desc: 'Upward push. Vascular tissue forming.' },
+    ],
+    meshTarget: 'Photosynthesis Engine',
+    meshHint: 'Drag Root System + CO2 + Chlorophyll together',
+    meshNodes: ['Root System', 'CO2', 'Chlorophyll'],
+    resultDesc: 'Root infrastructure meets carbon capture and light harvesting. The photosynthesis engine fixes into the Trunk.',
+  },
+  {
+    ring: 3, badge: 'trunk',
+    title: 'Stage 4: The Living Trunk',
+    desc: 'Photosynthesis engine is fixed. The plant is self-sustaining. Now it builds toward bloom.',
+    nodes: [
+      { label: 'Photosynthesis Engine', desc: 'FIXED from Roots. Self-sustaining energy cycle.', fixed: true },
+      { label: 'Stem Growth', desc: 'Structural support. Reaching for light.', carried: true },
+      { label: 'Bud Formation', desc: 'Reproductive organs begin differentiating.' },
+      { label: 'Nectar Production', desc: 'Sugar-rich fluid. Pollinator signal.' },
+    ],
+    meshTarget: 'The Bloom',
+    meshHint: 'Drag all four together to form the bloom',
+    meshNodes: ['Photosynthesis Engine', 'Stem Growth', 'Bud Formation', 'Nectar Production'],
+    resultDesc: 'Everything compresses to core. The bloom opens. Maximum density. The canopy keystone.',
+  },
+  {
+    ring: 4, badge: 'canopy',
+    title: 'Stage 5: Bloom and Exhale',
+    desc: 'The flower is the canopy keystone. Saturated core. Now it exhales: pollen, seeds, fragrance radiate outward. Petals decompose back to Air. The cycle completes.',
+    nodes: [
+      { label: 'The Bloom', desc: 'CANOPY KEYSTONE. Maximum compression. The flower in full expression.', fixed: true },
+    ],
+    meshTarget: null,
+    meshHint: 'Watch the bloom exhale. Pollen, seeds, and fragrance radiate back to Air. The cycle is complete.',
+    meshNodes: [],
+    resultDesc: 'The bloom radiates outward. Pollen catches wind. Seeds disperse. Petals decompose. Data returns to Air for the next cycle.',
+  }
+];
+
+// ============================================================
+// STATE
+// ============================================================
+let canvas, ctx, W, H, cx, cy, maxR;
+let nodes = [];
+let connections = [];
+let currentStage = 0;
+let dragging = null;
+let dragOffsetX = 0, dragOffsetY = 0;
+let mouseX = 0, mouseY = 0;
+let animFrame;
+let meshDensity = 0;
+let ehAnimating = false;
+let ehTimer = 0;
+let exhaleParticles = [];
+let stageTransitioning = false;
+
+// ============================================================
+// INIT
+// ============================================================
+function init() {
+  canvas = document.getElementById('c');
+  ctx = canvas.getContext('2d');
+  resize();
+  window.addEventListener('resize', resize);
+  canvas.addEventListener('mousedown', onMouseDown);
+  canvas.addEventListener('mousemove', onMouseMove);
+  canvas.addEventListener('mouseup', onMouseUp);
+  canvas.addEventListener('mouseleave', onMouseUp);
+
+  // Touch support
+  canvas.addEventListener('touchstart', onTouchStart, { passive: false });
+  canvas.addEventListener('touchmove', onTouchMove, { passive: false });
+  canvas.addEventListener('touchend', onTouchEnd);
+
+  buildStageList();
+  loadStage(0);
+  loop();
+}
+
+function resize() {
+  const area = document.getElementById('canvas-area');
+  W = area.clientWidth;
+  H = area.clientHeight;
+  canvas.width = W * devicePixelRatio;
+  canvas.height = H * devicePixelRatio;
+  canvas.style.width = W + 'px';
+  canvas.style.height = H + 'px';
+  ctx.setTransform(devicePixelRatio, 0, 0, devicePixelRatio, 0, 0);
+  cx = W / 2;
+  cy = H / 2;
+  maxR = Math.min(W, H) * 0.45;
+}
+
+// ============================================================
+// STAGE MANAGEMENT
+// ============================================================
+function buildStageList() {
+  const list = document.getElementById('stage-list');
+  list.innerHTML = '';
+  STAGES.forEach((s, i) => {
+    const card = document.createElement('div');
+    card.className = 'stage-card' + (i === 0 ? ' active' : '');
+    card.id = 'stage-card-' + i;
+    card.innerHTML = `<div class="stage-badge ${s.badge}">${RINGS[s.ring].name} Ring</div><h3>${s.title}</h3><p>${s.desc}</p>`;
+    list.appendChild(card);
+  });
+}
+
+function loadStage(idx) {
+  if (idx >= STAGES.length) return;
+  currentStage = idx;
+  const stage = STAGES[idx];
+
+  // Update sidebar
+  document.querySelectorAll('.stage-card').forEach((c, i) => {
+    c.className = 'stage-card' + (i === idx ? ' active' : i < idx ? ' completed' : '');
+  });
+
+  // Update hint
+  const hint = document.getElementById('hint-bar');
+  if (stage.meshTarget) {
+    hint.innerHTML = `<strong>${stage.meshHint}</strong><br>Build ${MESH_THRESHOLD} connections to reach mesh density threshold.`;
+  } else {
+    hint.innerHTML = `<strong>${stage.meshHint}</strong>`;
+  }
+
+  // Scroll active stage into view
+  const activeCard = document.getElementById('stage-card-' + idx);
+  if (activeCard) activeCard.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+
+  // Create nodes
+  nodes = [];
+  connections = [];
+  meshDensity = 0;
+  updateMeshBar();
+
+  const ringR = RINGS[stage.ring].radius * maxR;
+
+  stage.nodes.forEach((nd, ni) => {
+    const angle = (ni / stage.nodes.length) * Math.PI * 2 + Math.random() * 0.3;
+    const r = ringR + (Math.random() - 0.5) * 40;
+    const node = {
+      label: nd.label,
+      desc: nd.desc,
+      x: cx + Math.cos(angle) * r,
+      y: cy + Math.sin(angle) * r,
+      ring: stage.ring,
+      angle: angle,
+      orbitAngle: angle,
+      orbitR: r,
+      fixed: nd.fixed || false,
+      carried: nd.carried || false,
+      radius: nd.fixed ? 28 : 22,
+      color: RINGS[stage.ring].color,
+      draggable: !nd.fixed || stage.ring === 4,
+      meshMember: stage.meshNodes.includes(nd.label),
+      vx: 0, vy: 0,
+      pulsePhase: Math.random() * Math.PI * 2,
+    };
+    nodes.push(node);
+  });
+
+  // If final stage, trigger exhale after delay
+  if (idx === STAGES.length - 1) {
+    setTimeout(startExhale, 1500);
+  }
+}
+
+// ============================================================
+// INTERACTION
+// ============================================================
+function getCanvasPos(e) {
+  const rect = canvas.getBoundingClientRect();
+  return { x: e.clientX - rect.left, y: e.clientY - rect.top };
+}
+
+function findNodeAt(x, y) {
+  for (let i = nodes.length - 1; i >= 0; i--) {
+    const n = nodes[i];
+    const dx = n.x - x, dy = n.y - y;
+    if (dx * dx + dy * dy < (n.radius + 8) * (n.radius + 8) && n.draggable) {
+      return n;
+    }
+  }
+  return null;
+}
+
+function onMouseDown(e) {
+  const pos = getCanvasPos(e);
+  const node = findNodeAt(pos.x, pos.y);
+  if (node) {
+    dragging = node;
+    dragOffsetX = node.x - pos.x;
+    dragOffsetY = node.y - pos.y;
+    canvas.style.cursor = 'grabbing';
+  }
+}
+
+function onMouseMove(e) {
+  const pos = getCanvasPos(e);
+  mouseX = pos.x;
+  mouseY = pos.y;
+
+  if (dragging) {
+    dragging.x = pos.x + dragOffsetX;
+    dragging.y = pos.y + dragOffsetY;
+    checkConnections();
+  } else {
+    const node = findNodeAt(pos.x, pos.y);
+    canvas.style.cursor = node ? 'grab' : 'default';
+
+    // Tooltip
+    const tooltip = document.getElementById('tooltip');
+    if (node) {
+      tooltip.style.display = 'block';
+      tooltip.style.left = (pos.x + 16) + 'px';
+      tooltip.style.top = (pos.y - 10) + 'px';
+      tooltip.innerHTML = `<strong>${node.label}</strong><br>${node.desc}`;
+    } else {
+      tooltip.style.display = 'none';
+    }
+  }
+}
+
+function onMouseUp() {
+  if (dragging) {
+    dragging = null;
+    canvas.style.cursor = 'default';
+  }
+}
+
+function onTouchStart(e) {
+  e.preventDefault();
+  const touch = e.touches[0];
+  const pos = getCanvasPos(touch);
+  const node = findNodeAt(pos.x, pos.y);
+  if (node) {
+    dragging = node;
+    dragOffsetX = node.x - pos.x;
+    dragOffsetY = node.y - pos.y;
+  }
+}
+
+function onTouchMove(e) {
+  e.preventDefault();
+  const touch = e.touches[0];
+  const pos = getCanvasPos(touch);
+  if (dragging) {
+    dragging.x = pos.x + dragOffsetX;
+    dragging.y = pos.y + dragOffsetY;
+    checkConnections();
+  }
+}
+
+function onTouchEnd() {
+  dragging = null;
+}
+
+// ============================================================
+// MESH LOGIC
+// ============================================================
+function checkConnections() {
+  if (stageTransitioning || currentStage >= STAGES.length) return;
+  const stage = STAGES[currentStage];
+  if (!stage.meshTarget) return;
+
+  // Check all pairs of mesh-member nodes
+  const meshNodes = nodes.filter(n => n.meshMember);
+  let newConn = false;
+
+  for (let i = 0; i < meshNodes.length; i++) {
+    for (let j = i + 1; j < meshNodes.length; j++) {
+      const a = meshNodes[i], b = meshNodes[j];
+      const dx = a.x - b.x, dy = a.y - b.y;
+      const dist = Math.sqrt(dx * dx + dy * dy);
+
+      if (dist < CONNECT_DISTANCE) {
+        // Check if connection already exists
+        const exists = connections.find(c =>
+          (c.a === a && c.b === b) || (c.a === b && c.b === a)
+        );
+        if (!exists) {
+          connections.push({ a, b, strength: 0 });
+          newConn = true;
+        }
+      }
+    }
+  }
+
+  if (newConn) {
+    // Count unique connections among mesh nodes
+    const meshConns = connections.filter(c => c.a.meshMember && c.b.meshMember);
+    const maxPossible = (meshNodes.length * (meshNodes.length - 1)) / 2;
+    meshDensity = Math.min(1, meshConns.length / MESH_THRESHOLD);
+    updateMeshBar();
+
+    if (meshConns.length >= MESH_THRESHOLD) {
+      triggerEventHorizon();
+    }
+  }
+}
+
+function updateMeshBar() {
+  const fill = document.getElementById('bar-fill');
+  const text = document.getElementById('bar-text');
+  const pct = Math.round(meshDensity * 100);
+  fill.style.width = pct + '%';
+  text.textContent = pct + '%';
+
+  if (pct >= 100) {
+    fill.style.background = 'linear-gradient(90deg, #c47a30, #d44040)';
+  } else if (pct >= 60) {
+    fill.style.background = 'linear-gradient(90deg, #d4a843, #c47a30)';
+  } else {
+    fill.style.background = 'linear-gradient(90deg, #d4a843, #d4a843)';
+  }
+}
+
+// ============================================================
+// EVENT HORIZON
+// ============================================================
+function triggerEventHorizon() {
+  if (stageTransitioning) return;
+  stageTransitioning = true;
+  dragging = null;
+
+  const stage = STAGES[currentStage];
+  const meshNodes = nodes.filter(n => n.meshMember);
+
+  // Flash
+  const flash = document.getElementById('eh-flash');
+  flash.style.opacity = '1';
+  setTimeout(() => flash.style.opacity = '0', 300);
+
+  // Calculate centroid of mesh nodes
+  let avgX = 0, avgY = 0;
+  meshNodes.forEach(n => { avgX += n.x; avgY += n.y; });
+  avgX /= meshNodes.length;
+  avgY /= meshNodes.length;
+
+  // Animate: pull all mesh nodes to centroid
+  ehAnimating = true;
+  const pullInterval = setInterval(() => {
+    let allClose = true;
+    meshNodes.forEach(n => {
+      const dx = avgX - n.x, dy = avgY - n.y;
+      const dist = Math.sqrt(dx * dx + dy * dy);
+      if (dist > 3) {
+        n.x += dx * 0.08;
+        n.y += dy * 0.08;
+        allClose = false;
+      }
+    });
+
+    if (allClose) {
+      clearInterval(pullInterval);
+
+      // Now pull centroid inward to next ring
+      const nextRing = Math.min(stage.ring + 1, RINGS.length - 1);
+      const targetR = RINGS[nextRing].radius * maxR;
+      const angle = Math.atan2(avgY - cy, avgX - cx);
+      const targetX = cx + Math.cos(angle) * targetR;
+      const targetY = cy + Math.sin(angle) * targetR;
+
+      const inwardInterval = setInterval(() => {
+        let done = true;
+        meshNodes.forEach(n => {
+          const dx = targetX - n.x, dy = targetY - n.y;
+          const dist = Math.sqrt(dx * dx + dy * dy);
+          if (dist > 3) {
+            n.x += dx * 0.06;
+            n.y += dy * 0.06;
+            done = false;
+          }
+        });
+
+        if (done) {
+          clearInterval(inwardInterval);
+
+          // Update hint with result
+          const hint = document.getElementById('hint-bar');
+          hint.innerHTML = `<strong>Event Horizon!</strong> ${stage.resultDesc}`;
+
+          // Second flash
+          flash.style.opacity = '0.6';
+          setTimeout(() => flash.style.opacity = '0', 200);
+
+          // Proceed to next stage after delay
+          setTimeout(() => {
+            ehAnimating = false;
+            stageTransitioning = false;
+            meshDensity = 0;
+            updateMeshBar();
+            loadStage(currentStage + 1);
+          }, 2000);
+        }
+      }, 16);
+    }
+  }, 16);
+}
+
+// ============================================================
+// EXHALE (final stage)
+// ============================================================
+function startExhale() {
+  if (currentStage !== STAGES.length - 1) return;
+
+  const bloom = nodes.find(n => n.label === 'The Bloom');
+  if (!bloom) return;
+
+  const exhaleLabels = ['Pollen', 'Seeds', 'Fragrance', 'Nectar drops', 'Fallen petals', 'Nutrients'];
+  exhaleLabels.forEach((label, i) => {
+    setTimeout(() => {
+      exhaleParticles.push({
+        label: label,
+        x: bloom.x,
+        y: bloom.y,
+        angle: (i / exhaleLabels.length) * Math.PI * 2 + Math.random() * 0.3,
+        speed: 0.6 + Math.random() * 0.4,
+        r: 0,
+        maxR: RINGS[0].radius * maxR * (0.8 + Math.random() * 0.3),
+        alpha: 1,
+        size: 14 + Math.random() * 4,
+      });
+    }, i * 600);
+  });
+
+  // Update hint after all exhale
+  setTimeout(() => {
+    const hint = document.getElementById('hint-bar');
+    hint.innerHTML = `<strong>Cycle complete.</strong> The bloom has exhaled. Pollen, seeds, and nutrients return to Air. Each becomes atmospheric data for the next cycle. Press Reset to begin again.`;
+  }, exhaleLabels.length * 600 + 1000);
+}
+
+// ============================================================
+// RENDER LOOP
+// ============================================================
+function loop() {
+  ctx.clearRect(0, 0, W, H);
+  drawRings();
+  drawRedThread();
+  updateOrbit();
+  drawConnections();
+  drawNodes();
+  drawExhaleParticles();
+  animFrame = requestAnimationFrame(loop);
+}
+
+function drawRings() {
+  // Draw from outermost to innermost
+  for (let i = 0; i < RINGS.length; i++) {
+    const ring = RINGS[i];
+    const r = ring.radius * maxR;
+
+    // Fill between this ring and the next inner ring
+    ctx.beginPath();
+    ctx.arc(cx, cy, r, 0, Math.PI * 2);
+    ctx.fillStyle = ring.bg;
+    ctx.fill();
+
+    // Ring line
+    ctx.beginPath();
+    ctx.arc(cx, cy, r, 0, Math.PI * 2);
+    ctx.strokeStyle = ring.color;
+    ctx.globalAlpha = 0.3;
+    ctx.lineWidth = 1.5;
+    ctx.setLineDash([6, 4]);
+    ctx.stroke();
+    ctx.setLineDash([]);
+    ctx.globalAlpha = 1;
+
+    // Ring label
+    ctx.save();
+    ctx.font = '600 13px "Segoe UI", system-ui, sans-serif';
+    ctx.fillStyle = ring.textColor;
+    ctx.globalAlpha = 0.6;
+    ctx.textAlign = 'center';
+    ctx.fillText(ring.name, cx, cy - r + 18);
+    ctx.restore();
+  }
+
+  // Center dot
+  ctx.beginPath();
+  ctx.arc(cx, cy, 4, 0, Math.PI * 2);
+  ctx.fillStyle = '#c46a6a';
+  ctx.fill();
+}
+
+function drawRedThread() {
+  // Radial spokes
+  const spokeCount = 8;
+  for (let i = 0; i < spokeCount; i++) {
+    const angle = (i / spokeCount) * Math.PI * 2;
+    const outerR = RINGS[0].radius * maxR;
+    ctx.beginPath();
+    ctx.moveTo(cx, cy);
+    ctx.lineTo(cx + Math.cos(angle) * outerR, cy + Math.sin(angle) * outerR);
+    ctx.strokeStyle = '#d44040';
+    ctx.globalAlpha = 0.08;
+    ctx.lineWidth = 1;
+    ctx.stroke();
+    ctx.globalAlpha = 1;
+
+    // Diamond at each ring crossing
+    RINGS.forEach(ring => {
+      const r = ring.radius * maxR;
+      const dx = cx + Math.cos(angle) * r;
+      const dy = cy + Math.sin(angle) * r;
+      ctx.save();
+      ctx.translate(dx, dy);
+      ctx.rotate(Math.PI / 4);
+      ctx.fillStyle = '#d44040';
+      ctx.globalAlpha = 0.12;
+      ctx.fillRect(-3, -3, 6, 6);
+      ctx.restore();
+      ctx.globalAlpha = 1;
+    });
+  }
+}
+
+function updateOrbit() {
+  // AROUND force: non-dragged, non-fixed nodes orbit
+  nodes.forEach(n => {
+    if (n === dragging || n.fixed || ehAnimating) return;
+
+    n.orbitAngle += ORBIT_SPEED;
+
+    // Gentle pull back to orbit if not being dragged
+    const targetX = cx + Math.cos(n.orbitAngle) * n.orbitR;
+    const targetY = cy + Math.sin(n.orbitAngle) * n.orbitR;
+
+    // Weak spring force back to orbit (the AROUND pull)
+    if (!dragging || dragging !== n) {
+      n.x += (targetX - n.x) * 0.005;
+      n.y += (targetY - n.y) * 0.005;
+    }
+  });
+}
+
+function drawConnections() {
+  connections.forEach(c => {
+    c.strength = Math.min(1, c.strength + 0.02);
+
+    ctx.beginPath();
+    ctx.moveTo(c.a.x, c.a.y);
+    ctx.lineTo(c.b.x, c.b.y);
+    ctx.strokeStyle = '#c47a30';
+    ctx.globalAlpha = 0.3 + c.strength * 0.5;
+    ctx.lineWidth = 1.5 + c.strength * 1.5;
+    ctx.stroke();
+    ctx.globalAlpha = 1;
+
+    // Mesh overlap glow at midpoint
+    const mx = (c.a.x + c.b.x) / 2;
+    const my = (c.a.y + c.b.y) / 2;
+    ctx.beginPath();
+    ctx.arc(mx, my, 4 + c.strength * 4, 0, Math.PI * 2);
+    ctx.fillStyle = '#c47a30';
+    ctx.globalAlpha = 0.15 * c.strength;
+    ctx.fill();
+    ctx.globalAlpha = 1;
+  });
+}
+
+function drawNodes() {
+  const time = Date.now() / 1000;
+
+  nodes.forEach(n => {
+    const pulse = Math.sin(time * 2 + n.pulsePhase) * 0.1 + 1;
+    const r = n.radius * pulse;
+
+    // AROUND orbit trail (faint arc behind non-fixed nodes)
+    if (!n.fixed && !ehAnimating) {
+      ctx.beginPath();
+      ctx.arc(cx, cy, n.orbitR, n.orbitAngle - 0.4, n.orbitAngle, false);
+      ctx.strokeStyle = n.color;
+      ctx.globalAlpha = 0.08;
+      ctx.lineWidth = 6;
+      ctx.stroke();
+      ctx.globalAlpha = 1;
+    }
+
+    // Node shadow
+    ctx.beginPath();
+    ctx.arc(n.x, n.y + 2, r, 0, Math.PI * 2);
+    ctx.fillStyle = 'rgba(0,0,0,0.06)';
+    ctx.fill();
+
+    // Node body
+    ctx.beginPath();
+    ctx.arc(n.x, n.y, r, 0, Math.PI * 2);
+
+    if (n.fixed) {
+      // Fixed nodes: solid with border
+      ctx.fillStyle = n.color;
+      ctx.fill();
+      ctx.strokeStyle = '#fff';
+      ctx.lineWidth = 2.5;
+      ctx.stroke();
+    } else if (n.meshMember) {
+      // Mesh-eligible: filled with highlight border
+      ctx.fillStyle = '#fff';
+      ctx.fill();
+      ctx.strokeStyle = n.color;
+      ctx.lineWidth = 2.5;
+      ctx.stroke();
+
+      // Inner accent
+      ctx.beginPath();
+      ctx.arc(n.x, n.y, r * 0.6, 0, Math.PI * 2);
+      ctx.fillStyle = n.color;
+      ctx.globalAlpha = 0.15;
+      ctx.fill();
+      ctx.globalAlpha = 1;
+    } else {
+      // Non-mesh: lighter
+      ctx.fillStyle = '#fff';
+      ctx.fill();
+      ctx.strokeStyle = n.color;
+      ctx.globalAlpha = 0.4;
+      ctx.lineWidth = 1.5;
+      ctx.stroke();
+      ctx.globalAlpha = 1;
+    }
+
+    // Label
+    ctx.font = (n.fixed ? '700' : '600') + ' ' + (n.fixed ? '12' : '11') + 'px "Segoe UI", system-ui, sans-serif';
+    ctx.fillStyle = n.fixed ? '#fff' : '#3a3530';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+
+    // Text wrapping for long labels
+    const maxW = r * 2 - 6;
+    const words = n.label.split(' ');
+    if (words.length > 1 && ctx.measureText(n.label).width > maxW) {
+      const half = Math.ceil(words.length / 2);
+      const line1 = words.slice(0, half).join(' ');
+      const line2 = words.slice(half).join(' ');
+      ctx.fillText(line1, n.x, n.y - 6);
+      ctx.fillText(line2, n.x, n.y + 7);
+    } else {
+      ctx.fillText(n.label, n.x, n.y);
+    }
+
+    // Mesh-eligible indicator (small arrow pointing inward)
+    if (n.meshMember && !n.fixed) {
+      const angleToCenter = Math.atan2(cy - n.y, cx - n.x);
+      const arrowX = n.x + Math.cos(angleToCenter) * (r + 10);
+      const arrowY = n.y + Math.sin(angleToCenter) * (r + 10);
+      ctx.beginPath();
+      ctx.moveTo(arrowX, arrowY);
+      ctx.lineTo(
+        arrowX - Math.cos(angleToCenter - 0.4) * 6,
+        arrowY - Math.sin(angleToCenter - 0.4) * 6
+      );
+      ctx.moveTo(arrowX, arrowY);
+      ctx.lineTo(
+        arrowX - Math.cos(angleToCenter + 0.4) * 6,
+        arrowY - Math.sin(angleToCenter + 0.4) * 6
+      );
+      ctx.strokeStyle = '#d4a843';
+      ctx.globalAlpha = 0.4 + Math.sin(time * 3) * 0.2;
+      ctx.lineWidth = 1.5;
+      ctx.stroke();
+      ctx.globalAlpha = 1;
+    }
+  });
+}
+
+function drawExhaleParticles() {
+  exhaleParticles.forEach(p => {
+    p.r += p.speed;
+    if (p.r > p.maxR) {
+      p.alpha = Math.max(0, p.alpha - 0.003);
+    }
+
+    const x = cx + Math.cos(p.angle) * p.r;
+    const y = cy + Math.sin(p.angle) * p.r;
+
+    // Trail
+    ctx.beginPath();
+    ctx.moveTo(cx, cy);
+    ctx.lineTo(x, y);
+    ctx.strokeStyle = '#6a9a6a';
+    ctx.globalAlpha = p.alpha * 0.1;
+    ctx.lineWidth = 1;
+    ctx.stroke();
+    ctx.globalAlpha = 1;
+
+    // Particle
+    ctx.beginPath();
+    ctx.arc(x, y, p.size, 0, Math.PI * 2);
+    ctx.fillStyle = '#fff';
+    ctx.globalAlpha = p.alpha;
+    ctx.fill();
+    ctx.strokeStyle = '#6a9a6a';
+    ctx.lineWidth = 1.5;
+    ctx.stroke();
+    ctx.globalAlpha = 1;
+
+    // Label
+    ctx.font = '600 10px "Segoe UI", system-ui, sans-serif';
+    ctx.fillStyle = '#5a7a5a';
+    ctx.globalAlpha = p.alpha;
+    ctx.textAlign = 'center';
+    ctx.fillText(p.label, x, y + 3);
+    ctx.globalAlpha = 1;
+  });
+}
+
+// ============================================================
+// RESET
+// ============================================================
+function resetAll() {
+  exhaleParticles = [];
+  stageTransitioning = false;
+  ehAnimating = false;
+  connections = [];
+  meshDensity = 0;
+  updateMeshBar();
+  buildStageList();
+  loadStage(0);
+}
+
+// ============================================================
+// GO
+// ============================================================
+init();
+</script>
+</body>
+</html>

@@ -1,0 +1,568 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>The Synthesis Cycle</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    background: #f6f3ed;
+    color: #2a2520;
+    font-family: 'Georgia', serif;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    min-height: 100vh;
+    padding: 30px 20px;
+  }
+  h1 {
+    font-size: 36px;
+    font-weight: 700;
+    letter-spacing: 2px;
+    color: #2a2520;
+    margin-bottom: 6px;
+  }
+  .subtitle {
+    font-size: 16px;
+    color: #6b6055;
+    margin-bottom: 4px;
+  }
+  .philosophy {
+    font-size: 14px;
+    color: #8a7e70;
+    margin-bottom: 24px;
+    font-style: italic;
+  }
+  .canvas-wrap {
+    background: #fff;
+    border: 1px solid #d8d0c4;
+    border-radius: 8px;
+    padding: 10px;
+    box-shadow: 0 2px 12px rgba(0,0,0,0.06);
+  }
+  canvas { display: block; }
+  .footer {
+    margin-top: 24px;
+    max-width: 860px;
+    text-align: center;
+  }
+  .quote {
+    font-style: italic;
+    font-size: 17px;
+    color: #5a4f42;
+    margin-bottom: 20px;
+    line-height: 1.6;
+  }
+  .legend {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 24px;
+    font-size: 14px;
+    color: #5a5045;
+  }
+  .legend-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .legend-dot {
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    border: 1px solid rgba(0,0,0,0.15);
+  }
+  .water-cycle {
+    margin-top: 16px;
+    font-size: 13px;
+    color: #8a7e70;
+    line-height: 1.6;
+  }
+</style>
+</head>
+<body>
+
+<h1>THE SYNTHESIS CYCLE</h1>
+<div class="subtitle">Every node breathes. Every level rains. No analysis. Only synthesis at different scales.</div>
+<div class="philosophy">Energy is never lost or created; it is only moved.</div>
+
+<div class="canvas-wrap">
+  <canvas id="c" width="1000" height="860"></canvas>
+</div>
+
+<div class="footer">
+  <div class="quote">
+    "There's an entire other synthesis circle outside of this, building on the elements<br>
+    within the red thread. It's the event horizon."
+  </div>
+  <div class="legend">
+    <div class="legend-item"><div class="legend-dot" style="background:#c49540"></div>Rain (fixing inward)</div>
+    <div class="legend-item"><div class="legend-dot" style="background:#4a8a5a"></div>Growth (building upward)</div>
+    <div class="legend-item"><div class="legend-dot" style="background:#b83030"></div>Red thread (one to many to one)</div>
+    <div class="legend-item"><div class="legend-dot" style="background:#4a80aa"></div>Atmosphere at each level</div>
+    <div class="legend-item"><div class="legend-dot" style="background:#7a5aaa"></div>Outer cycle (inter-cycle mesh)</div>
+  </div>
+  <div class="water-cycle">
+    precipitation &rarr; absorption &rarr; saturation &rarr; springs &rarr; evaporation &rarr; clouds &rarr; precipitation<br>
+    The synthesis cycle IS the water cycle IS the tree.
+  </div>
+</div>
+
+<script>
+const canvas = document.getElementById('c');
+const ctx = canvas.getContext('2d');
+const W = 1000, H = 860;
+const cx = W / 2, cy = H / 2;
+let t = 0;
+
+const levels = [
+  { name: 'AIR',    color: '#4a80aa', fill: '#d6e6f2', y: 0.06, desc: 'Raw, ambient, unfixed' },
+  { name: 'SOIL',   color: '#9a7530', fill: '#efe0c4', y: 0.26, desc: 'Fixed, grounded, single domain' },
+  { name: 'ROOTS',  color: '#5a8040', fill: '#ddeacc', y: 0.46, desc: 'Within-domain clusters' },
+  { name: 'TRUNK',  color: '#7a6535', fill: '#e8dcc6', y: 0.66, desc: 'Cross-domain bridges' },
+  { name: 'CANOPY', color: '#2a7a55', fill: '#c8e6d6', y: 0.86, desc: 'Keystones, convergence' }
+];
+
+const transitions = [
+  { label: 'RAIN EVENT', sub: 'condense + fix', side: -1 },
+  { label: 'ROOT BINDING', sub: 'cluster + fix', side: 1 },
+  { label: 'VASCULAR BRIDGE', sub: 'bridge + build', side: -1 },
+  { label: 'CONVERGENCE', sub: 'converge + build', side: 1 }
+];
+
+function getY(i) { return 50 + levels[i].y * (H - 110); }
+function hexToRgb(hex) {
+  const r = parseInt(hex.slice(1,3),16);
+  const g = parseInt(hex.slice(3,5),16);
+  const b = parseInt(hex.slice(5,7),16);
+  return [r,g,b];
+}
+function rgba(hex, a) { const c = hexToRgb(hex); return `rgba(${c[0]},${c[1]},${c[2]},${a})`; }
+
+// Particle systems
+class InwardParticle {
+  constructor(level) { this.level = level; this.reset(); }
+  reset() {
+    this.angle = Math.random() * Math.PI * 2;
+    this.startR = 100 + Math.random() * 50;
+    this.endR = 30 + Math.random() * 15;
+    this.progress = Math.random();
+    this.speed = 0.004 + Math.random() * 0.005;
+    this.size = 2.5 + Math.random() * 2;
+    this.drift = (Math.random() - 0.5) * 0.006;
+  }
+  update() { this.progress += this.speed; this.angle += this.drift; if (this.progress > 1) this.reset(); }
+  draw() {
+    const ny = getY(this.level);
+    const r = this.startR + (this.endR - this.startR) * this.progress;
+    const px = cx + Math.cos(this.angle) * r;
+    const py = ny + Math.sin(this.angle) * r * 0.4;
+    const fade = this.progress < 0.1 ? this.progress * 10 : this.progress > 0.8 ? (1 - this.progress) * 5 : 1;
+    ctx.beginPath();
+    ctx.arc(px, py, this.size, 0, Math.PI * 2);
+    ctx.fillStyle = rgba(levels[this.level].color, 0.25 * fade);
+    ctx.fill();
+  }
+}
+
+class GrowthParticle {
+  constructor(from) { this.from = from; this.reset(); }
+  reset() {
+    this.progress = Math.random();
+    this.speed = 0.002 + Math.random() * 0.003;
+    this.xOff = (Math.random() - 0.5) * 30;
+    this.side = Math.random() > 0.5 ? 1 : -1;
+    this.size = 2.5 + Math.random() * 2;
+  }
+  update() { this.progress += this.speed; if (this.progress > 1) this.reset(); }
+  draw() {
+    const y1 = getY(this.from), y2 = getY(this.from + 1);
+    const py = y1 + (y2 - y1) * this.progress;
+    const curve = Math.sin(this.progress * Math.PI) * 25 * this.side;
+    const px = cx + 50 * this.side + this.xOff + curve;
+    const fade = this.progress < 0.1 ? this.progress * 10 : this.progress > 0.85 ? (1 - this.progress) * 6.67 : 1;
+    const c1 = hexToRgb(levels[this.from].color);
+    const c2 = hexToRgb(levels[this.from + 1].color);
+    const r = Math.round(c1[0] + (c2[0]-c1[0]) * this.progress);
+    const g = Math.round(c1[1] + (c2[1]-c1[1]) * this.progress);
+    const b = Math.round(c1[2] + (c2[2]-c1[2]) * this.progress);
+    ctx.beginPath();
+    ctx.arc(px, py, this.size, 0, Math.PI * 2);
+    ctx.fillStyle = `rgba(${r},${g},${b},${0.3 * fade})`;
+    ctx.fill();
+  }
+}
+
+class RainDrop {
+  constructor(level) { this.level = level; this.reset(); }
+  reset() {
+    this.angle = Math.random() * Math.PI * 2;
+    this.startR = 90 + Math.random() * 30;
+    this.progress = Math.random();
+    this.speed = 0.006 + Math.random() * 0.008;
+  }
+  update() { this.progress += this.speed; if (this.progress > 1) this.reset(); }
+  draw() {
+    const ny = getY(this.level);
+    const r = this.startR * (1 - this.progress);
+    const px = cx + Math.cos(this.angle + this.progress * 0.4) * r;
+    const py = ny + Math.sin(this.angle + this.progress * 0.4) * r * 0.35;
+    const fade = this.progress < 0.1 ? this.progress * 10 : this.progress > 0.65 ? (1 - this.progress) / 0.35 : 1;
+    const trailR = r + 10;
+    const tx = cx + Math.cos(this.angle + this.progress * 0.4) * trailR;
+    const ty = ny + Math.sin(this.angle + this.progress * 0.4) * trailR * 0.35;
+    ctx.beginPath();
+    ctx.moveTo(tx, ty);
+    ctx.lineTo(px, py);
+    ctx.strokeStyle = `rgba(196, 149, 64, ${0.35 * fade})`;
+    ctx.lineWidth = 1.5;
+    ctx.stroke();
+    ctx.beginPath();
+    ctx.arc(px, py, 2.5, 0, Math.PI * 2);
+    ctx.fillStyle = `rgba(196, 149, 64, ${0.5 * fade})`;
+    ctx.fill();
+  }
+}
+
+class OuterParticle {
+  constructor() { this.reset(); }
+  reset() {
+    this.angle = Math.random() * Math.PI * 2;
+    this.radius = 360 + Math.random() * 40;
+    this.speed = 0.0008 + Math.random() * 0.001;
+    this.size = 2 + Math.random() * 2.5;
+    this.phase = Math.random() * Math.PI * 2;
+  }
+  update() { this.angle += this.speed; }
+  draw() {
+    const px = cx + Math.cos(this.angle) * this.radius;
+    const py = cy + Math.sin(this.angle) * this.radius * 0.82;
+    const pulse = 0.5 + 0.5 * Math.sin(t * 0.015 + this.phase);
+    ctx.beginPath();
+    ctx.arc(px, py, this.size, 0, Math.PI * 2);
+    ctx.fillStyle = `rgba(122, 90, 170, ${0.18 * pulse})`;
+    ctx.fill();
+  }
+}
+
+class ReturnParticle {
+  constructor(side) { this.side = side; this.reset(); }
+  reset() {
+    this.progress = Math.random();
+    this.speed = 0.002 + Math.random() * 0.003;
+    this.spread = 0.85 + Math.random() * 0.3;
+    this.size = 2 + Math.random() * 2;
+  }
+  update() { this.progress += this.speed; if (this.progress > 1) this.reset(); }
+  draw() {
+    const canY = getY(4), airY = getY(0);
+    const arcW = 210 * this.spread;
+    const d = this.side;
+    const u = this.progress;
+    const v = 1 - u;
+    const sx = cx + d*40, sy = canY;
+    const c1x = cx + d*arcW, c1y = canY - 70;
+    const c2x = cx + d*arcW, c2y = airY + 70;
+    const ex = cx + d*40, ey = airY;
+    const px = v*v*v*sx + 3*v*v*u*c1x + 3*v*u*u*c2x + u*u*u*ex;
+    const py = v*v*v*sy + 3*v*v*u*c1y + 3*v*u*u*c2y + u*u*u*ey;
+    const fade = u < 0.08 ? u/0.08 : u > 0.88 ? (1-u)/0.12 : 1;
+    const col = d === -1 ? '#2a7a55' : '#4a80aa';
+    ctx.beginPath();
+    ctx.arc(px, py, this.size, 0, Math.PI * 2);
+    ctx.fillStyle = rgba(col, 0.25 * fade);
+    ctx.fill();
+  }
+}
+
+// Initialize particles
+let inward = [], growth = [], rain = [], outer = [], ret = [];
+for (let i = 0; i < 5; i++) {
+  for (let j = 0; j < 14; j++) inward.push(new InwardParticle(i));
+  for (let j = 0; j < 6; j++) rain.push(new RainDrop(i));
+  if (i < 4) for (let j = 0; j < 10; j++) growth.push(new GrowthParticle(i));
+}
+for (let i = 0; i < 40; i++) outer.push(new OuterParticle());
+for (let i = 0; i < 10; i++) { ret.push(new ReturnParticle(-1)); ret.push(new ReturnParticle(1)); }
+
+function drawNode(idx) {
+  const l = levels[idx];
+  const ny = getY(idx);
+  const breath = Math.sin(t * 0.013 + idx * 1.4);
+  const r = 40 + 3 * breath;
+
+  // Atmosphere halo
+  ctx.beginPath();
+  ctx.ellipse(cx, ny, 130, 48, 0, 0, Math.PI * 2);
+  ctx.fillStyle = rgba(l.color, 0.04 + 0.01 * breath);
+  ctx.fill();
+
+  // Saturation arc
+  const sat = 0.5 + 0.5 * Math.sin(t * 0.008 + idx * 2.1);
+  ctx.beginPath();
+  ctx.arc(cx, ny, r + 5, -Math.PI/2, -Math.PI/2 + Math.PI*2*sat, false);
+  ctx.strokeStyle = rgba(l.color, 0.35);
+  ctx.lineWidth = 3;
+  ctx.lineCap = 'round';
+  ctx.stroke();
+  ctx.lineCap = 'butt';
+
+  // Saturation percentage
+  ctx.fillStyle = rgba(l.color, 0.5);
+  ctx.font = 'bold 12px Georgia';
+  ctx.textAlign = 'right';
+  ctx.fillText(Math.floor(sat * 100) + '%', cx - r - 14, ny + 4);
+
+  // Node fill
+  ctx.beginPath();
+  ctx.arc(cx, ny, r, 0, Math.PI * 2);
+  ctx.fillStyle = l.fill;
+  ctx.fill();
+  ctx.strokeStyle = l.color;
+  ctx.lineWidth = 2.5;
+  ctx.stroke();
+
+  // Name
+  ctx.fillStyle = l.color;
+  ctx.font = 'bold 16px Georgia';
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
+  ctx.fillText(l.name, cx, ny - 8);
+
+  // Description
+  ctx.fillStyle = rgba(l.color, 0.65);
+  ctx.font = '12px Georgia';
+  ctx.fillText(l.desc, cx, ny + 11);
+
+  // Breathe label
+  const bLabel = breath > 0 ? 'exhale' : 'inhale';
+  ctx.fillStyle = rgba(l.color, Math.abs(breath) * 0.45);
+  ctx.font = '11px Georgia';
+  ctx.textAlign = 'left';
+  ctx.fillText(bLabel, cx + r + 14, ny + 4);
+}
+
+function drawRedThread() {
+  const airY = getY(0), canY = getY(4);
+
+  // Pulse traveling along thread
+  const pulsePos = (t * 0.005) % 1;
+  const pulseY = airY + (canY - airY) * pulsePos;
+
+  // Thread line
+  for (let y = airY + 42; y < canY - 42; y += 2) {
+    const dist = Math.abs(y - pulseY) / (canY - airY);
+    const pulseGlow = Math.max(0, 1 - dist * 4) * 0.4;
+    const base = 0.12;
+    ctx.beginPath();
+    ctx.moveTo(cx, y); ctx.lineTo(cx, y + 2);
+    ctx.strokeStyle = `rgba(184, 48, 48, ${base + pulseGlow})`;
+    ctx.lineWidth = 2;
+    ctx.stroke();
+  }
+
+  // Diamonds
+  for (let i = 0; i < 4; i++) {
+    const midY = (getY(i) + getY(i+1)) / 2;
+    const dH = 20 + 4 * Math.sin(t * 0.015 + i * 1.2);
+    const dW = 12 + 3 * Math.sin(t * 0.015 + i * 1.2);
+    const a = 0.3 + 0.12 * Math.sin(t * 0.018 + i);
+
+    ctx.beginPath();
+    ctx.moveTo(cx, midY - dH);
+    ctx.lineTo(cx + dW, midY);
+    ctx.lineTo(cx, midY + dH);
+    ctx.lineTo(cx - dW, midY);
+    ctx.closePath();
+    ctx.fillStyle = `rgba(184, 48, 48, ${a * 0.2})`;
+    ctx.fill();
+    ctx.strokeStyle = `rgba(184, 48, 48, ${a})`;
+    ctx.lineWidth = 1.5;
+    ctx.stroke();
+
+    // 1 > many > 1 labels
+    ctx.fillStyle = `rgba(184, 48, 48, ${a * 0.7})`;
+    ctx.font = 'bold 9px Georgia';
+    ctx.textAlign = 'right';
+    ctx.fillText('1', cx - dW - 6, midY - dH + 4);
+    ctx.font = '9px Georgia';
+    ctx.fillText('many', cx - dW - 6, midY + 3);
+    ctx.font = 'bold 9px Georgia';
+    ctx.fillText('1', cx - dW - 6, midY + dH + 2);
+  }
+
+  // Center label
+  const ra = 0.35 + 0.1 * Math.sin(t * 0.012);
+  ctx.fillStyle = `rgba(184, 48, 48, ${ra})`;
+  ctx.font = 'bold 13px Georgia';
+  ctx.textAlign = 'center';
+  ctx.fillText('RED THREAD', cx, cy - 10);
+  ctx.font = '12px Georgia';
+  ctx.fillStyle = `rgba(184, 48, 48, ${ra * 0.7})`;
+  ctx.fillText('one \u2192 many \u2192 one', cx, cy + 7);
+}
+
+function drawTransitionLabels() {
+  transitions.forEach((tr, i) => {
+    const midY = (getY(i) + getY(i+1)) / 2;
+    const xPos = cx + tr.side * 135;
+    const a = 0.55 + 0.15 * Math.sin(t * 0.015 + i);
+
+    ctx.font = 'bold 13px Georgia';
+    ctx.textAlign = tr.side === -1 ? 'right' : 'left';
+    ctx.fillStyle = `rgba(90, 75, 55, ${a})`;
+    ctx.fillText(tr.label, xPos, midY - 6);
+
+    ctx.font = '11px Georgia';
+    ctx.fillStyle = `rgba(120, 105, 85, ${a * 0.7})`;
+    ctx.fillText(tr.sub, xPos, midY + 10);
+
+    // "causes" arrow
+    ctx.fillStyle = `rgba(90, 75, 55, ${a * 0.4})`;
+    ctx.font = 'italic 10px Georgia';
+    ctx.textAlign = 'center';
+    ctx.fillText('causes', cx + tr.side * 62, midY);
+  });
+}
+
+function drawReturnArcs() {
+  const canY = getY(4), airY = getY(0);
+  const arcW = 210;
+  const a = 0.12 + 0.04 * Math.sin(t * 0.01);
+
+  // Left arc
+  ctx.beginPath();
+  ctx.moveTo(cx - 42, canY);
+  ctx.bezierCurveTo(cx - arcW, canY - 70, cx - arcW, airY + 70, cx - 42, airY);
+  ctx.strokeStyle = rgba('#2a7a55', a + 0.05);
+  ctx.lineWidth = 2;
+  ctx.stroke();
+
+  // Right arc
+  ctx.beginPath();
+  ctx.moveTo(cx + 42, canY);
+  ctx.bezierCurveTo(cx + arcW, canY - 70, cx + arcW, airY + 70, cx + 42, airY);
+  ctx.strokeStyle = rgba('#4a80aa', a + 0.05);
+  ctx.lineWidth = 2;
+  ctx.stroke();
+
+  // Labels
+  ctx.font = '12px Georgia';
+  ctx.fillStyle = rgba('#2a7a55', 0.5);
+  ctx.textAlign = 'right';
+  ctx.fillText('canopy transpires', cx - arcW + 12, cy - 10);
+  ctx.fillText('back to atmosphere', cx - arcW + 12, cy + 6);
+
+  ctx.fillStyle = rgba('#4a80aa', 0.5);
+  ctx.textAlign = 'left';
+  ctx.fillText('event horizon resets', cx + arcW - 12, cy - 10);
+  ctx.fillText('compression to air', cx + arcW - 12, cy + 6);
+}
+
+function drawOuterCircle() {
+  const outerR = 365;
+  ctx.beginPath();
+  ctx.ellipse(cx, cy, outerR, outerR * 0.82, 0, 0, Math.PI * 2);
+  ctx.strokeStyle = 'rgba(122, 90, 170, 0.12)';
+  ctx.lineWidth = 1.5;
+  ctx.setLineDash([6, 8]);
+  ctx.stroke();
+  ctx.setLineDash([]);
+
+  // Label
+  ctx.fillStyle = 'rgba(122, 90, 170, 0.4)';
+  ctx.font = 'bold 12px Georgia';
+  ctx.textAlign = 'center';
+  ctx.fillText('OUTER SYNTHESIS CIRCLE', cx, cy - outerR * 0.82 - 16);
+  ctx.font = '11px Georgia';
+  ctx.fillStyle = 'rgba(122, 90, 170, 0.3)';
+  ctx.fillText('other red threads pulling from consolidation points', cx, cy - outerR * 0.82 - 1);
+
+  // Mini external cycles
+  for (let i = 0; i < 6; i++) {
+    const angle = (i / 6) * Math.PI * 2 + t * 0.001;
+    const ex = cx + Math.cos(angle) * (outerR + 28);
+    const ey = cy + Math.sin(angle) * (outerR * 0.82 + 22);
+    const p = 0.3 + 0.15 * Math.sin(t * 0.02 + i * 1.5);
+
+    ctx.beginPath();
+    ctx.arc(ex, ey, 14, 0, Math.PI * 2);
+    ctx.strokeStyle = `rgba(122, 90, 170, ${p})`;
+    ctx.lineWidth = 1.5;
+    ctx.stroke();
+
+    ctx.beginPath();
+    ctx.arc(ex, ey, 3, 0, Math.PI * 2);
+    ctx.fillStyle = `rgba(184, 48, 48, ${p})`;
+    ctx.fill();
+  }
+}
+
+function drawDirectionLabels() {
+  const a = 0.4;
+
+  ctx.save();
+  ctx.translate(cx - 180, cy);
+  ctx.rotate(-Math.PI / 2);
+  ctx.fillStyle = `rgba(170, 130, 50, ${a})`;
+  ctx.font = 'bold 13px Georgia';
+  ctx.textAlign = 'center';
+  ctx.fillText('PRECIPITATION', 0, 0);
+  ctx.font = '11px Georgia';
+  ctx.fillStyle = `rgba(170, 130, 50, ${a * 0.7})`;
+  ctx.fillText('fixing inward at every level', 0, 16);
+  ctx.restore();
+
+  ctx.save();
+  ctx.translate(cx + 180, cy);
+  ctx.rotate(Math.PI / 2);
+  ctx.fillStyle = `rgba(74, 138, 90, ${a})`;
+  ctx.font = 'bold 13px Georgia';
+  ctx.textAlign = 'center';
+  ctx.fillText('GROWTH', 0, 0);
+  ctx.font = '11px Georgia';
+  ctx.fillStyle = `rgba(74, 138, 90, ${a * 0.7})`;
+  ctx.fillText('building upward between levels', 0, 16);
+  ctx.restore();
+}
+
+function draw() {
+  ctx.clearRect(0, 0, W, H);
+  t++;
+
+  // White/cream background
+  ctx.fillStyle = '#faf8f4';
+  ctx.fillRect(0, 0, W, H);
+
+  // Subtle center column
+  const colG = ctx.createLinearGradient(cx - 150, 0, cx + 150, 0);
+  colG.addColorStop(0, 'rgba(220, 210, 195, 0)');
+  colG.addColorStop(0.5, 'rgba(220, 210, 195, 0.2)');
+  colG.addColorStop(1, 'rgba(220, 210, 195, 0)');
+  ctx.fillStyle = colG;
+  ctx.fillRect(cx - 250, 0, 500, H);
+
+  // Draw layers
+  drawOuterCircle();
+  drawReturnArcs();
+
+  outer.forEach(p => { p.update(); p.draw(); });
+  ret.forEach(p => { p.update(); p.draw(); });
+  inward.forEach(p => { p.update(); p.draw(); });
+  rain.forEach(p => { p.update(); p.draw(); });
+  growth.forEach(p => { p.update(); p.draw(); });
+
+  drawRedThread();
+  drawTransitionLabels();
+  drawDirectionLabels();
+
+  for (let i = 0; i < 5; i++) drawNode(i);
+
+  requestAnimationFrame(draw);
+}
+
+draw();
+</script>
+</body>
+</html>

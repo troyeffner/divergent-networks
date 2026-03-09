@@ -1,0 +1,578 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Term Alignment Map</title>
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body {
+  font-family: 'Segoe UI', system-ui, sans-serif;
+  background: #f5f2ed;
+  color: #2a2520;
+  padding: 32px;
+  min-height: 100vh;
+}
+h1 { font: 700 24px/1.2 Georgia, serif; margin-bottom: 4px; }
+.subtitle { font-size: 12px; color: #8a8580; margin-bottom: 24px; }
+
+.family-legend {
+  display: flex; flex-wrap: wrap; gap: 12px; margin-bottom: 28px;
+}
+.legend-item {
+  display: flex; align-items: center; gap: 6px;
+  font-size: 11px; color: #5a5550;
+}
+.legend-dot { width: 10px; height: 10px; border-radius: 50%; }
+
+.family-section { margin-bottom: 28px; }
+.family-header {
+  display: flex; align-items: center; gap: 8px;
+  margin-bottom: 10px; padding-bottom: 6px;
+  border-bottom: 1px solid #e4e0da;
+}
+.family-dot { width: 12px; height: 12px; border-radius: 50%; }
+.family-name { font: 600 15px Georgia, serif; }
+.family-count { font-size: 11px; color: #8a8580; margin-left: auto; }
+
+.term-grid {
+  display: flex; flex-wrap: wrap; gap: 8px;
+}
+.term-card {
+  background: #fff;
+  border: 1px solid #e4e0da;
+  border-radius: 8px;
+  padding: 10px 14px;
+  min-width: 260px;
+  max-width: 360px;
+  flex: 1 1 300px;
+  transition: all 0.15s;
+  position: relative;
+}
+.term-card:hover {
+  border-color: #b4afa7;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+}
+.term-card.corrected {
+  opacity: 0.6;
+}
+.term-card.corrected::after {
+  content: "CORRECTED";
+  position: absolute; top: 8px; right: 10px;
+  font-size: 8px; font-weight: 700;
+  color: #c46a6a; letter-spacing: 0.5px;
+}
+.term-card.extended::after {
+  content: "EXTENDED";
+  position: absolute; top: 8px; right: 10px;
+  font-size: 8px; font-weight: 700;
+  color: #5a8ab4; letter-spacing: 0.5px;
+}
+.term-name {
+  font: 600 13px Georgia, serif;
+  margin-bottom: 3px;
+}
+.term-re {
+  font-size: 9px; font-weight: 700;
+  color: #8a8580; margin-bottom: 4px;
+}
+.term-meaning {
+  font-size: 11px; line-height: 1.5;
+  color: #5a5550;
+}
+.term-correction {
+  font-size: 10px; color: #c46a6a;
+  margin-top: 4px; font-style: italic;
+}
+</style>
+</head>
+<body>
+
+<h1>Term Alignment Map</h1>
+<p class="subtitle">62 named terms across 9 metaphor families. Corrected terms marked. RE origin tracked.</p>
+
+<div class="family-legend">
+  <div class="legend-item"><div class="legend-dot" style="background:#8a7a5a"></div>Biographical (4)</div>
+  <div class="legend-item"><div class="legend-dot" style="background:#c46a6a"></div>Forces (3)</div>
+  <div class="legend-item"><div class="legend-dot" style="background:#9a6a9a"></div>Linguistics (6)</div>
+  <div class="legend-item"><div class="legend-dot" style="background:#5ab4a0"></div>Navigation (5)</div>
+  <div class="legend-item"><div class="legend-dot" style="background:#5a8ab4"></div>Network Architecture (10)</div>
+  <div class="legend-item"><div class="legend-dot" style="background:#c49030"></div>Operations (9)</div>
+  <div class="legend-item"><div class="legend-dot" style="background:#b47a5a"></div>Physics (7)</div>
+  <div class="legend-item"><div class="legend-dot" style="background:#b47a5a"></div>Physics / Biology (1)</div>
+  <div class="legend-item"><div class="legend-dot" style="background:#6a9a6a"></div>Tree Biology (17)</div>
+</div>
+
+<div class="family-section">
+  <div class="family-header">
+    <div class="family-dot" style="background:#6a9a6a"></div>
+    <div class="family-name">Tree Biology</div>
+    <div class="family-count">17 terms</div>
+  </div>
+  <div class="term-grid">
+    <div class="term-card" style="border-left: 3px solid #6a9a6a">
+      <div class="term-name">Air</div>
+      <div class="term-re">RE-054</div>
+      <div class="term-meaning">Raw unfixed data. Outermost ring. The atmosphere. Also: the practitioner themselves (RE-075).</div>
+      
+    </div>
+    <div class="term-card" style="border-left: 3px solid #6a9a6a">
+      <div class="term-name">Soil</div>
+      <div class="term-re">RE-054</div>
+      <div class="term-meaning">Fixed observations. Single domain. First compression event.</div>
+      
+    </div>
+    <div class="term-card" style="border-left: 3px solid #6a9a6a">
+      <div class="term-name">Roots</div>
+      <div class="term-re">RE-054</div>
+      <div class="term-meaning">Clustered within-domain patterns. Multiple soil observations binding together.</div>
+      
+    </div>
+    <div class="term-card" style="border-left: 3px solid #6a9a6a">
+      <div class="term-name">Trunk</div>
+      <div class="term-re">RE-054</div>
+      <div class="term-meaning">Cross-domain structural connections. Where real structural insight happens.</div>
+      
+    </div>
+    <div class="term-card" style="border-left: 3px solid #6a9a6a">
+      <div class="term-name">Canopy</div>
+      <div class="term-re">RE-054</div>
+      <div class="term-meaning">Keystones. Theory-level convergence. Innermost core. Also: the air of the universe at next scale (RE-072).</div>
+      
+    </div>
+    <div class="term-card" style="border-left: 3px solid #6a9a6a">
+      <div class="term-name">Rings</div>
+      <div class="term-re">RE-068</div>
+      <div class="term-meaning">Consolidation artifacts. Concentric layers formed by compression events.</div>
+      
+    </div>
+    <div class="term-card corrected" style="border-left: 3px solid #6a9a6a">
+      <div class="term-name">Branch</div>
+      <div class="term-re">RE-083</div>
+      <div class="term-meaning">Originally: structural unit of expansion. CORRECTED: the artifact that grows behind a division. Past tense record, not active event.</div>
+      <div class="term-correction">Corrected by RE-104</div>
+    </div>
+    <div class="term-card" style="border-left: 3px solid #6a9a6a">
+      <div class="term-name">Fiber / Thread</div>
+      <div class="term-re">RE-078</div>
+      <div class="term-meaning">Every fractal in the trunk. A long thread spanning multiple rings under tension. Pulled from inner rings, anchored in outer rings.</div>
+      
+    </div>
+    <div class="term-card" style="border-left: 3px solid #6a9a6a">
+      <div class="term-name">Fiber Tips / Thread Tips</div>
+      <div class="term-re">RE-099</div>
+      <div class="term-meaning">The exposed ends of active fibers at the cross-section surface. The ready ports. The intake interface.</div>
+      
+    </div>
+    <div class="term-card" style="border-left: 3px solid #6a9a6a">
+      <div class="term-name">Heartwood</div>
+      <div class="term-re">RE-013</div>
+      <div class="term-meaning">Storage layer. Dead cells (paused verbs) providing structural support. NDD IS heartwood (RE-020).</div>
+      
+    </div>
+    <div class="term-card" style="border-left: 3px solid #6a9a6a">
+      <div class="term-name">Meristem</div>
+      <div class="term-re">RE-077</div>
+      <div class="term-meaning">The growth tip. The irreducible subject. The comparator (RE-077). We are the meristem.</div>
+      
+    </div>
+    <div class="term-card" style="border-left: 3px solid #6a9a6a">
+      <div class="term-name">Phloem / Sugar</div>
+      <div class="term-re">RE-073</div>
+      <div class="term-meaning">Internal circulatory loop. Canopy feeds roots. Compressed insights flow inward to strengthen infrastructure.</div>
+      
+    </div>
+    <div class="term-card" style="border-left: 3px solid #6a9a6a">
+      <div class="term-name">Fruit</div>
+      <div class="term-re">RE-074</div>
+      <div class="term-meaning">Structured seed for others. One of five forms of canopy release.</div>
+      
+    </div>
+    <div class="term-card" style="border-left: 3px solid #6a9a6a">
+      <div class="term-name">Fallen Leaf</div>
+      <div class="term-re">RE-074</div>
+      <div class="term-meaning">Compost to local soil. One of five forms of canopy release.</div>
+      
+    </div>
+    <div class="term-card" style="border-left: 3px solid #6a9a6a">
+      <div class="term-name">Seed</div>
+      <div class="term-re">RE-085</div>
+      <div class="term-meaning">A pruned branch compressed to minimum viable form. Contains both verb and noun. Self-germinating.</div>
+      
+    </div>
+    <div class="term-card" style="border-left: 3px solid #6a9a6a">
+      <div class="term-name">Pruning</div>
+      <div class="term-re">RE-014</div>
+      <div class="term-meaning">Organic removal. Compaction as growth. Also: the act of detaching a branch/seed from the parent tree.</div>
+      
+    </div>
+    <div class="term-card" style="border-left: 3px solid #6a9a6a">
+      <div class="term-name">Cross-Section / Bisection</div>
+      <div class="term-re">RE-097</div>
+      <div class="term-meaning">Top view looking down through concentric rings. The trunk density map IS this view.</div>
+      
+    </div>
+  </div>
+</div>
+
+<div class="family-section">
+  <div class="family-header">
+    <div class="family-dot" style="background:#5a8ab4"></div>
+    <div class="family-name">Network Architecture</div>
+    <div class="family-count">10 terms</div>
+  </div>
+  <div class="term-grid">
+    <div class="term-card" style="border-left: 3px solid #5a8ab4">
+      <div class="term-name">Mesh</div>
+      <div class="term-re">RE-008</div>
+      <div class="term-meaning">The connective tissue between all fractals. The substrate, not a router. IS the cycle (RE-056).</div>
+      
+    </div>
+    <div class="term-card" style="border-left: 3px solid #5a8ab4">
+      <div class="term-name">Pulse</div>
+      <div class="term-re">RE-009</div>
+      <div class="term-meaning">Ambient propagation through known topology. Broadcast signal.</div>
+      
+    </div>
+    <div class="term-card" style="border-left: 3px solid #5a8ab4">
+      <div class="term-name">Packet</div>
+      <div class="term-re">RE-010</div>
+      <div class="term-meaning">Direct address via tag. Targeted signal.</div>
+      
+    </div>
+    <div class="term-card" style="border-left: 3px solid #5a8ab4">
+      <div class="term-name">System Port</div>
+      <div class="term-re">RE-079</div>
+      <div class="term-meaning">Universal connection point. Shared across practitioners. Standardized. Framework-level.</div>
+      
+    </div>
+    <div class="term-card" style="border-left: 3px solid #5a8ab4">
+      <div class="term-name">Local Port</div>
+      <div class="term-re">RE-079</div>
+      <div class="term-meaning">Personal connection point. Unique to one trunk. Idiosyncratic. Experiential.</div>
+      
+    </div>
+    <div class="term-card" style="border-left: 3px solid #5a8ab4">
+      <div class="term-name">Seed Port</div>
+      <div class="term-re">RE-088</div>
+      <div class="term-meaning">Genetic compression of a system port. Minimum generative instruction. DNA of ports.</div>
+      
+    </div>
+    <div class="term-card" style="border-left: 3px solid #5a8ab4">
+      <div class="term-name">Port-Match</div>
+      <div class="term-re">RE-081</div>
+      <div class="term-meaning">Intake mechanism. Fractals enter wherever their ports match. No sequential pipeline.</div>
+      
+    </div>
+    <div class="term-card" style="border-left: 3px solid #5a8ab4">
+      <div class="term-name">Port Growth Trajectory</div>
+      <div class="term-re">RE-080</div>
+      <div class="term-meaning">Local > System > Seed. Ports are not types, they are compression levels.</div>
+      
+    </div>
+    <div class="term-card" style="border-left: 3px solid #5a8ab4">
+      <div class="term-name">Pre-Installed Ports</div>
+      <div class="term-re">RE-090</div>
+      <div class="term-meaning">Factory firmware. Emotion blends and need blends a human arrives with at birth.</div>
+      
+    </div>
+    <div class="term-card" style="border-left: 3px solid #5a8ab4">
+      <div class="term-name">OSPF</div>
+      <div class="term-re">RE-012</div>
+      <div class="term-meaning">Open Shortest Path First. Network routing protocol. Structural parallel to mesh propagation.</div>
+      
+    </div>
+  </div>
+</div>
+
+<div class="family-section">
+  <div class="family-header">
+    <div class="family-dot" style="background:#b47a5a"></div>
+    <div class="family-name">Physics</div>
+    <div class="family-count">7 terms</div>
+  </div>
+  <div class="term-grid">
+    <div class="term-card" style="border-left: 3px solid #b47a5a">
+      <div class="term-name">Event Horizon</div>
+      <div class="term-re">RE-017</div>
+      <div class="term-meaning">Compression boundary. Forms when mesh density crosses threshold. Consolidation completing.</div>
+      
+    </div>
+    <div class="term-card corrected" style="border-left: 3px solid #b47a5a">
+      <div class="term-name">Horizon Event</div>
+      <div class="term-re">RE-083</div>
+      <div class="term-meaning">Expansion crossing. The moment of passing outward past consolidated boundary. REFRAMED as 'division' (RE-104).</div>
+      <div class="term-correction">Corrected by RE-104</div>
+    </div>
+    <div class="term-card" style="border-left: 3px solid #b47a5a">
+      <div class="term-name">Mesh Gravity</div>
+      <div class="term-re">RE-071</div>
+      <div class="term-meaning">Mesh generates its own gravitational pull as it densifies. Four phases from weak to event horizon.</div>
+      
+    </div>
+    <div class="term-card" style="border-left: 3px solid #b47a5a">
+      <div class="term-name">Compression</div>
+      <div class="term-re">RE-054</div>
+      <div class="term-meaning">Inward movement. Data moving toward the core. The fundamental operation.</div>
+      
+    </div>
+    <div class="term-card" style="border-left: 3px solid #b47a5a">
+      <div class="term-name">Tension</div>
+      <div class="term-re">RE-078</div>
+      <div class="term-meaning">Force on a fiber. Pulled from inner rings, anchored in outer rings. Division threshold.</div>
+      
+    </div>
+    <div class="term-card" style="border-left: 3px solid #b47a5a">
+      <div class="term-name">Density</div>
+      <div class="term-re">RE-071</div>
+      <div class="term-meaning">Mesh connection count per unit. Determines gravity, event horizon formation, and port promotion.</div>
+      
+    </div>
+    <div class="term-card" style="border-left: 3px solid #b47a5a">
+      <div class="term-name">Forced Compression</div>
+      <div class="term-re">RE-087</div>
+      <div class="term-meaning">Deliberate reduction of a full tree into a seed. Not gradual. Design operation.</div>
+      
+    </div>
+  </div>
+</div>
+
+<div class="family-section">
+  <div class="family-header">
+    <div class="family-dot" style="background:#b47a5a"></div>
+    <div class="family-name">Physics / Biology</div>
+    <div class="family-count">1 terms</div>
+  </div>
+  <div class="term-grid">
+    <div class="term-card" style="border-left: 3px solid #b47a5a">
+      <div class="term-name">Division</div>
+      <div class="term-re">RE-104</div>
+      <div class="term-meaning">The active event of splitting. Present tense. What you experience. The branch grows behind it.</div>
+      
+    </div>
+  </div>
+</div>
+
+<div class="family-section">
+  <div class="family-header">
+    <div class="family-dot" style="background:#9a6a9a"></div>
+    <div class="family-name">Linguistics</div>
+    <div class="family-count">6 terms</div>
+  </div>
+  <div class="term-grid">
+    <div class="term-card" style="border-left: 3px solid #9a6a9a">
+      <div class="term-name">Verb</div>
+      <div class="term-re">RE-076</div>
+      <div class="term-meaning">Process. Action. Operation. Fixing. We ARE verbs. Pre-installed ports are verbs.</div>
+      
+    </div>
+    <div class="term-card" style="border-left: 3px solid #9a6a9a">
+      <div class="term-name">Noun</div>
+      <div class="term-re">RE-076</div>
+      <div class="term-meaning">Fixed entity. Structure. Paused verb. The product of a verb pausing another verb (or itself).</div>
+      
+    </div>
+    <div class="term-card" style="border-left: 3px solid #9a6a9a">
+      <div class="term-name">Fixing</div>
+      <div class="term-re">RE-076</div>
+      <div class="term-meaning">Four simultaneous meanings: repairing, affixing, making permanent, determining position.</div>
+      
+    </div>
+    <div class="term-card extended" style="border-left: 3px solid #9a6a9a">
+      <div class="term-name">Pausing</div>
+      <div class="term-re">RE-091</div>
+      <div class="term-meaning">The mechanism by which verbs create nouns. Verb pauses itself (RE-094). Inside the pause: both verb and noun.</div>
+      <div class="term-correction">Corrected by RE-094</div>
+    </div>
+    <div class="term-card" style="border-left: 3px solid #9a6a9a">
+      <div class="term-name">Naming</div>
+      <div class="term-re">RE-089</div>
+      <div class="term-meaning">IS compression. Every quotable phrase is an event horizon artifact. The phrase holds collapsed mesh.</div>
+      
+    </div>
+    <div class="term-card" style="border-left: 3px solid #9a6a9a">
+      <div class="term-name">The Comparator</div>
+      <div class="term-re">RE-077</div>
+      <div class="term-meaning">We are neither verb nor noun. We are the one who makes the comparison. The irreducible subject.</div>
+      
+    </div>
+  </div>
+</div>
+
+<div class="family-section">
+  <div class="family-header">
+    <div class="family-dot" style="background:#c49030"></div>
+    <div class="family-name">Operations</div>
+    <div class="family-count">9 terms</div>
+  </div>
+  <div class="term-grid">
+    <div class="term-card" style="border-left: 3px solid #c49030">
+      <div class="term-name">Spark Zero</div>
+      <div class="term-re">RE-038</div>
+      <div class="term-meaning">Domain identification event. 'What is it?' First operation. Also: fractalizing books.</div>
+      
+    </div>
+    <div class="term-card" style="border-left: 3px solid #c49030">
+      <div class="term-name">Care Engine</div>
+      <div class="term-re">RE-042</div>
+      <div class="term-meaning">What the perceiver cares about. Activation energy for perception. IS the event horizon (RE-042).</div>
+      
+    </div>
+    <div class="term-card" style="border-left: 3px solid #c49030">
+      <div class="term-name">Fixing Event</div>
+      <div class="term-re">RE-059</div>
+      <div class="term-meaning">Air to soil compression. Nitrogen fixation. Universal across all domains.</div>
+      
+    </div>
+    <div class="term-card" style="border-left: 3px solid #c49030">
+      <div class="term-name">Rain Event</div>
+      <div class="term-re">RE-058</div>
+      <div class="term-meaning">Compressed material released outward. Re-enters as atmospheric data at appropriate scale.</div>
+      
+    </div>
+    <div class="term-card" style="border-left: 3px solid #c49030">
+      <div class="term-name">Overlay</div>
+      <div class="term-re">RE-034</div>
+      <div class="term-meaning">Reading across multiple independent sparks to find correspondences. Where novel insight lives.</div>
+      
+    </div>
+    <div class="term-card" style="border-left: 3px solid #c49030">
+      <div class="term-name">Selective Compression</div>
+      <div class="term-re">RE-069</div>
+      <div class="term-meaning">Not all data compresses. Unfixed data is signal to the broader system.</div>
+      
+    </div>
+    <div class="term-card" style="border-left: 3px solid #c49030">
+      <div class="term-name">Self-Germination</div>
+      <div class="term-re">RE-094</div>
+      <div class="term-meaning">The seed plants itself. The verb pauses itself. No external creator needed.</div>
+      
+    </div>
+    <div class="term-card" style="border-left: 3px solid #c49030">
+      <div class="term-name">Home-Grown</div>
+      <div class="term-re">RE-084</div>
+      <div class="term-meaning">Branches/divisions that emerge from internal compression, not external intake.</div>
+      
+    </div>
+    <div class="term-card" style="border-left: 3px solid #c49030">
+      <div class="term-name">Spawning</div>
+      <div class="term-re">RE-086</div>
+      <div class="term-meaning">Each new term producing the next. Self-sustaining generative cascade.</div>
+      
+    </div>
+  </div>
+</div>
+
+<div class="family-section">
+  <div class="family-header">
+    <div class="family-dot" style="background:#c46a6a"></div>
+    <div class="family-name">Forces</div>
+    <div class="family-count">3 terms</div>
+  </div>
+  <div class="term-grid">
+    <div class="term-card" style="border-left: 3px solid #c46a6a">
+      <div class="term-name">IN</div>
+      <div class="term-re">RE-070</div>
+      <div class="term-meaning">Compression. Care engine pulling toward core. Active fixing.</div>
+      
+    </div>
+    <div class="term-card" style="border-left: 3px solid #c46a6a">
+      <div class="term-name">OUT</div>
+      <div class="term-re">RE-070</div>
+      <div class="term-meaning">Expansion. Saturated core radiating outward. Release. Five forms (RE-074).</div>
+      
+    </div>
+    <div class="term-card" style="border-left: 3px solid #c46a6a">
+      <div class="term-name">AROUND</div>
+      <div class="term-re">RE-070</div>
+      <div class="term-meaning">Lateral orbit. Default state. Data orbiting at current ring without compression or expansion.</div>
+      
+    </div>
+  </div>
+</div>
+
+<div class="family-section">
+  <div class="family-header">
+    <div class="family-dot" style="background:#5ab4a0"></div>
+    <div class="family-name">Navigation</div>
+    <div class="family-count">5 terms</div>
+  </div>
+  <div class="term-grid">
+    <div class="term-card" style="border-left: 3px solid #5ab4a0">
+      <div class="term-name">Go Wide</div>
+      <div class="term-re">RE-100</div>
+      <div class="term-meaning">Scan full cross-section surface. All fiber tips. Orientation pass.</div>
+      
+    </div>
+    <div class="term-card" style="border-left: 3px solid #5ab4a0">
+      <div class="term-name">Crawl</div>
+      <div class="term-re">RE-100</div>
+      <div class="term-meaning">Click into one element. Follow depth. Depth-first within one region.</div>
+      
+    </div>
+    <div class="term-card" style="border-left: 3px solid #5ab4a0">
+      <div class="term-name">Comb</div>
+      <div class="term-re">RE-100</div>
+      <div class="term-meaning">Go one level deep in two separate sections. Find hidden connections. Synthesis tool.</div>
+      
+    </div>
+    <div class="term-card" style="border-left: 3px solid #5ab4a0">
+      <div class="term-name">Select / Attach / Port / Why</div>
+      <div class="term-re">RE-101</div>
+      <div class="term-meaning">Four-step basic interaction. Select insight, click fiber tip, classify port, articulate why.</div>
+      
+    </div>
+    <div class="term-card" style="border-left: 3px solid #5ab4a0">
+      <div class="term-name">Depth-Matching</div>
+      <div class="term-re">RE-102</div>
+      <div class="term-meaning">When no surface tip matches, navigate down through closest tip to find connection at depth.</div>
+      
+    </div>
+  </div>
+</div>
+
+<div class="family-section">
+  <div class="family-header">
+    <div class="family-dot" style="background:#8a7a5a"></div>
+    <div class="family-name">Biographical</div>
+    <div class="family-count">4 terms</div>
+  </div>
+  <div class="term-grid">
+    <div class="term-card" style="border-left: 3px solid #8a7a5a">
+      <div class="term-name">Expansion</div>
+      <div class="term-re">RE-082</div>
+      <div class="term-meaning">Outward phase. Encountering new domains. Air flooding in. Intake.</div>
+      
+    </div>
+    <div class="term-card" style="border-left: 3px solid #8a7a5a">
+      <div class="term-name">Consolidation</div>
+      <div class="term-re">RE-082</div>
+      <div class="term-meaning">Inward phase. Processing, densifying, ring forming. Identity solidifying.</div>
+      
+    </div>
+    <div class="term-card" style="border-left: 3px solid #8a7a5a">
+      <div class="term-name">Self-Realization</div>
+      <div class="term-re">RE-092</div>
+      <div class="term-meaning">Reflexive verb-pause. When your verbs pause your own verbs. Produces self-knowledge.</div>
+      
+    </div>
+    <div class="term-card" style="border-left: 3px solid #8a7a5a">
+      <div class="term-name">Port Distance</div>
+      <div class="term-re">RE-098</div>
+      <div class="term-meaning">Shared ports between two trunks. Determines communication cost. Shared language = shared ports.</div>
+      
+    </div>
+  </div>
+</div>
+
+<div style="margin-top: 24px; padding-top: 16px; border-top: 1px solid #e4e0da;">
+  <p style="font-size: 11px; color: #8a8580;">
+    Metaphor families are not competing. They are simultaneous views of the same structure (RE-106).
+    Each family provides terms for aspects the others cannot name.
+    Tree Biology names the growth. Physics names the forces. Linguistics names the operations.
+    Network Architecture names the connections. All describe the same trunk.
+  </p>
+</div>
+
+</body>
+</html>

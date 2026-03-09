@@ -1,0 +1,478 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>The Synthesis Cycle: Compression and Expansion</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    background: #f6f3ed;
+    color: #2a2520;
+    font-family: 'Georgia', serif;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    min-height: 100vh;
+    padding: 24px 20px;
+  }
+  h1 {
+    font-size: 34px;
+    font-weight: 700;
+    letter-spacing: 2px;
+    color: #2a2520;
+    margin-bottom: 4px;
+  }
+  .subtitle {
+    font-size: 15px;
+    color: #6b6055;
+    margin-bottom: 4px;
+  }
+  .philosophy {
+    font-size: 14px;
+    color: #8a7e70;
+    margin-bottom: 20px;
+    font-style: italic;
+  }
+  .canvas-wrap {
+    background: #fff;
+    border: 1px solid #d8d0c4;
+    border-radius: 8px;
+    padding: 10px;
+    box-shadow: 0 2px 12px rgba(0,0,0,0.06);
+  }
+  canvas { display: block; }
+  .footer {
+    margin-top: 20px;
+    max-width: 860px;
+    text-align: center;
+  }
+  .quote {
+    font-style: italic;
+    font-size: 16px;
+    color: #5a4f42;
+    margin-bottom: 16px;
+    line-height: 1.6;
+  }
+  .legend {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 22px;
+    font-size: 14px;
+    color: #5a5045;
+    margin-bottom: 10px;
+  }
+  .legend-item { display: flex; align-items: center; gap: 7px; }
+  .legend-dot { width: 12px; height: 12px; border-radius: 50%; border: 1px solid rgba(0,0,0,0.12); }
+  .water { font-size: 13px; color: #8a7e70; line-height: 1.6; }
+</style>
+</head>
+<body>
+
+<h1>THE SYNTHESIS CYCLE</h1>
+<div class="subtitle">Compression inward. Expansion outward. Every node breathes. No analysis. Only synthesis.</div>
+<div class="philosophy">Energy is never lost or created; it is only moved.</div>
+
+<div class="canvas-wrap">
+  <canvas id="c" width="960" height="960"></canvas>
+</div>
+
+<div class="footer">
+  <div class="quote">"When stuff consolidates into the red thread, there's a point where a different<br>red thread synthesizes and pulls that information in. It's the event horizon."</div>
+  <div class="legend">
+    <div class="legend-item"><div class="legend-dot" style="background:#c49540"></div>Compression (inward)</div>
+    <div class="legend-item"><div class="legend-dot" style="background:#4a8a5a"></div>Expansion (outward)</div>
+    <div class="legend-item"><div class="legend-dot" style="background:#b83030"></div>Red thread</div>
+    <div class="legend-item"><div class="legend-dot" style="background:#4a80aa"></div>Atmosphere</div>
+    <div class="legend-item"><div class="legend-dot" style="background:#7a5aaa"></div>Outer cycles</div>
+  </div>
+  <div class="water">
+    The synthesis cycle IS the water cycle IS the tree.
+  </div>
+</div>
+
+<script>
+const canvas = document.getElementById('c');
+const ctx = canvas.getContext('2d');
+const W = 960, H = 960;
+const cx = W / 2, cy = H / 2;
+let t = 0;
+
+// Concentric rings: AIR outermost, CANOPY innermost
+const levels = [
+  { name: 'AIR',    color: '#4a80aa', fill: '#e4eef6', r: 420, desc: 'Raw, ambient, unfixed' },
+  { name: 'SOIL',   color: '#9a7530', fill: '#f2e6ce', r: 330, desc: 'Fixed, grounded' },
+  { name: 'ROOTS',  color: '#5a8040', fill: '#e0ecd0', r: 240, desc: 'Within-domain clusters' },
+  { name: 'TRUNK',  color: '#7a6535', fill: '#ebe0cc', r: 150, desc: 'Cross-domain bridges' },
+  { name: 'CANOPY', color: '#2a7a55', fill: '#cce8d8', r: 65,  desc: 'Keystones' }
+];
+
+const transLabels = [
+  'RAIN EVENT: condense + fix',
+  'ROOT BINDING: cluster + fix',
+  'VASCULAR BRIDGE: bridge + build',
+  'CONVERGENCE: converge + build'
+];
+
+function hexRgb(hex) {
+  return [parseInt(hex.slice(1,3),16), parseInt(hex.slice(3,5),16), parseInt(hex.slice(5,7),16)];
+}
+function rgba(hex, a) { const c = hexRgb(hex); return `rgba(${c[0]},${c[1]},${c[2]},${a})`; }
+
+// Compression particles (moving inward)
+class CompressParticle {
+  constructor(fromLevel) { this.from = fromLevel; this.reset(); }
+  reset() {
+    this.angle = Math.random() * Math.PI * 2;
+    this.progress = Math.random();
+    this.speed = 0.003 + Math.random() * 0.005;
+    this.size = 2.5 + Math.random() * 2;
+    this.drift = (Math.random() - 0.5) * 0.008;
+  }
+  update() { this.progress += this.speed; this.angle += this.drift; if (this.progress > 1) this.reset(); }
+  draw() {
+    const r1 = levels[this.from].r;
+    const r2 = this.from < 4 ? levels[this.from + 1].r : 30;
+    const r = r1 + (r2 - r1) * this.progress;
+    const px = cx + Math.cos(this.angle) * r;
+    const py = cy + Math.sin(this.angle) * r;
+    const fade = this.progress < 0.1 ? this.progress * 10 : this.progress > 0.8 ? (1 - this.progress) * 5 : 1;
+    // Trail
+    const trR = r + 8;
+    const tx = cx + Math.cos(this.angle) * trR;
+    const ty = cy + Math.sin(this.angle) * trR;
+    ctx.beginPath(); ctx.moveTo(tx,ty); ctx.lineTo(px,py);
+    ctx.strokeStyle = `rgba(196, 149, 64, ${0.3 * fade})`;
+    ctx.lineWidth = 1.2; ctx.stroke();
+    ctx.beginPath(); ctx.arc(px, py, this.size, 0, Math.PI * 2);
+    ctx.fillStyle = `rgba(196, 149, 64, ${0.45 * fade})`;
+    ctx.fill();
+  }
+}
+
+// Expansion particles (moving outward)
+class ExpandParticle {
+  constructor(fromLevel) { this.from = fromLevel; this.reset(); }
+  reset() {
+    this.angle = Math.random() * Math.PI * 2;
+    this.progress = Math.random();
+    this.speed = 0.002 + Math.random() * 0.003;
+    this.size = 2 + Math.random() * 2;
+    this.drift = (Math.random() - 0.5) * 0.005;
+  }
+  update() { this.progress += this.speed; this.angle += this.drift; if (this.progress > 1) this.reset(); }
+  draw() {
+    const r1 = levels[this.from].r;
+    const r2 = this.from > 0 ? levels[this.from - 1].r : 450;
+    const r = r1 + (r2 - r1) * this.progress;
+    const px = cx + Math.cos(this.angle) * r;
+    const py = cy + Math.sin(this.angle) * r;
+    const fade = this.progress < 0.1 ? this.progress * 10 : this.progress > 0.85 ? (1 - this.progress) * 6.67 : 1;
+    const c1 = hexRgb(levels[this.from].color);
+    const toIdx = this.from > 0 ? this.from - 1 : 0;
+    const c2 = hexRgb(levels[toIdx].color);
+    const cr = Math.round(c1[0]+(c2[0]-c1[0])*this.progress);
+    const cg = Math.round(c1[1]+(c2[1]-c1[1])*this.progress);
+    const cb = Math.round(c1[2]+(c2[2]-c1[2])*this.progress);
+    ctx.beginPath(); ctx.arc(px, py, this.size, 0, Math.PI * 2);
+    ctx.fillStyle = `rgba(${cr},${cg},${cb},${0.3 * fade})`;
+    ctx.fill();
+  }
+}
+
+// Outer cycle particles
+class OuterParticle {
+  constructor() { this.reset(); }
+  reset() {
+    this.angle = Math.random() * Math.PI * 2;
+    this.speed = 0.0006 + Math.random() * 0.001;
+    this.size = 2.5 + Math.random() * 2;
+    this.phase = Math.random() * Math.PI * 2;
+  }
+  update() { this.angle += this.speed; }
+  draw() {
+    const r = 455 + 10 * Math.sin(t * 0.01 + this.phase);
+    const px = cx + Math.cos(this.angle) * r;
+    const py = cy + Math.sin(this.angle) * r;
+    const pulse = 0.5 + 0.5 * Math.sin(t * 0.015 + this.phase);
+    ctx.beginPath(); ctx.arc(px, py, this.size, 0, Math.PI * 2);
+    ctx.fillStyle = `rgba(122, 90, 170, ${0.16 * pulse})`;
+    ctx.fill();
+  }
+}
+
+// Initialize
+let comp = [], exp = [], outerP = [];
+for (let i = 0; i < 5; i++) {
+  for (let j = 0; j < 12; j++) comp.push(new CompressParticle(i));
+  for (let j = 0; j < 8; j++) exp.push(new ExpandParticle(i));
+}
+for (let i = 0; i < 45; i++) outerP.push(new OuterParticle());
+
+function drawRings() {
+  // Draw concentric rings from outside in
+  for (let i = 0; i < 5; i++) {
+    const l = levels[i];
+    const breath = Math.sin(t * 0.012 + i * 1.4);
+    const r = l.r + 2 * breath;
+
+    // Ring band (zone between this ring and the next inner ring)
+    if (i < 4) {
+      const innerR = levels[i + 1].r;
+      ctx.beginPath();
+      ctx.arc(cx, cy, r, 0, Math.PI * 2);
+      ctx.arc(cx, cy, innerR, 0, Math.PI * 2, true);
+      ctx.fillStyle = rgba(l.color, 0.03 + 0.005 * breath);
+      ctx.fill();
+    } else {
+      // Canopy center
+      ctx.beginPath();
+      ctx.arc(cx, cy, r, 0, Math.PI * 2);
+      ctx.fillStyle = rgba(l.color, 0.06 + 0.01 * breath);
+      ctx.fill();
+    }
+
+    // Ring border
+    ctx.beginPath();
+    ctx.arc(cx, cy, r, 0, Math.PI * 2);
+    ctx.strokeStyle = rgba(l.color, 0.3);
+    ctx.lineWidth = 2;
+    ctx.stroke();
+
+    // Saturation arc on ring
+    const sat = 0.5 + 0.5 * Math.sin(t * 0.008 + i * 2.1);
+    ctx.beginPath();
+    ctx.arc(cx, cy, r, -Math.PI/2, -Math.PI/2 + Math.PI * 2 * sat, false);
+    ctx.strokeStyle = rgba(l.color, 0.5);
+    ctx.lineWidth = 3;
+    ctx.lineCap = 'round';
+    ctx.stroke();
+    ctx.lineCap = 'butt';
+  }
+}
+
+function drawRingLabels() {
+  for (let i = 0; i < 5; i++) {
+    const l = levels[i];
+    const r = l.r;
+    const sat = 0.5 + 0.5 * Math.sin(t * 0.008 + i * 2.1);
+
+    // Place labels at top of each ring
+    const labelY = cy - r - 8;
+
+    ctx.fillStyle = l.color;
+    ctx.font = 'bold 15px Georgia';
+    ctx.textAlign = 'center';
+    ctx.fillText(l.name, cx, labelY);
+
+    ctx.fillStyle = rgba(l.color, 0.6);
+    ctx.font = '11px Georgia';
+    ctx.fillText(l.desc, cx, labelY + 15);
+
+    // Saturation
+    ctx.fillStyle = rgba(l.color, 0.5);
+    ctx.font = 'bold 11px Georgia';
+    ctx.textAlign = 'left';
+    ctx.fillText(Math.floor(sat * 100) + '%', cx + 20, cy - r + 4);
+
+    // Breathe indicator
+    const breath = Math.sin(t * 0.012 + i * 1.4);
+    const bLabel = breath > 0 ? 'exhale' : 'inhale';
+    ctx.fillStyle = rgba(l.color, Math.abs(breath) * 0.4);
+    ctx.font = '10px Georgia';
+    ctx.textAlign = 'right';
+    ctx.fillText(bLabel, cx - 20, cy - r + 4);
+  }
+}
+
+function drawRedThread() {
+  // Radial red thread from outer edge to center
+  const numSpokes = 8;
+  const pulseR = (t * 1.5) % 450;
+
+  for (let s = 0; s < numSpokes; s++) {
+    const angle = (s / numSpokes) * Math.PI * 2;
+
+    // Thread line
+    for (let r = levels[0].r; r > levels[4].r; r -= 3) {
+      const distFromPulse = Math.abs(r - (450 - pulseR));
+      const pulseGlow = Math.max(0, 1 - distFromPulse / 60) * 0.3;
+      const base = 0.06;
+      const px1 = cx + Math.cos(angle) * r;
+      const py1 = cy + Math.sin(angle) * r;
+      const px2 = cx + Math.cos(angle) * (r - 3);
+      const py2 = cy + Math.sin(angle) * (r - 3);
+
+      ctx.beginPath(); ctx.moveTo(px1, py1); ctx.lineTo(px2, py2);
+      ctx.strokeStyle = `rgba(184, 48, 48, ${base + pulseGlow})`;
+      ctx.lineWidth = 1.5;
+      ctx.stroke();
+    }
+
+    // Diamond at each ring crossing
+    for (let i = 0; i < 4; i++) {
+      const midR = (levels[i].r + levels[i+1].r) / 2;
+      const dx = cx + Math.cos(angle) * midR;
+      const dy = cy + Math.sin(angle) * midR;
+      const dSize = 5 + 2 * Math.sin(t * 0.015 + i + s);
+      const dAlpha = 0.25 + 0.1 * Math.sin(t * 0.018 + i);
+
+      ctx.save();
+      ctx.translate(dx, dy);
+      ctx.rotate(angle);
+      ctx.beginPath();
+      ctx.moveTo(-dSize, 0);
+      ctx.lineTo(0, -dSize * 0.6);
+      ctx.lineTo(dSize, 0);
+      ctx.lineTo(0, dSize * 0.6);
+      ctx.closePath();
+      ctx.fillStyle = `rgba(184, 48, 48, ${dAlpha * 0.25})`;
+      ctx.fill();
+      ctx.strokeStyle = `rgba(184, 48, 48, ${dAlpha})`;
+      ctx.lineWidth = 1;
+      ctx.stroke();
+      ctx.restore();
+    }
+  }
+
+  // Center core label
+  const ca = 0.5 + 0.15 * Math.sin(t * 0.012);
+  ctx.fillStyle = `rgba(184, 48, 48, ${ca})`;
+  ctx.font = 'bold 14px Georgia';
+  ctx.textAlign = 'center';
+  ctx.fillText('CORE', cx, cy - 6);
+  ctx.font = '11px Georgia';
+  ctx.fillStyle = `rgba(184, 48, 48, ${ca * 0.7})`;
+  ctx.fillText('1 \u2192 many \u2192 1', cx, cy + 10);
+}
+
+function drawTransitionLabels() {
+  const angles = [0, Math.PI / 2, Math.PI, Math.PI * 1.5];
+  transLabels.forEach((label, i) => {
+    const midR = (levels[i].r + levels[i+1].r) / 2;
+    const angle = angles[i];
+    const lx = cx + Math.cos(angle) * midR;
+    const ly = cy + Math.sin(angle) * midR;
+    const a = 0.55 + 0.1 * Math.sin(t * 0.015 + i);
+
+    ctx.save();
+    ctx.translate(lx, ly);
+    if (angle > Math.PI / 2 && angle < Math.PI * 1.5) {
+      ctx.rotate(angle + Math.PI);
+    } else {
+      ctx.rotate(angle);
+    }
+    ctx.fillStyle = `rgba(70, 58, 40, ${a})`;
+    ctx.font = 'bold 11px Georgia';
+    ctx.textAlign = 'center';
+    ctx.fillText(label, 0, -4);
+    ctx.restore();
+  });
+}
+
+function drawDirectionLabels() {
+  // COMPRESSION label with inward arrow
+  ctx.fillStyle = 'rgba(170, 130, 50, 0.5)';
+  ctx.font = 'bold 14px Georgia';
+  ctx.textAlign = 'right';
+  ctx.fillText('COMPRESSION', cx - levels[0].r - 20, cy - 4);
+  ctx.font = '12px Georgia';
+  ctx.fillStyle = 'rgba(170, 130, 50, 0.35)';
+  ctx.fillText('fixing inward', cx - levels[0].r - 20, cy + 12);
+
+  // Arrow pointing inward
+  ctx.beginPath();
+  ctx.moveTo(cx - levels[0].r - 10, cy);
+  ctx.lineTo(cx - levels[0].r + 15, cy);
+  ctx.strokeStyle = 'rgba(170, 130, 50, 0.4)';
+  ctx.lineWidth = 2; ctx.stroke();
+  ctx.beginPath();
+  ctx.moveTo(cx - levels[0].r + 15, cy);
+  ctx.lineTo(cx - levels[0].r + 8, cy - 5);
+  ctx.lineTo(cx - levels[0].r + 8, cy + 5);
+  ctx.closePath();
+  ctx.fillStyle = 'rgba(170, 130, 50, 0.4)';
+  ctx.fill();
+
+  // EXPANSION label with outward arrow
+  ctx.fillStyle = 'rgba(74, 138, 90, 0.5)';
+  ctx.font = 'bold 14px Georgia';
+  ctx.textAlign = 'left';
+  ctx.fillText('EXPANSION', cx + levels[0].r + 20, cy - 4);
+  ctx.font = '12px Georgia';
+  ctx.fillStyle = 'rgba(74, 138, 90, 0.35)';
+  ctx.fillText('building outward', cx + levels[0].r + 20, cy + 12);
+
+  // Arrow pointing outward
+  ctx.beginPath();
+  ctx.moveTo(cx + levels[0].r + 10, cy);
+  ctx.lineTo(cx + levels[0].r - 15, cy);
+  ctx.strokeStyle = 'rgba(74, 138, 90, 0.4)';
+  ctx.lineWidth = 2; ctx.stroke();
+  ctx.beginPath();
+  ctx.moveTo(cx + levels[0].r - 15, cy);
+  ctx.lineTo(cx + levels[0].r - 8, cy - 5);
+  ctx.lineTo(cx + levels[0].r - 8, cy + 5);
+  ctx.closePath();
+  ctx.fillStyle = 'rgba(74, 138, 90, 0.4)';
+  ctx.fill();
+}
+
+function drawOuterCircle() {
+  ctx.beginPath();
+  ctx.arc(cx, cy, 455, 0, Math.PI * 2);
+  ctx.strokeStyle = 'rgba(122, 90, 170, 0.15)';
+  ctx.lineWidth = 1.5;
+  ctx.setLineDash([6, 8]);
+  ctx.stroke();
+  ctx.setLineDash([]);
+
+  ctx.fillStyle = 'rgba(122, 90, 170, 0.4)';
+  ctx.font = 'bold 12px Georgia';
+  ctx.textAlign = 'center';
+  ctx.fillText('OUTER SYNTHESIS CIRCLE', cx, cy - 468);
+  ctx.font = '11px Georgia';
+  ctx.fillStyle = 'rgba(122, 90, 170, 0.28)';
+  ctx.fillText('other red threads pulling from consolidation points', cx, cy - 454);
+
+  for (let i = 0; i < 6; i++) {
+    const angle = (i / 6) * Math.PI * 2 + t * 0.0008;
+    const ex = cx + Math.cos(angle) * 475;
+    const ey = cy + Math.sin(angle) * 475;
+    const p = 0.3 + 0.12 * Math.sin(t * 0.02 + i * 1.5);
+    ctx.beginPath(); ctx.arc(ex, ey, 13, 0, Math.PI * 2);
+    ctx.strokeStyle = `rgba(122, 90, 170, ${p})`;
+    ctx.lineWidth = 1.5; ctx.stroke();
+    ctx.beginPath(); ctx.arc(ex, ey, 3, 0, Math.PI * 2);
+    ctx.fillStyle = `rgba(184, 48, 48, ${p})`; ctx.fill();
+  }
+}
+
+function draw() {
+  ctx.clearRect(0, 0, W, H);
+  t++;
+
+  ctx.fillStyle = '#faf8f4';
+  ctx.fillRect(0, 0, W, H);
+
+  drawOuterCircle();
+  outerP.forEach(p => { p.update(); p.draw(); });
+
+  drawRings();
+
+  comp.forEach(p => { p.update(); p.draw(); });
+  exp.forEach(p => { p.update(); p.draw(); });
+
+  drawRedThread();
+  drawTransitionLabels();
+  drawRingLabels();
+  drawDirectionLabels();
+
+  requestAnimationFrame(draw);
+}
+
+draw();
+</script>
+</body>
+</html>
