@@ -1,0 +1,901 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>The Fractal Method — NDD as Living Tree</title>
+<meta name="designer" content="TE.EE_Janet" />
+<meta name="engineer" content="TE.ENG_Fiona" />
+<style>
+:root {
+  --bg-deep: #0e0d0b;
+  --bg-surface: #161412;
+  --bg-elevated: #1e1c18;
+  --accent: #c49030;
+  --accent-soft: rgba(196,144,48,0.15);
+  --color-root: #d4a040;
+  --color-trunk: #c49030;
+  --color-branch: #5ab4a0;
+  --color-pruned: #c47058;
+  --color-canopy: #4a9ab4;
+  --color-event: #d4a040;
+  --color-wormhole: #c47058;
+  --color-port: #d4a040;
+  --color-drill: #5ab4a0;
+  --text-primary: #f0ece6;
+  --text-secondary: #c4beb4;
+  --text-dim: #9a9288;
+  --text-quote: #b8ae9e;
+}
+@media (prefers-reduced-motion: reduce) {
+  * { transition-duration: 0s !important; animation-duration: 0s !important; }
+}
+*, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+body {
+  font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+  background: var(--bg-deep);
+  color: var(--text-primary);
+  overflow: hidden;
+  height: 100vh;
+}
+.app { display: flex; flex-direction: column; height: 100vh; }
+
+/* Header */
+.header {
+  height: 48px;
+  padding: 0 24px;
+  background: var(--bg-surface);
+  border-bottom: 1px solid rgba(255,255,255,0.05);
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  flex-shrink: 0;
+  z-index: 100;
+}
+.header h1 {
+  font: 300 17px/1 Georgia, serif;
+  color: var(--accent);
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+}
+.header-sub {
+  font: 400 11px/1 'Segoe UI', system-ui, sans-serif;
+  color: var(--text-dim);
+}
+.header-right {
+  margin-left: auto;
+  display: flex;
+  gap: 14px;
+  align-items: center;
+}
+.stat { font: 400 10px/1 'Segoe UI', system-ui, sans-serif; color: var(--text-dim); }
+.stat b { color: var(--accent); font-weight: 600; }
+
+/* Breadcrumb */
+.breadcrumb {
+  height: 32px;
+  padding: 0 24px;
+  background: var(--bg-surface);
+  border-bottom: 1px solid rgba(255,255,255,0.03);
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  flex-shrink: 0;
+  overflow-x: auto;
+}
+.bc-item {
+  font: 400 11px/1 'Segoe UI', system-ui, sans-serif;
+  color: var(--text-dim);
+  background: none;
+  border: none;
+  padding: 3px 6px;
+  border-radius: 3px;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: color 0.15s, background 0.15s;
+}
+.bc-item:hover { color: var(--text-secondary); background: rgba(255,255,255,0.04); }
+.bc-item.current { color: var(--accent); cursor: default; }
+.bc-sep { color: var(--text-dim); opacity: 0.3; font-size: 9px; }
+
+/* Main */
+.main { flex: 1; display: flex; overflow: hidden; position: relative; }
+
+/* Canvas */
+.canvas-wrap { flex: 1; position: relative; overflow: hidden; }
+#canvas { display: block; cursor: grab; touch-action: none; }
+#canvas.grabbing { cursor: grabbing; }
+
+/* Detail panel */
+.detail {
+  width: 340px;
+  min-width: 340px;
+  background: var(--bg-surface);
+  border-left: 1px solid rgba(255,255,255,0.05);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  z-index: 10;
+}
+.detail-scroll {
+  flex: 1;
+  overflow-y: auto;
+  padding: 24px 20px;
+}
+.detail-scroll::-webkit-scrollbar { width: 3px; }
+.detail-scroll::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.08); border-radius: 2px; }
+
+.d-name {
+  font: 600 20px/1.2 Georgia, serif;
+  color: var(--accent);
+  margin-bottom: 4px;
+}
+.d-type {
+  display: inline-block;
+  font: 700 8px/1 'Segoe UI', system-ui, sans-serif;
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
+  padding: 3px 7px;
+  border-radius: 3px;
+  margin-bottom: 14px;
+}
+.d-type.root { background: rgba(212,160,64,0.15); color: var(--color-root); }
+.d-type.trunk { background: rgba(196,144,48,0.12); color: var(--color-trunk); }
+.d-type.branch { background: rgba(90,180,160,0.12); color: var(--color-branch); }
+.d-type.pruned { background: rgba(196,112,88,0.08); color: var(--color-pruned); }
+.d-type.canopy { background: rgba(74,154,180,0.12); color: var(--color-canopy); }
+.d-type.event-horizon { background: rgba(212,160,64,0.15); color: var(--color-event); }
+
+.d-section {
+  font: 600 9px/1 'Segoe UI', system-ui, sans-serif;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  color: var(--text-dim);
+  margin: 18px 0 6px;
+}
+.d-want, .d-relies {
+  font: 400 14px/1.6 Georgia, serif;
+  color: var(--text-secondary);
+  padding: 8px 12px;
+  background: rgba(255,255,255,0.015);
+  border-left: 2px solid rgba(255,255,255,0.06);
+  border-radius: 0 4px 4px 0;
+  margin-bottom: 10px;
+}
+.d-ring {
+  font: italic 13px/1.5 Georgia, serif;
+  color: var(--text-quote);
+  padding: 8px 12px;
+  border-left: 2px solid var(--accent);
+  background: rgba(196,144,48,0.04);
+  border-radius: 0 4px 4px 0;
+  margin-bottom: 10px;
+}
+
+/* Status */
+.d-status {
+  display: flex;
+  gap: 12px;
+  padding: 10px 0;
+  border-top: 1px solid rgba(255,255,255,0.04);
+  border-bottom: 1px solid rgba(255,255,255,0.04);
+  margin-bottom: 10px;
+}
+.d-stat {
+  font: 400 10px/1 'Segoe UI', system-ui, sans-serif;
+  color: var(--text-dim);
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+.dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  display: inline-block;
+}
+.dot.seed { background: #7ab870; }
+.dot.tested { background: #eab308; }
+.dot.measured { background: #5ab4a0; }
+.dot.confirmed { background: #22c55e; }
+.dot.green { background: #22c55e; }
+.dot.yellow { background: #eab308; }
+.dot.red { background: #ef4444; }
+
+/* Tags */
+.d-tags { display: flex; flex-wrap: wrap; gap: 4px; margin-top: 4px; }
+.d-tag {
+  font: 500 10px/1 'Segoe UI', system-ui, sans-serif;
+  padding: 3px 8px;
+  border-radius: 10px;
+  border: 1px solid rgba(255,255,255,0.1);
+  background: rgba(255,255,255,0.02);
+  color: var(--text-dim);
+  cursor: pointer;
+  transition: all 0.15s;
+}
+.d-tag:hover { border-color: var(--color-wormhole); color: var(--color-wormhole); }
+.d-tag.active { border-color: var(--color-wormhole); color: var(--color-wormhole); background: rgba(196,112,88,0.08); }
+
+/* Navigation links */
+.d-nav { display: flex; flex-direction: column; gap: 3px; }
+.d-nav-item {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 8px;
+  border-radius: 4px;
+  cursor: pointer;
+  font: 400 12px/1.3 'Segoe UI', system-ui, sans-serif;
+  color: var(--text-secondary);
+  transition: background 0.12s;
+  background: none;
+  border: none;
+  text-align: left;
+  width: 100%;
+}
+.d-nav-item:hover { background: rgba(255,255,255,0.04); }
+.d-nav-arrow { font-size: 11px; opacity: 0.5; width: 14px; }
+.d-nav-item.port .d-nav-arrow { color: var(--color-port); }
+.d-nav-item.drill .d-nav-arrow { color: var(--color-drill); }
+.d-nav-item.wormhole .d-nav-arrow { color: var(--color-wormhole); }
+.d-nav-item.wormhole { border-left: 2px dashed rgba(196,112,88,0.3); }
+.d-worm-via {
+  font: 500 8px/1 'Segoe UI', system-ui, sans-serif;
+  color: var(--color-wormhole);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  opacity: 0.6;
+}
+
+/* Quote */
+.quote-bar {
+  padding: 6px 20px;
+  background: var(--bg-surface);
+  border-top: 1px solid rgba(255,255,255,0.05);
+  text-align: center;
+  flex-shrink: 0;
+}
+.quote-bar span {
+  font: italic 12px/1.4 Georgia, serif;
+  color: var(--text-quote);
+}
+
+/* Hint */
+.nav-hint {
+  position: absolute;
+  bottom: 10px;
+  left: 50%;
+  transform: translateX(-50%);
+  font: 400 10px/1 'Segoe UI', system-ui, sans-serif;
+  color: var(--text-dim);
+  background: var(--bg-elevated);
+  padding: 5px 12px;
+  border-radius: 12px;
+  border: 1px solid rgba(255,255,255,0.05);
+  opacity: 0.5;
+  pointer-events: none;
+  z-index: 5;
+}
+</style>
+</head>
+<body>
+<div class="app">
+  <div class="header">
+    <h1>The Fractal Method</h1>
+    <span class="header-sub">NDD as living tree — navigate up, down, and through wormholes</span>
+    <div class="header-right">
+      <span class="stat">Nodes: <b id="stat-nodes">0</b></span>
+      <span class="stat">Depth: <b id="stat-depth">0</b></span>
+      <span class="stat">Wormholes: <b id="stat-worms">0</b></span>
+    </div>
+  </div>
+  <div class="breadcrumb" id="breadcrumb"></div>
+  <div class="main">
+    <div class="canvas-wrap">
+      <canvas id="canvas"></canvas>
+      <div class="nav-hint">Click nodes to navigate &middot; Arrow keys &middot; Scroll to zoom</div>
+    </div>
+    <div class="detail">
+      <div class="detail-scroll" id="detail"></div>
+      <div class="quote-bar"><span id="quote">"Every direction means something in the fractal system."</span></div>
+    </div>
+  </div>
+</div>
+<script>
+// =============================================
+// THE FRACTAL METHOD — Canvas Tree Navigator
+// =============================================
+
+const TREE = {
+  id:"ndd-root", name:"Narrative Driven Design", type:"root",
+  want:"A method where structure emerges from practice, not prescription. Work objects carry their own orientation. The tree grows itself.",
+  relies_on:"Fractal decomposition. Append-only growth. The tree metaphor as operating system. Three proof trees at three scales.",
+  validation:"confirmed", health:"green",
+  ring:"The method is the product. The product is the proof. Three trees. Three scales. Same root pattern.",
+  tags:["fractal","method","navigation","growth","proof"],
+  children:[
+    { id:"fiction-engine", name:"The Fiction Engine", type:"trunk",
+      want:"Shared fictions that enable cooperation at scale. Names, roles, processes — all fiction, all functional.",
+      relies_on:"Language. Naming conventions. Vocabulary enforcement. Metaphor families.",
+      validation:"confirmed", health:"green",
+      ring:"Fiction is not a phase — it is the operating system.",
+      tags:["fiction","naming","cooperation","vocabulary","language"],
+      children:[
+        { id:"three-questions", name:"Three Questions Protocol", type:"branch",
+          want:"Every fractal answers three questions: What do you want? What does this rely on? Does this apply elsewhere?",
+          relies_on:"Fractal unit schema. User input. Q3 cross-connection detection.",
+          validation:"measured", health:"green",
+          ring:"Q3 is the wormhole detector. It finds the interstitial space between branches.",
+          tags:["protocol","questions","schema","wormhole","input"],
+          children:[
+            { id:"q1", name:"Q1: So You Want To", type:"branch",
+              want:"Capture intent in the user's own words. Not a title — a desire.",
+              relies_on:"Free text input. No format validation.", validation:"confirmed", health:"green",
+              tags:["intent","input","user-voice"] },
+            { id:"q2", name:"Q2: This Relies On", type:"branch",
+              want:"Map dependencies. What must exist for this to work?",
+              relies_on:"Tag-based linking to existing fractals.", validation:"measured", health:"yellow",
+              tags:["dependencies","linking","schema"] },
+            { id:"q3", name:"Q3: Applies Elsewhere?", type:"event-horizon",
+              want:"Detect cross-connections. The wormhole question. Where else does this pattern show up?",
+              relies_on:"Tag matching. Convergence detection. 3+ matches = possible root blocker.",
+              validation:"seed", health:"yellow",
+              ring:"The most important question. It finds what the tree structure hides.",
+              tags:["cross-connection","wormhole","convergence","pattern","detection"] }
+          ]
+        },
+        { id:"fractal-identity", name:"Fractal Identity", type:"branch",
+          want:"Persistent name, machine-addressable ID, position in tree, spark history as growth rings.",
+          relies_on:"Naming conventions. ID schema. Growth ring recording.", validation:"confirmed", health:"green",
+          tags:["identity","naming","growth-rings","addressing"],
+          children:[
+            { id:"growth-rings-id", name:"Growth Rings", type:"branch",
+              want:"Spark history on a fractal. Not software versions — botanical rings.",
+              relies_on:"Append-only spark recording.", validation:"confirmed", health:"green",
+              ring:"Versions and children are different axes. Rings = depth. Children = breadth.",
+              tags:["growth-rings","versioning","botanical","spark-history"] },
+            { id:"spark-children", name:"Spark Children", type:"canopy",
+              want:"Sub-ideas in fractal view are addressable, draft-state, spark-ready. They inherit parent soil.",
+              relies_on:"Parent spark. Soil inheritance. Draft state machine.", validation:"measured", health:"green",
+              tags:["sparks","children","inheritance","draft"] }
+          ]
+        },
+        { id:"vocabulary", name:"Vocabulary Enforcement", type:"branch",
+          want:"Words mean specific things. Fractal vs fractional vs fraction. The fiction engine applied to its own vocabulary.",
+          relies_on:"Decision log. Shared vocabulary doc. CLAUDE.md.", validation:"confirmed", health:"green",
+          tags:["vocabulary","naming","precision","fiction","decisions"] }
+      ]
+    },
+    { id:"pruning-pattern", name:"The Pruning Pattern", type:"trunk",
+      want:"What gets cut feeds what grows. Infrastructure earth. Nothing is lost — only composted.",
+      relies_on:"Append-only logging. Soil contribution capture. Prune reason recording.",
+      validation:"confirmed", health:"green",
+      ring:"The tree prunes more than it grows. What it prunes becomes the soil everything else grows from.",
+      tags:["pruning","soil","infrastructure-earth","composting","growth"],
+      children:[
+        { id:"infra-earth", name:"Infrastructure Earth", type:"branch",
+          want:"Pruned branches whose sparks can be replayed. Four states: Adopted, Deferred, Incompatible-Static, Incompatible-Dynamic.",
+          relies_on:"Replayable spark record. State machine.", validation:"measured", health:"green",
+          tags:["pruning","replay","soil","state-machine","deferred"],
+          children:[
+            { id:"replay-spark", name:"Replayable Spark Record", type:"branch",
+              want:"6-field structure: Spark, Growth Path, Constraint, Pruning Decision, State, Re-spark Trigger.",
+              relies_on:"Append-only records. State tracking.", validation:"measured", health:"green",
+              tags:["spark","replay","record","state-machine"] },
+            { id:"verdict-vs-replay", name:"Verdict vs Replay Mode", type:"canopy",
+              want:"Two interaction patterns for infrastructure earth. Verdict = selection-first. Replay = rejection-reasoning.",
+              relies_on:"UX design. Hybrid context transfer.", validation:"seed", health:"yellow",
+              tags:["interaction","ux","verdict","replay","pattern"] }
+          ]
+        },
+        { id:"decomposition-cycle", name:"The Decomposition Cycle", type:"branch",
+          want:"Spark → Branch → Constraint → Prune → Spark Replay → Murmur Re-spark. The full lifecycle.",
+          relies_on:"Growth ring recording. Murmur signal detection.", validation:"confirmed", health:"green",
+          ring:"Spark is cellular respiration — not fire. Smallest unit of the tree's metabolism.",
+          tags:["lifecycle","spark","growth","decomposition","murmur"] }
+      ]
+    },
+    { id:"navigation-model", name:"Navigation Model", type:"trunk",
+      want:"Move through the fractal system spatially. Every direction means something. No walking — always climbing or warping.",
+      relies_on:"Port/tag/wormhole primitives. Fractal navigator UI. Interstitial space.",
+      validation:"measured", health:"green",
+      ring:"Ports ladder up. Tags drill down. Tags pivot — that's the fractal wormhole. The space between nodes IS the wormhole.",
+      tags:["navigation","spatial","ports","wormholes","movement","interstitial"],
+      children:[
+        { id:"ports", name:"Ports — Ladder Up", type:"branch",
+          want:"Exits upward out of the system. The book is a port. The PhD is a port. A port is a ladder to the world.",
+          relies_on:"Parent-tagging interface. Impact Radius = parent tag count.", validation:"measured", health:"green",
+          tags:["ports","upward","exit","impact-radius","book","phd"] },
+        { id:"tags-drill", name:"Tags — Drill Down", type:"branch",
+          want:"Descend deeper into a topic. Tags as entry points, not categories. Naming the tag names the destination.",
+          relies_on:"Tag vocabulary. Depth auto-calculation.", validation:"confirmed", health:"green",
+          tags:["tags","depth","drill","descent","naming"] },
+        { id:"wormholes", name:"Fractal Wormholes", type:"event-horizon",
+          want:"Instantaneous lateral jump to same-depth node on different branch via shared tag. The interstitial space.",
+          relies_on:"Shared tags. Q3 cross-connection. The space between nodes at every level.",
+          validation:"seed", health:"yellow",
+          ring:"I travel through wormholes — the space between the soil, between the cells, between the branches, between the leaves.",
+          tags:["wormhole","lateral","pivot","interstitial","cross-connection","movement"] },
+        { id:"four-directions", name:"Four Directions", type:"branch",
+          want:"UP = port to parent. DOWN = drill to children. LEFT/RIGHT = wormhole to cross-connections. CENTER = current fractal.",
+          relies_on:"Spatial UI. Fractal navigator component.", validation:"measured", health:"green",
+          tags:["spatial","directions","ui","navigation","center"] }
+      ]
+    },
+    { id:"scaling-traps", name:"Scaling Traps", type:"trunk",
+      want:"Name where the method breaks. Recursive orientation failure. Property boundaries. The trap is the feature.",
+      relies_on:"Real implementation at multiple scales. Failure observation. Named problems.",
+      validation:"measured", health:"yellow",
+      ring:"If you can name the scaling break before it happens, you can design around it. The trap is the feature.",
+      tags:["scaling","traps","failure-modes","boundaries","naming"],
+      children:[
+        { id:"orientation-failure", name:"Recursive Orientation Failure", type:"branch",
+          want:"The named problem. Orientation fails at boundary crossings. Each handoff loses context.",
+          relies_on:"Orientation Header + Dispatch Envelope. Compiled abstraction from level above.",
+          validation:"confirmed", health:"yellow",
+          tags:["orientation","boundaries","handoff","context-loss","dispatch"] },
+        { id:"property-switch", name:"Property Boundary", type:"branch",
+          want:"5 operations for boundary crossing: Pass Through, Expand, Add, Transform, Strip.",
+          relies_on:"Property switch rules. Brief self-containment.", validation:"measured", health:"green",
+          tags:["property","boundaries","off-property","brief","operations"] }
+      ]
+    },
+    { id:"proof-trees", name:"The Proof Trees", type:"canopy",
+      want:"Three instances at three scales = universality proof. Same patterns emerge independently.",
+      relies_on:"DavidOS (micro). Sapiens (macro). CommunityBoard (meso). Independent growth. Pattern convergence.",
+      validation:"seed", health:"yellow",
+      ring:"Three trees. Three scales. Same root pattern. Archaeology proves the fossil record. Ecology proves the living system.",
+      tags:["proof","universality","three-scales","book","phd","convergence"],
+      children:[
+        { id:"davidOS", name:"DavidOS — Micro", type:"canopy",
+          want:"Prove fractal management works for one person's portfolio. Retrospective analysis.",
+          relies_on:"Troy's daily practice. Practitioner system. This tree.", validation:"measured", health:"green",
+          tags:["davidOS","micro","portfolio","practice","retrospective"] },
+        { id:"sapiens", name:"Sapiens — Macro", type:"canopy",
+          want:"Prove fractal decomposition works on historical knowledge. 70,000 years as one tree.",
+          relies_on:"Sapiens visualizations. Ring 3 data. Pattern tag fibers.", validation:"measured", health:"green",
+          ring:"The tree remembers what linear history forgot.",
+          tags:["sapiens","macro","history","visualization","retrospective"] },
+        { id:"communityboard", name:"CommunityBoard — Meso", type:"canopy",
+          want:"Prove fractal decomposition works for a living community. Real-time. User-generated. Its own big bang.",
+          relies_on:"CB launch. Empty tag space. Observation layer. Community names its own forces.",
+          validation:"seed", health:"yellow",
+          ring:"Practice ends. The method seeds itself. CommunityBoard grows its own tree from its own root.",
+          tags:["communityboard","meso","live","community","big-bang","ecology"] }
+      ]
+    }
+  ]
+};
+
+// ── State ──
+let nodes = [], nodeMap = {}, currentId = 'ndd-root';
+let canvas, ctx, W, H, dpr;
+let camX = 0, camY = 0, camScale = 1, targetCamX = 0, targetCamY = 0, targetScale = 1;
+let isDrag = false, dragSX, dragSY, dragCX, dragCY;
+let hoverNode = null;
+let activeWormholeTag = null;
+let animFrame;
+
+const COLORS = {
+  root:'#d4a040', trunk:'#c49030', branch:'#5ab4a0', pruned:'#c47058',
+  canopy:'#4a9ab4', 'event-horizon':'#d4a040'
+};
+
+// ── Flatten ──
+function flatten(n, pid, depth) {
+  const e = { ...n, parentId:pid, depth, childIds:(n.children||[]).map(c=>c.id), cx:0, cy:0, r:0 };
+  delete e.children;
+  nodes.push(e); nodeMap[e.id] = e;
+  if (n.children) n.children.forEach(c => flatten(c, n.id, depth+1));
+}
+flatten(TREE, null, 0);
+
+// ── Layout: radial tree ──
+function layoutTree() {
+  const root = nodeMap['ndd-root'];
+  root.cx = 0; root.cy = 0;
+
+  function layoutChildren(parent, startAngle, sweep, radius) {
+    const kids = parent.childIds.map(id => nodeMap[id]).filter(Boolean);
+    if (kids.length === 0) return;
+    const step = sweep / Math.max(kids.length, 1);
+    kids.forEach((kid, i) => {
+      const angle = startAngle + step * (i + 0.5);
+      kid.cx = parent.cx + Math.cos(angle) * radius;
+      kid.cy = parent.cy + Math.sin(angle) * radius;
+      // Descendants get tighter sweep and smaller step
+      const childSweep = Math.min(step * 1.2, Math.PI * 0.8);
+      layoutChildren(kid, angle - childSweep/2, childSweep, radius * 0.7);
+    });
+  }
+
+  layoutChildren(root, -Math.PI/2 - Math.PI * 0.8, Math.PI * 1.6, 280);
+
+  // Compute radii
+  nodes.forEach(n => {
+    n.r = n.type === 'root' ? 36 : n.type === 'trunk' ? 28 :
+          n.type === 'event-horizon' ? 22 : n.type === 'canopy' ? 22 : 20;
+  });
+}
+layoutTree();
+
+// ── Wormholes ──
+function getWormholes(node) {
+  if (!node.tags) return [];
+  const ancestors = new Set(), desc = new Set();
+  let p = node;
+  while (p) { ancestors.add(p.id); p = p.parentId ? nodeMap[p.parentId] : null; }
+  (function addD(id) { desc.add(id); const n=nodeMap[id]; if(n&&n.childIds) n.childIds.forEach(addD); })(node.id);
+  const st = new Set(node.tags);
+  const results = [];
+  nodes.forEach(o => {
+    if (o.id===node.id||ancestors.has(o.id)||desc.has(o.id)||!o.tags) return;
+    const shared = o.tags.filter(t=>st.has(t));
+    if (shared.length) results.push({ node:o, shared, strength:shared.length/Math.max(node.tags.length,o.tags.length) });
+  });
+  return results.sort((a,b)=>b.strength-a.strength).slice(0,8);
+}
+
+// ── Ancestors ──
+function getAncestors(id) {
+  const path = [];
+  let n = nodeMap[id];
+  while (n) { path.push(n.id); n = n.parentId ? nodeMap[n.parentId] : null; }
+  return new Set(path);
+}
+
+// ── Hex helper ──
+function hexRgba(hex, a) {
+  const r=parseInt(hex.slice(1,3),16), g=parseInt(hex.slice(3,5),16), b=parseInt(hex.slice(5,7),16);
+  return `rgba(${r},${g},${b},${a})`;
+}
+
+// ── Camera ──
+function panTo(x, y, s) {
+  targetCamX = -x; targetCamY = -y; targetScale = s || targetScale;
+}
+
+function animateCamera() {
+  camX += (targetCamX - camX) * 0.12;
+  camY += (targetCamY - camY) * 0.12;
+  camScale += (targetScale - camScale) * 0.12;
+}
+
+// ── Draw ──
+function draw() {
+  animateCamera();
+  ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  ctx.clearRect(0, 0, W, H);
+  ctx.save();
+  ctx.translate(W/2 + camX * camScale, H/2 + camY * camScale);
+  ctx.scale(camScale, camScale);
+
+  const cur = nodeMap[currentId];
+  const ancestors = getAncestors(currentId);
+  const childSet = new Set(cur.childIds || []);
+  const worms = getWormholes(cur);
+  const wormIds = new Set(worms.map(w => w.node.id));
+
+  // Wormhole arcs (behind everything)
+  worms.forEach(w => {
+    const from = cur, to = w.node;
+    ctx.beginPath();
+    const mx = (from.cx+to.cx)/2, my = (from.cy+to.cy)/2;
+    const dx = to.cx-from.cx, dy = to.cy-from.cy;
+    const cpx = mx - dy*0.3, cpy = my + dx*0.3;
+    ctx.moveTo(from.cx, from.cy);
+    ctx.quadraticCurveTo(cpx, cpy, to.cx, to.cy);
+    const isActiveWorm = activeWormholeTag && w.shared.includes(activeWormholeTag);
+    ctx.strokeStyle = isActiveWorm ? hexRgba('#c47058', 0.35) : hexRgba('#c47058', 0.08);
+    ctx.setLineDash([6, 5]);
+    ctx.lineWidth = isActiveWorm ? 2 : 1;
+    ctx.stroke();
+    ctx.setLineDash([]);
+  });
+
+  // Tree connections
+  nodes.forEach(n => {
+    if (!n.parentId) return;
+    const p = nodeMap[n.parentId];
+    if (!p) return;
+
+    const isAncestorLine = ancestors.has(n.id) && ancestors.has(p.id);
+    const isChildLine = (n.parentId === currentId) || (childSet.has(n.id));
+    const isRelated = isAncestorLine || isChildLine || n.id === currentId;
+
+    ctx.beginPath();
+    ctx.moveTo(p.cx, p.cy);
+    const mx = (p.cx+n.cx)/2, my = (p.cy+n.cy)/2;
+    ctx.quadraticCurveTo(mx + (n.cy-p.cy)*0.1, my - (n.cx-p.cx)*0.1, n.cx, n.cy);
+
+    if (isAncestorLine) {
+      ctx.strokeStyle = hexRgba('#c49030', 0.3);
+      ctx.lineWidth = 2.5;
+    } else if (isChildLine) {
+      ctx.strokeStyle = hexRgba('#5ab4a0', 0.25);
+      ctx.lineWidth = 2;
+    } else {
+      ctx.strokeStyle = 'rgba(255,255,255,0.025)';
+      ctx.lineWidth = 0.8;
+    }
+    ctx.stroke();
+  });
+
+  // Nodes
+  nodes.forEach(n => {
+    const isCur = n.id === currentId;
+    const isAnc = ancestors.has(n.id);
+    const isChild = childSet.has(n.id);
+    const isWorm = wormIds.has(n.id);
+    const isHover = hoverNode && hoverNode.id === n.id;
+    const isRelated = isCur || isAnc || isChild || isWorm;
+    const color = COLORS[n.type] || COLORS.branch;
+
+    ctx.save();
+    if (!isRelated) ctx.globalAlpha = 0.15;
+
+    // Glow for current
+    if (isCur) {
+      ctx.beginPath();
+      ctx.arc(n.cx, n.cy, n.r + 18, 0, Math.PI*2);
+      ctx.fillStyle = hexRgba(color, 0.06);
+      ctx.fill();
+      ctx.beginPath();
+      ctx.arc(n.cx, n.cy, n.r + 10, 0, Math.PI*2);
+      ctx.strokeStyle = hexRgba(color, 0.25);
+      ctx.lineWidth = 2;
+      ctx.stroke();
+    }
+
+    // Wormhole ring
+    if (isWorm) {
+      ctx.beginPath();
+      ctx.arc(n.cx, n.cy, n.r + 6, 0, Math.PI*2);
+      ctx.strokeStyle = hexRgba('#c47058', 0.3);
+      ctx.setLineDash([3, 3]);
+      ctx.lineWidth = 1.5;
+      ctx.stroke();
+      ctx.setLineDash([]);
+    }
+
+    // Hover glow
+    if (isHover && !isCur) {
+      ctx.beginPath();
+      ctx.arc(n.cx, n.cy, n.r + 8, 0, Math.PI*2);
+      ctx.fillStyle = hexRgba(color, 0.08);
+      ctx.fill();
+    }
+
+    // Node body
+    ctx.beginPath();
+    ctx.arc(n.cx, n.cy, n.r, 0, Math.PI*2);
+    if (n.type === 'pruned') {
+      ctx.fillStyle = hexRgba(color, 0.05);
+      ctx.strokeStyle = hexRgba(color, 0.25);
+      ctx.setLineDash([3, 3]);
+    } else if (n.type === 'event-horizon') {
+      ctx.fillStyle = isCur ? hexRgba(color, 0.2) : hexRgba(color, 0.06);
+      ctx.strokeStyle = color;
+      ctx.setLineDash([]);
+    } else {
+      ctx.fillStyle = isCur ? hexRgba(color, 0.15) : hexRgba(color, 0.04);
+      ctx.strokeStyle = isCur ? color : hexRgba(color, 0.35);
+      ctx.setLineDash([]);
+    }
+    ctx.lineWidth = isCur ? 2.5 : isHover ? 1.5 : 1;
+    ctx.fill();
+    ctx.stroke();
+    ctx.setLineDash([]);
+
+    // Growth ring
+    if (n.ring) {
+      ctx.beginPath();
+      ctx.arc(n.cx, n.cy, n.r + 4, 0, Math.PI*2);
+      ctx.strokeStyle = hexRgba('#c49030', 0.2);
+      ctx.lineWidth = 1.5;
+      ctx.setLineDash([2, 3]);
+      ctx.stroke();
+      ctx.setLineDash([]);
+    }
+
+    // Label
+    if (isRelated || camScale > 0.6) {
+      ctx.fillStyle = isRelated ? '#f0ece6' : 'rgba(240,236,230,0.4)';
+      ctx.font = (n.type==='root'||n.type==='trunk') ? '600 12px Segoe UI, system-ui, sans-serif' : '400 11px Segoe UI, system-ui, sans-serif';
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'top';
+      const words = n.name.split(' ');
+      let lines = [], line = '';
+      words.forEach(w => {
+        const t = line ? line+' '+w : w;
+        if (ctx.measureText(t).width > 120 && line) { lines.push(line); line = w; }
+        else line = t;
+      });
+      if (line) lines.push(line);
+      lines.forEach((l, i) => ctx.fillText(l, n.cx, n.cy + n.r + 6 + i * 13));
+    }
+
+    ctx.restore();
+  });
+
+  ctx.restore();
+  animFrame = requestAnimationFrame(draw);
+}
+
+// ── Navigate ──
+function goTo(id) {
+  currentId = id;
+  activeWormholeTag = null;
+  const n = nodeMap[id];
+  panTo(n.cx, n.cy, 1);
+  renderDetail();
+  renderBreadcrumb();
+  document.getElementById('stat-depth').textContent = n.depth;
+  document.getElementById('stat-worms').textContent = getWormholes(n).length;
+}
+
+// ── Detail panel ──
+function renderDetail() {
+  const n = nodeMap[currentId];
+  const worms = getWormholes(n);
+  let h = '';
+  h += `<div class="d-name">${n.name}</div>`;
+  h += `<span class="d-type ${n.type}">${n.type} · depth ${n.depth}</span>`;
+
+  h += `<div class="d-section">So you want to:</div>`;
+  h += `<div class="d-want">${n.want||''}</div>`;
+  h += `<div class="d-section">This relies on:</div>`;
+  h += `<div class="d-relies">${n.relies_on||''}</div>`;
+
+  if (n.ring) h += `<div class="d-ring">"${n.ring}"</div>`;
+
+  h += `<div class="d-status">`;
+  h += `<div class="d-stat"><b style="margin-right:2px">Eval:</b> <span class="dot ${n.validation||'seed'}"></span> ${n.validation||'seed'}</div>`;
+  h += `<div class="d-stat"><b style="margin-right:2px">Health:</b> <span class="dot ${n.health||'none'}"></span> ${n.health||'none'}</div>`;
+  h += `</div>`;
+
+  // Tags
+  if (n.tags && n.tags.length) {
+    h += `<div class="d-section">Tags (click to find wormholes)</div>`;
+    h += `<div class="d-tags">`;
+    n.tags.forEach(t => {
+      const isActive = activeWormholeTag === t;
+      h += `<span class="d-tag ${isActive?'active':''}" data-tag="${t}">${t}</span>`;
+    });
+    h += `</div>`;
+  }
+
+  // Parent
+  if (n.parentId) {
+    const p = nodeMap[n.parentId];
+    h += `<div class="d-section">&uarr; Port up</div>`;
+    h += `<div class="d-nav"><button class="d-nav-item port" data-id="${p.id}"><span class="d-nav-arrow">&uarr;</span> ${p.name}</button></div>`;
+  }
+
+  // Children
+  if (n.childIds && n.childIds.length) {
+    h += `<div class="d-section">&darr; Drill down (${n.childIds.length})</div>`;
+    h += `<div class="d-nav">`;
+    n.childIds.forEach(cid => {
+      const c = nodeMap[cid];
+      if (c) h += `<button class="d-nav-item drill" data-id="${cid}"><span class="d-nav-arrow">&darr;</span> ${c.name}</button>`;
+    });
+    h += `</div>`;
+  }
+
+  // Wormholes
+  if (worms.length) {
+    h += `<div class="d-section">&harr; Wormholes (${worms.length})</div>`;
+    h += `<div class="d-nav">`;
+    worms.forEach(w => {
+      h += `<button class="d-nav-item wormhole" data-id="${w.node.id}">
+        <span class="d-nav-arrow">&harr;</span>
+        <div><div>${w.node.name}</div><div class="d-worm-via">via: ${w.shared.join(', ')}</div></div>
+      </button>`;
+    });
+    h += `</div>`;
+  }
+
+  const el = document.getElementById('detail');
+  el.innerHTML = h;
+
+  // Bind
+  el.querySelectorAll('.d-nav-item').forEach(b => b.addEventListener('click', () => goTo(b.dataset.id)));
+  el.querySelectorAll('.d-tag').forEach(t => t.addEventListener('click', () => {
+    activeWormholeTag = activeWormholeTag === t.dataset.tag ? null : t.dataset.tag;
+    renderDetail();
+  }));
+
+  // Quote
+  const q = document.getElementById('quote');
+  q.textContent = n.ring ? `"${n.ring}"` : n.want ? `"${n.want}"` : '"Every direction means something."';
+}
+
+// ── Breadcrumb ──
+function renderBreadcrumb() {
+  const bc = document.getElementById('breadcrumb');
+  const path = [];
+  let n = nodeMap[currentId];
+  while (n) { path.unshift(n); n = n.parentId ? nodeMap[n.parentId] : null; }
+  bc.innerHTML = '';
+  path.forEach((p, i) => {
+    if (i > 0) { const s = document.createElement('span'); s.className='bc-sep'; s.textContent='\u203A'; bc.appendChild(s); }
+    const b = document.createElement('button');
+    b.className = 'bc-item' + (p.id===currentId?' current':'');
+    b.textContent = p.name;
+    if (p.id !== currentId) b.addEventListener('click', () => goTo(p.id));
+    bc.appendChild(b);
+  });
+}
+
+// ── Canvas events ──
+function setupCanvas() {
+  canvas = document.getElementById('canvas');
+  ctx = canvas.getContext('2d');
+  resize();
+  window.addEventListener('resize', resize);
+
+  canvas.addEventListener('pointerdown', e => {
+    isDrag = true; dragSX = e.clientX; dragSY = e.clientY;
+    dragCX = targetCamX; dragCY = targetCamY;
+    canvas.classList.add('grabbing');
+    canvas.setPointerCapture(e.pointerId);
+  });
+  canvas.addEventListener('pointermove', e => {
+    // Hit test for hover
+    const mx = (e.offsetX - W/2/dpr)/camScale - camX;
+    const my = (e.offsetY - H/2/dpr)/camScale - camY;
+    hoverNode = null;
+    nodes.forEach(n => {
+      const dx = n.cx-mx, dy = n.cy-my;
+      if (Math.sqrt(dx*dx+dy*dy) < n.r + 5) hoverNode = n;
+    });
+    canvas.style.cursor = hoverNode ? 'pointer' : isDrag ? 'grabbing' : 'grab';
+
+    if (!isDrag) return;
+    targetCamX = dragCX + (e.clientX - dragSX) / camScale;
+    targetCamY = dragCY + (e.clientY - dragSY) / camScale;
+  });
+  canvas.addEventListener('pointerup', e => {
+    const moved = Math.abs(e.clientX-dragSX) + Math.abs(e.clientY-dragSY);
+    isDrag = false;
+    canvas.classList.remove('grabbing');
+    canvas.releasePointerCapture(e.pointerId);
+    if (moved < 5 && hoverNode) goTo(hoverNode.id);
+  });
+  canvas.addEventListener('wheel', e => {
+    e.preventDefault();
+    const d = e.deltaY > 0 ? 0.9 : 1.1;
+    targetScale = Math.max(0.25, Math.min(3, targetScale * d));
+  }, { passive: false });
+}
+
+function resize() {
+  const wrap = canvas.parentElement;
+  dpr = window.devicePixelRatio || 1;
+  W = wrap.clientWidth * dpr; H = wrap.clientHeight * dpr;
+  canvas.width = W; canvas.height = H;
+  canvas.style.width = wrap.clientWidth + 'px';
+  canvas.style.height = wrap.clientHeight + 'px';
+}
+
+// ── Keyboard ──
+document.addEventListener('keydown', e => {
+  const n = nodeMap[currentId];
+  if (e.key === 'ArrowUp' && n.parentId) goTo(n.parentId);
+  else if (e.key === 'ArrowDown' && n.childIds && n.childIds.length) goTo(n.childIds[0]);
+  else if (e.key === 'ArrowLeft' || e.key === 'ArrowRight') {
+    const w = getWormholes(n);
+    if (w.length) goTo(w[e.key==='ArrowLeft'?0:Math.min(1,w.length-1)].node.id);
+  }
+});
+
+// ── Init ──
+document.getElementById('stat-nodes').textContent = nodes.length;
+setupCanvas();
+goTo('ndd-root');
+draw();
+</script>
+</body>
+</html>
