@@ -1,0 +1,238 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="robots" content="noindex, nofollow" />
+  <title>Sandbox</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      background: #0a0a0a;
+      color: #e8e8e8;
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    /* Gate */
+    .gate {
+      text-align: center;
+      max-width: 320px;
+    }
+    .gate h1 {
+      font-size: 1rem;
+      font-weight: 600;
+      letter-spacing: 0.02em;
+      color: #fff;
+      margin-bottom: 24px;
+    }
+    .gate input {
+      width: 100%;
+      padding: 12px 16px;
+      background: #111;
+      border: 1px solid #1c1c1c;
+      color: #e8e8e8;
+      font-size: 0.9rem;
+      outline: none;
+      text-align: center;
+      letter-spacing: 0.1em;
+    }
+    .gate input:focus { border-color: #333; }
+    .gate .hint {
+      margin-top: 12px;
+      font-size: 0.7rem;
+      color: #333;
+    }
+    .gate .error {
+      margin-top: 8px;
+      font-size: 0.75rem;
+      color: #b4503c;
+      display: none;
+    }
+
+    /* Content (hidden until unlocked) */
+    .content {
+      display: none;
+      max-width: 720px;
+      width: 100%;
+      padding: 48px 24px;
+    }
+    .content.visible {
+      display: block;
+    }
+    body.unlocked {
+      align-items: flex-start;
+    }
+    body.unlocked .gate { display: none; }
+
+    header { margin-bottom: 48px; }
+    header h1 {
+      font-size: 1.25rem;
+      font-weight: 600;
+      letter-spacing: 0.02em;
+      color: #fff;
+    }
+    header p {
+      margin-top: 8px;
+      font-size: 0.875rem;
+      color: #666;
+    }
+    .section { margin-bottom: 40px; }
+    .section-label {
+      font-size: 0.7rem;
+      font-weight: 600;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: #444;
+      margin-bottom: 12px;
+    }
+    .grid {
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+    }
+    a.card {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 14px 16px;
+      background: #111;
+      border: 1px solid #1c1c1c;
+      text-decoration: none;
+      color: #e8e8e8;
+      transition: border-color 0.15s, background 0.15s;
+    }
+    a.card:hover {
+      background: #161616;
+      border-color: #333;
+    }
+    a.card .name { font-size: 0.9rem; }
+    a.card .arrow { font-size: 0.75rem; color: #444; }
+    a.card .tag {
+      font-size: 0.65rem;
+      color: #555;
+      margin-left: 12px;
+      white-space: nowrap;
+    }
+    footer {
+      margin-top: 64px;
+      padding-top: 24px;
+      border-top: 1px solid #1c1c1c;
+      font-size: 0.75rem;
+      color: #333;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Password gate -->
+  <div class="gate">
+    <h1>Sandbox</h1>
+    <input type="password" id="passInput" placeholder="passphrase" autocomplete="off" />
+    <div class="error" id="error">incorrect</div>
+    <p class="hint">access by invitation</p>
+  </div>
+
+  <!-- Gated content -->
+  <div class="content" id="content">
+    <header>
+      <h1>The Tree of Humanity</h1>
+      <p>Fractal decomposition of human history. Work in progress.</p>
+    </header>
+
+    <div class="section">
+      <div class="section-label">Core Views</div>
+      <div class="grid">
+        <a class="card" href="sapiens-temporal-tree.html" style="border-color:#c49030;">
+          <span class="name">The Tree — Sapiens as Fractal</span>
+          <span class="arrow">&#8599;</span>
+        </a>
+        <a class="card" href="sapiens-pruning-viewer.html" style="border-color:#b4503c;">
+          <span class="name">Infrastructure Earth — What the Tree Pruned</span>
+          <span class="arrow">&#8599;</span>
+        </a>
+        <a class="card" href="sapiens-growth-rings.html" style="border-color:#c49030;">
+          <span class="name">Growth Rings — 70,000 Years in Cross-Section</span>
+          <span class="arrow">&#8599;</span>
+        </a>
+      </div>
+    </div>
+
+    <div class="section">
+      <div class="section-label">Experimental Branches</div>
+      <div class="grid">
+        <a class="card" href="sapiens-fiber-view.html" style="border-color:#5ab4a0;">
+          <span class="name">Fiber View — Forces as Fibers Through Time</span>
+          <span class="tag">trace</span>
+          <span class="arrow">&#8599;</span>
+        </a>
+        <a class="card" href="sapiens-instrument.html" style="border-color:#d4a040;">
+          <span class="name">The Instrument — Pluck Fibers, Watch Resonance</span>
+          <span class="tag">branch A</span>
+          <span class="arrow">&#8599;</span>
+        </a>
+        <a class="card" href="sapiens-microscope.html" style="border-color:#5ab4a0;">
+          <span class="name">The Microscope — Enter Nodes, Find Self-Similarity</span>
+          <span class="tag">branch B</span>
+          <span class="arrow">&#8599;</span>
+        </a>
+        <a class="card" href="sapiens-map-room.html" style="border-color:#4a9ab4;">
+          <span class="name">The Map Room — Pin, Compare, Correlate</span>
+          <span class="tag">branch C</span>
+          <span class="arrow">&#8599;</span>
+        </a>
+      </div>
+    </div>
+
+    <footer>
+      divergent-networks.com/sandbox &mdash; invitation only
+    </footer>
+  </div>
+
+  <script>
+    // Simple client-side gate. Not security — just a door.
+    // The passphrase hash (SHA-256) is checked client-side.
+    // Content is in the HTML regardless — this is obscurity, not encryption.
+    // For real protection, use server-side auth.
+
+    const HASH = '38400c22123166d068303d717dbdddd8a4de8c16e6b6e8efe3fd5bf6364ec929';
+
+    async function sha256(str) {
+      const buf = await crypto.subtle.digest('SHA-256',
+        new TextEncoder().encode(str));
+      return Array.from(new Uint8Array(buf))
+        .map(b => b.toString(16).padStart(2, '0')).join('');
+    }
+
+    const input = document.getElementById('passInput');
+    const error = document.getElementById('error');
+    const content = document.getElementById('content');
+
+    // Check session
+    if (sessionStorage.getItem('sandbox_unlocked') === 'true') {
+      unlock();
+    }
+
+    input.addEventListener('keydown', async (e) => {
+      if (e.key === 'Enter') {
+        const hash = await sha256(input.value.trim());
+        if (hash === HASH) {
+          sessionStorage.setItem('sandbox_unlocked', 'true');
+          unlock();
+        } else {
+          error.style.display = 'block';
+          input.value = '';
+        }
+      }
+    });
+
+    function unlock() {
+      document.body.classList.add('unlocked');
+      content.classList.add('visible');
+    }
+  </script>
+</body>
+</html>

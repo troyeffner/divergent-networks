@@ -1,0 +1,716 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>The Tree of Humanity — Sapiens as Fractal</title>
+<meta name="wow-version" content="v3.70.0-troyos" />
+<meta name="trunk-stamp" content="v48_20260310" />
+<meta name="ndd-ref" content="RE-028" />
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body {
+  font-family: 'Segoe UI', system-ui, sans-serif;
+  background: #1a1612;
+  color: #faf8f4;
+  overflow: hidden;
+  height: 100vh;
+  width: 100vw;
+}
+
+.app { display: flex; flex-direction: column; height: 100vh; }
+
+.header {
+  padding: 14px 24px;
+  background: #1e1a16;
+  border-bottom: 1px solid rgba(255,255,255,0.06);
+  display: flex; align-items: center; gap: 16px;
+  z-index: 100;
+}
+.header h1 {
+  font: 300 18px/1 Georgia, serif;
+  color: #c49030;
+  letter-spacing: 1px;
+}
+.header-sub {
+  font: 400 11px/1.4 'Segoe UI', system-ui, sans-serif;
+  color: #6a6560;
+}
+.header-right {
+  margin-left: auto;
+  display: flex; align-items: center; gap: 16px;
+}
+.stat { font-size: 11px; color: #6a6560; }
+.stat-val { color: #c49030; font-weight: 600; }
+
+.main { display: flex; flex: 1; overflow: hidden; }
+
+/* Sidebar */
+.sidebar {
+  width: 300px; min-width: 300px;
+  background: #201c18;
+  border-right: 1px solid rgba(255,255,255,0.06);
+  display: flex; flex-direction: column;
+  overflow-y: auto;
+}
+.sidebar::-webkit-scrollbar { width: 4px; }
+.sidebar::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.1); border-radius: 2px; }
+
+.filter-bar {
+  padding: 12px 16px;
+  border-bottom: 1px solid rgba(255,255,255,0.04);
+  display: flex; gap: 6px; flex-wrap: wrap;
+}
+.filter-btn {
+  font: 600 9px/1 'Segoe UI', system-ui, sans-serif;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  padding: 4px 8px;
+  border-radius: 3px;
+  border: 1px solid rgba(255,255,255,0.1);
+  background: transparent;
+  color: #8a8580;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+.filter-btn:hover { border-color: rgba(255,255,255,0.2); color: #c8c2b8; }
+.filter-btn.active { background: rgba(196,144,48,0.15); border-color: #c49030; color: #c49030; }
+.filter-btn.pruned-filter.active { background: rgba(180,80,60,0.15); border-color: #b4503c; color: #b4503c; }
+
+.node-list { padding: 8px 0; }
+.node-item {
+  padding: 8px 16px;
+  cursor: pointer;
+  border-left: 3px solid transparent;
+  transition: all 0.15s;
+}
+.node-item:hover { background: rgba(255,255,255,0.03); }
+.node-item.selected { background: rgba(196,144,48,0.08); border-left-color: #c49030; }
+.node-item.pruned-item { opacity: 0.6; }
+.node-item.pruned-item .node-name { text-decoration: line-through; text-decoration-color: rgba(180,80,60,0.4); }
+.node-item.pruned-item.selected { opacity: 1; }
+
+.node-era {
+  font: 700 8px/1 'Segoe UI', system-ui, sans-serif;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: #6a6560;
+  margin-bottom: 2px;
+}
+.node-name {
+  font: 500 12px/1.3 'Segoe UI', system-ui, sans-serif;
+  color: #c8c2b8;
+}
+.node-tags {
+  display: flex; gap: 3px; margin-top: 4px; flex-wrap: wrap;
+}
+.tag {
+  font: 700 7px/1 'Segoe UI', system-ui, sans-serif;
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+  padding: 2px 4px;
+  border-radius: 2px;
+}
+.tag.type-trunk { background: rgba(196,144,48,0.15); color: #c49030; }
+.tag.type-branch { background: rgba(90,180,160,0.15); color: #5ab4a0; }
+.tag.type-pruned { background: rgba(180,80,60,0.15); color: #b4503c; }
+.tag.type-canopy { background: rgba(74,154,180,0.15); color: #4a9ab4; }
+.tag.type-root { background: rgba(196,144,48,0.25); color: #d4a040; }
+
+/* Canvas area */
+.canvas-area {
+  flex: 1;
+  position: relative;
+  overflow: hidden;
+}
+#tree-canvas { display: block; }
+
+/* Detail panel */
+.detail-panel {
+  position: absolute;
+  bottom: 0; left: 0; right: 0;
+  background: linear-gradient(0deg, rgba(26,22,18,0.98) 0%, rgba(26,22,18,0.95) 80%, rgba(26,22,18,0) 100%);
+  padding: 40px 32px 24px;
+  transform: translateY(100%);
+  transition: transform 0.3s ease;
+  z-index: 50;
+  max-height: 45%;
+  overflow-y: auto;
+}
+.detail-panel.visible { transform: translateY(0); }
+.detail-panel::-webkit-scrollbar { width: 4px; }
+.detail-panel::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.1); border-radius: 2px; }
+
+.detail-close {
+  position: absolute; top: 12px; right: 16px;
+  background: none; border: none; color: #6a6560; cursor: pointer;
+  font-size: 18px; padding: 4px 8px;
+}
+.detail-close:hover { color: #faf8f4; }
+.detail-name { font: 600 20px/1.2 Georgia, serif; color: #c49030; margin-bottom: 4px; }
+.detail-era { font: 400 12px/1 'Segoe UI', system-ui, sans-serif; color: #6a6560; margin-bottom: 12px; }
+.detail-label { font: 400 14px/1.6 Georgia, serif; color: #c8c2b8; margin-bottom: 12px; }
+.detail-ring { font: italic 13px/1.5 Georgia, serif; color: #8a7e70; margin-bottom: 12px; padding-left: 12px; border-left: 2px solid rgba(196,144,48,0.3); }
+.detail-section-title { font: 600 9px/1 'Segoe UI', system-ui, sans-serif; text-transform: uppercase; letter-spacing: 1px; color: #6a6560; margin: 16px 0 6px; }
+.detail-prune { font: 400 13px/1.5 'Segoe UI', system-ui, sans-serif; color: #b4503c; margin-bottom: 8px; }
+.detail-soil { font: italic 13px/1.5 Georgia, serif; color: #5ab4a0; }
+
+/* Quote bar */
+.quote-bar {
+  padding: 10px 24px;
+  background: #1e1a16;
+  border-top: 1px solid rgba(255,255,255,0.06);
+  text-align: center;
+}
+.quote-text {
+  font: italic 13px/1.4 Georgia, serif;
+  color: #8a7e70;
+}
+</style>
+</head>
+<body>
+<div class="app">
+  <div class="header">
+    <h1>THE TREE OF HUMANITY</h1>
+    <span class="header-sub">Sapiens decomposed as fractal — every branch traceable to root</span>
+    <div class="header-right">
+      <span class="stat">Nodes: <span class="stat-val" id="node-count">0</span></span>
+      <span class="stat">Pruned: <span class="stat-val" id="prune-count">0</span></span>
+      <span class="stat">Depth: <span class="stat-val">70,000 years</span></span>
+    </div>
+  </div>
+  <div class="main">
+    <div class="sidebar">
+      <div class="filter-bar">
+        <button class="filter-btn active" data-filter="all">All</button>
+        <button class="filter-btn" data-filter="trunk">Trunk</button>
+        <button class="filter-btn" data-filter="branch">Branch</button>
+        <button class="filter-btn pruned-filter" data-filter="pruned">Pruned</button>
+        <button class="filter-btn" data-filter="canopy">Canopy</button>
+      </div>
+      <div class="node-list" id="node-list"></div>
+    </div>
+    <div class="canvas-area">
+      <canvas id="tree-canvas"></canvas>
+      <div class="detail-panel" id="detail-panel">
+        <button class="detail-close" id="detail-close">&times;</button>
+        <div id="detail-content"></div>
+      </div>
+    </div>
+  </div>
+  <div class="quote-bar">
+    <span class="quote-text">"The tree remembers what linear history forgot."</span>
+  </div>
+</div>
+
+<script>
+// Load the data
+let treeData = null;
+let allNodes = [];
+let selectedNode = null;
+let activeFilter = 'all';
+
+// Canvas state
+let canvas, ctx;
+let canvasW, canvasH;
+let offsetX = 0, offsetY = 0;
+let scale = 1;
+let isDragging = false;
+let dragStartX, dragStartY, dragOffsetX, dragOffsetY;
+
+// Colors
+const COLORS = {
+  root: '#d4a040',
+  trunk: '#c49030',
+  branch: '#5ab4a0',
+  pruned: '#b4503c',
+  canopy: '#4a9ab4',
+  line: 'rgba(196,144,48,0.2)',
+  lineHover: 'rgba(196,144,48,0.5)',
+  bg: '#1a1612',
+  text: '#c8c2b8',
+  textDim: '#6a6560'
+};
+
+// Flatten tree into array with computed positions
+function flattenTree(node, depth, parentId, index, siblingCount) {
+  const entry = {
+    ...node,
+    depth: depth,
+    parentId: parentId,
+    index: index,
+    siblingCount: siblingCount,
+    children_ids: (node.children || []).map(c => c.id),
+    x: 0, y: 0
+  };
+  allNodes.push(entry);
+
+  if (node.children) {
+    node.children.forEach((child, i) => {
+      flattenTree(child, depth + 1, node.id, i, node.children.length);
+    });
+  }
+}
+
+function formatDate(d) {
+  if (d === null) return 'future';
+  if (d < 0) {
+    const abs = Math.abs(d);
+    if (abs >= 1000000) return (abs / 1000000).toFixed(1) + 'M ya';
+    if (abs >= 1000) return (abs / 1000).toFixed(0) + 'k ya';
+    return abs + ' BCE';
+  }
+  return d + ' CE';
+}
+
+function dateRange(dr) {
+  if (!dr) return '';
+  return formatDate(dr[0]) + ' → ' + formatDate(dr[1]);
+}
+
+// Layout: vertical tree, time flows top to bottom
+function computeLayout() {
+  // Group by depth
+  const byDepth = {};
+  allNodes.forEach(n => {
+    if (!byDepth[n.depth]) byDepth[n.depth] = [];
+    byDepth[n.depth].push(n);
+  });
+
+  const levelHeight = 120;
+  const nodeSpacing = 180;
+
+  // Position each level
+  Object.keys(byDepth).forEach(d => {
+    const level = byDepth[d];
+    const totalWidth = level.length * nodeSpacing;
+    const startX = -totalWidth / 2 + nodeSpacing / 2;
+    level.forEach((node, i) => {
+      node.y = parseInt(d) * levelHeight + 80;
+      node.x = startX + i * nodeSpacing;
+    });
+  });
+
+  // Center children under parents
+  for (let pass = 0; pass < 3; pass++) {
+    allNodes.forEach(node => {
+      if (node.children_ids.length > 0) {
+        const children = allNodes.filter(n => node.children_ids.includes(n.id));
+        if (children.length > 0) {
+          const avgX = children.reduce((s, c) => s + c.x, 0) / children.length;
+          node.x = avgX;
+        }
+      }
+    });
+
+    // Spread children evenly under parent
+    allNodes.forEach(node => {
+      if (node.children_ids.length > 1) {
+        const children = allNodes.filter(n => node.children_ids.includes(n.id));
+        children.sort((a, b) => a.index - b.index);
+        const totalWidth = (children.length - 1) * nodeSpacing;
+        const startX = node.x - totalWidth / 2;
+        children.forEach((child, i) => {
+          child.x = startX + i * nodeSpacing;
+        });
+      }
+    });
+  }
+
+  // Resolve overlaps at each depth
+  Object.keys(byDepth).forEach(d => {
+    const level = byDepth[d];
+    level.sort((a, b) => a.x - b.x);
+    for (let i = 1; i < level.length; i++) {
+      const gap = level[i].x - level[i-1].x;
+      if (gap < nodeSpacing * 0.8) {
+        level[i].x = level[i-1].x + nodeSpacing * 0.8;
+      }
+    }
+  });
+}
+
+// Draw
+function draw() {
+  ctx.clearRect(0, 0, canvasW, canvasH);
+  ctx.save();
+  ctx.translate(canvasW / 2 + offsetX, offsetY + 40);
+  ctx.scale(scale, scale);
+
+  // Draw connections first
+  allNodes.forEach(node => {
+    if (node.parentId) {
+      const parent = allNodes.find(n => n.id === node.parentId);
+      if (parent && isVisible(node) && isVisible(parent)) {
+        ctx.beginPath();
+        ctx.moveTo(parent.x, parent.y + 20);
+
+        // Curved connector
+        const midY = (parent.y + 20 + node.y - 20) / 2;
+        ctx.bezierCurveTo(parent.x, midY, node.x, midY, node.x, node.y - 20);
+
+        ctx.strokeStyle = node.type === 'pruned' ?
+          'rgba(180,80,60,0.15)' :
+          (selectedNode && (selectedNode.id === node.id || selectedNode.id === parent.id) ?
+            COLORS.lineHover : COLORS.line);
+        ctx.lineWidth = node.type === 'trunk' ? 2.5 : 1.5;
+        if (node.type === 'pruned') {
+          ctx.setLineDash([4, 4]);
+        } else {
+          ctx.setLineDash([]);
+        }
+        ctx.stroke();
+        ctx.setLineDash([]);
+      }
+    }
+  });
+
+  // Draw nodes
+  allNodes.forEach(node => {
+    if (!isVisible(node)) return;
+
+    const isSelected = selectedNode && selectedNode.id === node.id;
+    const color = COLORS[node.type] || COLORS.branch;
+    const radius = node.type === 'root' ? 28 :
+                   node.type === 'trunk' ? 22 :
+                   node.type === 'canopy' ? 20 : 16;
+
+    // Glow for selected
+    if (isSelected) {
+      ctx.beginPath();
+      ctx.arc(node.x, node.y, radius + 8, 0, Math.PI * 2);
+      ctx.fillStyle = color.replace(')', ',0.1)').replace('rgb', 'rgba');
+      ctx.fill();
+    }
+
+    // Node circle
+    ctx.beginPath();
+    ctx.arc(node.x, node.y, radius, 0, Math.PI * 2);
+
+    if (node.type === 'pruned') {
+      ctx.fillStyle = 'rgba(180,80,60,0.08)';
+      ctx.strokeStyle = 'rgba(180,80,60,0.3)';
+      ctx.setLineDash([3, 3]);
+    } else {
+      ctx.fillStyle = isSelected ?
+        color.replace(')', ',0.2)').replace('rgb', 'rgba').replace('#', '') :
+        'rgba(250,248,244,0.04)';
+      // Convert hex to rgba for fill
+      if (isSelected) {
+        ctx.fillStyle = hexToRgba(color, 0.2);
+      } else {
+        ctx.fillStyle = 'rgba(250,248,244,0.04)';
+      }
+      ctx.strokeStyle = isSelected ? color : hexToRgba(color, 0.4);
+      ctx.setLineDash([]);
+    }
+
+    ctx.lineWidth = isSelected ? 2 : 1;
+    ctx.fill();
+    ctx.stroke();
+    ctx.setLineDash([]);
+
+    // Node label
+    ctx.fillStyle = node.type === 'pruned' ? 'rgba(180,80,60,0.6)' : COLORS.text;
+    ctx.font = node.type === 'trunk' || node.type === 'root' ?
+      '600 10px Segoe UI, system-ui, sans-serif' :
+      '400 9px Segoe UI, system-ui, sans-serif';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'top';
+
+    // Word wrap the name
+    const maxWidth = 140;
+    const words = node.name.split(' ');
+    let lines = [];
+    let currentLine = '';
+    words.forEach(word => {
+      const testLine = currentLine ? currentLine + ' ' + word : word;
+      if (ctx.measureText(testLine).width > maxWidth && currentLine) {
+        lines.push(currentLine);
+        currentLine = word;
+      } else {
+        currentLine = testLine;
+      }
+    });
+    if (currentLine) lines.push(currentLine);
+
+    lines.forEach((line, i) => {
+      ctx.fillText(line, node.x, node.y + radius + 6 + i * 13);
+    });
+
+    // Era label
+    if (node.date_range) {
+      ctx.fillStyle = COLORS.textDim;
+      ctx.font = '400 8px Segoe UI, system-ui, sans-serif';
+      ctx.fillText(dateRange(node.date_range), node.x, node.y + radius + 6 + lines.length * 13 + 2);
+    }
+
+    // Growth ring indicator
+    if (node.growth_ring) {
+      ctx.beginPath();
+      ctx.arc(node.x + radius - 4, node.y - radius + 4, 4, 0, Math.PI * 2);
+      ctx.fillStyle = '#c49030';
+      ctx.fill();
+    }
+  });
+
+  ctx.restore();
+}
+
+function hexToRgba(hex, alpha) {
+  const r = parseInt(hex.slice(1, 3), 16);
+  const g = parseInt(hex.slice(3, 5), 16);
+  const b = parseInt(hex.slice(5, 7), 16);
+  return `rgba(${r},${g},${b},${alpha})`;
+}
+
+function isVisible(node) {
+  if (activeFilter === 'all') return true;
+  if (activeFilter === 'pruned') return node.type === 'pruned';
+  if (activeFilter === node.type) return true;
+  // Always show trunk/root for context
+  if (node.type === 'root') return true;
+  return false;
+}
+
+// Sidebar
+function renderSidebar() {
+  const list = document.getElementById('node-list');
+  list.innerHTML = '';
+
+  const visible = allNodes.filter(n => isVisible(n));
+  visible.forEach(node => {
+    const item = document.createElement('div');
+    item.className = 'node-item' +
+      (node.type === 'pruned' ? ' pruned-item' : '') +
+      (selectedNode && selectedNode.id === node.id ? ' selected' : '');
+
+    const indent = '&nbsp;'.repeat(node.depth * 4);
+
+    item.innerHTML = `
+      <div class="node-era">${indent}${dateRange(node.date_range)}</div>
+      <div class="node-name">${indent}${node.name}</div>
+      <div class="node-tags">
+        <span class="tag type-${node.type}">${node.type}</span>
+        ${(node.tags || []).slice(0, 3).map(t => `<span class="tag type-branch">${t}</span>`).join('')}
+      </div>
+    `;
+
+    item.addEventListener('click', () => selectNode(node));
+    list.appendChild(item);
+  });
+}
+
+function selectNode(node) {
+  selectedNode = node;
+  renderSidebar();
+  showDetail(node);
+  draw();
+
+  // Pan to node
+  const targetX = -node.x * scale;
+  const targetY = -node.y * scale + canvasH / 2;
+  animatePan(targetX, targetY);
+}
+
+function animatePan(targetX, targetY) {
+  const startX = offsetX;
+  const startY = offsetY;
+  const duration = 300;
+  const startTime = Date.now();
+
+  function step() {
+    const elapsed = Date.now() - startTime;
+    const t = Math.min(elapsed / duration, 1);
+    const ease = t * (2 - t); // ease out
+    offsetX = startX + (targetX - startX) * ease;
+    offsetY = startY + (targetY - startY) * ease;
+    draw();
+    if (t < 1) requestAnimationFrame(step);
+  }
+  requestAnimationFrame(step);
+}
+
+function showDetail(node) {
+  const panel = document.getElementById('detail-panel');
+  const content = document.getElementById('detail-content');
+
+  let html = `
+    <div class="detail-name">${node.name}</div>
+    <div class="detail-era">${dateRange(node.date_range)} · ${node.type}</div>
+    <div class="detail-label">${node.label || ''}</div>
+  `;
+
+  if (node.growth_ring) {
+    html += `<div class="detail-ring">${node.growth_ring}</div>`;
+  }
+
+  if (node.type === 'pruned') {
+    html += `<div class="detail-section-title">Why it was pruned</div>`;
+    html += `<div class="detail-prune">${node.prune_reason || 'Unknown'}</div>`;
+    html += `<div class="detail-section-title">What it left in the soil</div>`;
+    html += `<div class="detail-soil">${node.soil_contribution || 'Unknown'}</div>`;
+  }
+
+  if (node.tags && node.tags.length > 0) {
+    html += `<div class="detail-section-title">Tags</div>`;
+    html += `<div class="node-tags">${node.tags.map(t => `<span class="tag type-branch">${t}</span>`).join('')}</div>`;
+  }
+
+  if (node.children_ids && node.children_ids.length > 0) {
+    html += `<div class="detail-section-title">Branches (${node.children_ids.length})</div>`;
+    node.children_ids.forEach(cid => {
+      const child = allNodes.find(n => n.id === cid);
+      if (child) {
+        const childColor = child.type === 'pruned' ? 'detail-prune' : 'detail-label';
+        html += `<div class="${childColor}" style="cursor:pointer;font-size:12px;margin-bottom:4px;" onclick="selectNode(allNodes.find(n=>n.id==='${cid}'))">→ ${child.name}</div>`;
+      }
+    });
+  }
+
+  content.innerHTML = html;
+  panel.classList.add('visible');
+}
+
+// Init
+async function init() {
+  // Load data
+  const resp = await fetch('sapiens-tree-data.json');
+  treeData = await resp.json();
+
+  // Flatten
+  flattenTree(treeData.tree, 0, null, 0, 1);
+
+  // Stats
+  document.getElementById('node-count').textContent = allNodes.length;
+  document.getElementById('prune-count').textContent = allNodes.filter(n => n.type === 'pruned').length;
+
+  // Canvas setup
+  canvas = document.getElementById('tree-canvas');
+  ctx = canvas.getContext('2d');
+  resize();
+  window.addEventListener('resize', resize);
+
+  // Compute layout
+  computeLayout();
+
+  // Center on root
+  offsetY = 40;
+
+  // Render
+  renderSidebar();
+  draw();
+
+  // Events
+  setupEvents();
+}
+
+function resize() {
+  const area = document.querySelector('.canvas-area');
+  canvasW = area.clientWidth;
+  canvasH = area.clientHeight;
+  canvas.width = canvasW * window.devicePixelRatio;
+  canvas.height = canvasH * window.devicePixelRatio;
+  canvas.style.width = canvasW + 'px';
+  canvas.style.height = canvasH + 'px';
+  ctx.scale(window.devicePixelRatio, window.devicePixelRatio);
+  draw();
+}
+
+function setupEvents() {
+  // Pan
+  canvas.addEventListener('mousedown', e => {
+    isDragging = true;
+    dragStartX = e.clientX;
+    dragStartY = e.clientY;
+    dragOffsetX = offsetX;
+    dragOffsetY = offsetY;
+    canvas.style.cursor = 'grabbing';
+  });
+  canvas.addEventListener('mousemove', e => {
+    if (isDragging) {
+      offsetX = dragOffsetX + (e.clientX - dragStartX);
+      offsetY = dragOffsetY + (e.clientY - dragStartY);
+      draw();
+    }
+  });
+  canvas.addEventListener('mouseup', () => {
+    isDragging = false;
+    canvas.style.cursor = 'grab';
+  });
+  canvas.addEventListener('mouseleave', () => {
+    isDragging = false;
+    canvas.style.cursor = 'grab';
+  });
+  canvas.style.cursor = 'grab';
+
+  // Zoom
+  canvas.addEventListener('wheel', e => {
+    e.preventDefault();
+    const delta = e.deltaY > 0 ? 0.9 : 1.1;
+    const newScale = Math.max(0.3, Math.min(3, scale * delta));
+
+    // Zoom toward mouse
+    const rect = canvas.getBoundingClientRect();
+    const mx = e.clientX - rect.left - canvasW / 2;
+    const my = e.clientY - rect.top;
+
+    offsetX = mx - (mx - offsetX) * (newScale / scale);
+    offsetY = my - (my - offsetY) * (newScale / scale);
+    scale = newScale;
+    draw();
+  }, { passive: false });
+
+  // Click to select
+  canvas.addEventListener('click', e => {
+    if (Math.abs(e.clientX - dragStartX) > 5 || Math.abs(e.clientY - dragStartY) > 5) return;
+
+    const rect = canvas.getBoundingClientRect();
+    const mx = (e.clientX - rect.left - canvasW / 2 - offsetX) / scale;
+    const my = (e.clientY - rect.top - offsetY - 40) / scale;
+
+    // Find closest node
+    let closest = null;
+    let closestDist = Infinity;
+    allNodes.forEach(node => {
+      if (!isVisible(node)) return;
+      const dx = node.x - mx;
+      const dy = node.y - my;
+      const dist = Math.sqrt(dx * dx + dy * dy);
+      const radius = node.type === 'trunk' ? 30 : 25;
+      if (dist < radius && dist < closestDist) {
+        closest = node;
+        closestDist = dist;
+      }
+    });
+
+    if (closest) {
+      selectNode(closest);
+    }
+  });
+
+  // Filters
+  document.querySelectorAll('.filter-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      activeFilter = btn.dataset.filter;
+      renderSidebar();
+      draw();
+    });
+  });
+
+  // Detail close
+  document.getElementById('detail-close').addEventListener('click', () => {
+    document.getElementById('detail-panel').classList.remove('visible');
+    selectedNode = null;
+    renderSidebar();
+    draw();
+  });
+}
+
+// Go
+init();
+</script>
+</body>
+</html>

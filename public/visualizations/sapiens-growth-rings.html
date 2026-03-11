@@ -1,0 +1,534 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Growth Rings — 70,000 Years in Cross-Section</title>
+<meta name="wow-version" content="v3.70.0-troyos" />
+<meta name="trunk-stamp" content="v51_20260310" />
+<meta name="ndd-ref" content="RE-028" />
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body {
+  font-family: 'Segoe UI', system-ui, sans-serif;
+  background: #1a1612;
+  color: #faf8f4;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+.header {
+  padding: 20px 32px;
+  background: #1e1a16;
+  border-bottom: 1px solid rgba(255,255,255,0.06);
+  display: flex; align-items: center; gap: 20px;
+}
+.header h1 {
+  font: 300 22px/1 Georgia, serif;
+  color: #c49030;
+  letter-spacing: 1px;
+}
+.header-sub {
+  font: italic 13px/1.4 Georgia, serif;
+  color: #8a7e70;
+}
+.header-right {
+  margin-left: auto;
+  font: 400 11px/1 'Segoe UI', system-ui, sans-serif;
+  color: #6a6560;
+}
+
+.main {
+  display: flex;
+  flex: 1;
+  overflow: hidden;
+}
+
+/* Ring visualization */
+.ring-area {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  overflow: hidden;
+}
+#ring-canvas { display: block; }
+
+/* Info panel */
+.info-panel {
+  width: 340px;
+  background: #201c18;
+  border-left: 1px solid rgba(255,255,255,0.06);
+  overflow-y: auto;
+  padding: 0;
+}
+.info-panel::-webkit-scrollbar { width: 4px; }
+.info-panel::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.1); border-radius: 2px; }
+
+.ring-info {
+  padding: 20px;
+  border-bottom: 1px solid rgba(255,255,255,0.04);
+  cursor: pointer;
+  transition: all 0.15s;
+}
+.ring-info:hover { background: rgba(255,255,255,0.02); }
+.ring-info.selected { background: rgba(196,144,48,0.06); border-left: 3px solid #c49030; }
+
+.ring-era-label {
+  font: 600 9px/1 'Segoe UI', system-ui, sans-serif;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  margin-bottom: 4px;
+}
+.ring-title {
+  font: 500 14px/1.3 Georgia, serif;
+  color: #c8c2b8;
+  margin-bottom: 4px;
+}
+.ring-date {
+  font: 400 10px/1 'Segoe UI', system-ui, sans-serif;
+  color: #6a6560;
+  margin-bottom: 8px;
+}
+.ring-desc {
+  font: 400 12px/1.5 'Segoe UI', system-ui, sans-serif;
+  color: #a09888;
+  margin-bottom: 8px;
+}
+.ring-growth {
+  font: italic 12px/1.5 Georgia, serif;
+  color: #c49030;
+  padding-left: 10px;
+  border-left: 2px solid rgba(196,144,48,0.3);
+}
+.ring-node-count {
+  font: 400 10px/1 'Segoe UI', system-ui, sans-serif;
+  color: #6a6560;
+  margin-top: 6px;
+}
+.ring-pruned-count {
+  color: #b4503c;
+}
+
+.walk-controls {
+  padding: 16px 32px;
+  background: #1e1a16;
+  border-top: 1px solid rgba(255,255,255,0.06);
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+.walk-btn {
+  font: 500 11px/1 'Segoe UI', system-ui, sans-serif;
+  padding: 8px 16px;
+  border-radius: 4px;
+  border: 1px solid rgba(196,144,48,0.3);
+  background: transparent;
+  color: #c49030;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+.walk-btn:hover { background: rgba(196,144,48,0.1); }
+.walk-btn:disabled { opacity: 0.3; cursor: default; }
+
+.walk-label {
+  font: italic 13px/1 Georgia, serif;
+  color: #8a7e70;
+  flex: 1;
+  text-align: center;
+}
+
+.walk-progress {
+  display: flex; gap: 4px;
+}
+.walk-dot {
+  width: 8px; height: 8px;
+  border-radius: 50%;
+  background: rgba(196,144,48,0.15);
+  border: 1px solid rgba(196,144,48,0.2);
+  transition: all 0.2s;
+}
+.walk-dot.active {
+  background: #c49030;
+  border-color: #c49030;
+}
+.walk-dot.visited {
+  background: rgba(196,144,48,0.4);
+  border-color: rgba(196,144,48,0.5);
+}
+
+.footer-links {
+  padding: 10px 32px;
+  background: #1e1a16;
+  border-top: 1px solid rgba(255,255,255,0.04);
+  display: flex;
+  justify-content: space-between;
+  font: 400 11px/1 'Segoe UI', system-ui, sans-serif;
+}
+.footer-links a { color: #c49030; text-decoration: none; }
+.footer-links a:hover { text-decoration: underline; }
+.footer-links span { color: #6a6560; }
+</style>
+</head>
+<body>
+<div class="header">
+  <div>
+    <h1>GROWTH RINGS</h1>
+    <div class="header-sub">Read the tree from center to bark — each ring is an epoch</div>
+  </div>
+  <div class="header-right">Walk backward through time. The past is in front.</div>
+</div>
+
+<div class="main">
+  <div class="ring-area">
+    <canvas id="ring-canvas"></canvas>
+  </div>
+  <div class="info-panel" id="info-panel"></div>
+</div>
+
+<div class="walk-controls">
+  <button class="walk-btn" id="btn-prev" disabled>&larr; Older</button>
+  <div class="walk-progress" id="walk-progress"></div>
+  <div class="walk-label" id="walk-label">Click a ring or use arrows to walk through time</div>
+  <button class="walk-btn" id="btn-next">Newer &rarr;</button>
+</div>
+
+<div class="footer-links">
+  <a href="sapiens-temporal-tree.html">&larr; Full Tree</a>
+  <span>Sapiens as Fractal — Growth Ring View</span>
+  <a href="sapiens-pruning-viewer.html">Infrastructure Earth &rarr;</a>
+</div>
+
+<script>
+let treeData = null;
+let canvas, ctx;
+let rings = [];
+let selectedRing = -1;
+let hoveredRing = -1;
+let allNodes = [];
+
+// Define the rings (epochs) — center is oldest
+const RING_DEFS = [
+  {
+    id: 'pre-cognitive',
+    name: 'Before the Spark',
+    dateRange: [-2500000, -70000],
+    color: '#3d3528',
+    colorHover: '#4d4538',
+    label: 'Multiple human species coexist. Stone tools, fire, no fiction. The wood is dark and dense — millions of years compressed into the innermost ring.',
+    growth: null
+  },
+  {
+    id: 'cognitive',
+    name: 'Cognitive Revolution',
+    dateRange: [-70000, -12000],
+    color: '#c49030',
+    colorHover: '#d4a040',
+    label: 'Language, fiction, cooperation beyond kinship. The first ring you can truly count. Everything changes here — Sapiens becomes the only human species.',
+    growth: 'The tree discovers it can tell stories. Fiction enables cooperation at scale. This ring is the root spark.'
+  },
+  {
+    id: 'agricultural',
+    name: 'Agricultural Revolution',
+    dateRange: [-12000, -5000],
+    color: '#6b8a50',
+    colorHover: '#7b9a60',
+    label: 'Settlement, domestication, property. Harari calls it "history\'s biggest fraud." Population explodes. Individual quality of life arguably declines.',
+    growth: 'The tree\'s first massive branching. Wheat domesticated humans as much as humans domesticated wheat.'
+  },
+  {
+    id: 'unification',
+    name: 'Unification of Humankind',
+    dateRange: [-5000, 1500],
+    color: '#8a6a40',
+    colorHover: '#9a7a50',
+    label: 'Writing, money, empires, universal religions. Thousands of cultures compress into fewer, larger branches through three universal orders.',
+    growth: 'The trunk thickens. Money, empire, and religion are compression algorithms — reducing thousands of local truths into shared fictions.'
+  },
+  {
+    id: 'scientific',
+    name: 'Scientific Revolution',
+    dateRange: [1500, 1800],
+    color: '#4a7a8a',
+    colorHover: '#5a8a9a',
+    label: 'The admission of ignorance. Science + Empire + Capitalism fuse into an engine of growth. The tree discovers it can observe itself.',
+    growth: 'Science is the tree growing eyes. "I don\'t know" becomes the most productive sentence in history.'
+  },
+  {
+    id: 'industrial',
+    name: 'Industrial Revolution',
+    dateRange: [1800, 1945],
+    color: '#7a5040',
+    colorHover: '#8a6050',
+    label: 'Energy conversion. Steam, electricity, petroleum. The tree burns ancient trees (fossil fuel) to grow faster. Nation-states replace empires.',
+    growth: 'Fossil fuels are infrastructure earth from 300 million years ago. The tree consuming its own ancient soil.'
+  },
+  {
+    id: 'information',
+    name: 'Information Age',
+    dateRange: [1945, 2025],
+    color: '#4a9ab4',
+    colorHover: '#5aaac4',
+    label: 'Computers, networks, AI. Information moves at light speed. The tree begins to model itself. Sapiens starts designing its own evolution.',
+    growth: 'The growth edge. The outermost ring. The bark being formed right now. You are standing here.'
+  }
+];
+
+function flattenTree(node, depth) {
+  allNodes.push({ ...node, depth });
+  if (node.children) node.children.forEach(c => flattenTree(c, depth + 1));
+}
+
+function getNodesForEra(eraId) {
+  const def = RING_DEFS.find(r => r.id === eraId);
+  if (!def) return { total: 0, pruned: 0 };
+
+  const inRange = allNodes.filter(n => {
+    if (!n.date_range) return false;
+    const start = n.date_range[0];
+    return start >= def.dateRange[0] && start < def.dateRange[1];
+  });
+
+  return {
+    total: inRange.length,
+    pruned: inRange.filter(n => n.type === 'pruned').length,
+    nodes: inRange
+  };
+}
+
+function formatDate(d) {
+  if (d < 0) {
+    const abs = Math.abs(d);
+    if (abs >= 1000000) return (abs / 1000000).toFixed(1) + 'M ya';
+    if (abs >= 1000) return Math.round(abs / 1000) + 'k ya';
+    return abs + ' BCE';
+  }
+  return d + ' CE';
+}
+
+function drawRings() {
+  const w = canvas.width / window.devicePixelRatio;
+  const h = canvas.height / window.devicePixelRatio;
+  const cx = w / 2;
+  const cy = h / 2;
+  const maxRadius = Math.min(cx, cy) - 40;
+  const minRadius = 30;
+
+  ctx.save();
+  ctx.scale(window.devicePixelRatio, window.devicePixelRatio);
+  ctx.clearRect(0, 0, w, h);
+
+  // Ring widths — inner rings wider (more time), outer rings thinner (less time)
+  // Pre-cognitive = huge, Information = thin
+  const weights = [8, 4, 3, 5, 2, 1.5, 1];
+  const totalWeight = weights.reduce((s, w) => s + w, 0);
+  const ringGap = 2;
+
+  let currentRadius = minRadius;
+
+  RING_DEFS.forEach((ring, i) => {
+    const ringWidth = ((maxRadius - minRadius - ringGap * RING_DEFS.length) * weights[i]) / totalWeight;
+    const outerRadius = currentRadius + ringWidth;
+    const isSelected = selectedRing === i;
+    const isHovered = hoveredRing === i;
+
+    // Draw ring
+    ctx.beginPath();
+    ctx.arc(cx, cy, outerRadius, 0, Math.PI * 2);
+    ctx.arc(cx, cy, currentRadius, 0, Math.PI * 2, true);
+
+    if (isSelected) {
+      ctx.fillStyle = ring.colorHover;
+      ctx.strokeStyle = '#faf8f4';
+      ctx.lineWidth = 2;
+    } else if (isHovered) {
+      ctx.fillStyle = ring.colorHover;
+      ctx.strokeStyle = 'rgba(250,248,244,0.3)';
+      ctx.lineWidth = 1;
+    } else {
+      ctx.fillStyle = ring.color;
+      ctx.strokeStyle = 'rgba(250,248,244,0.06)';
+      ctx.lineWidth = 0.5;
+    }
+    ctx.fill();
+    ctx.stroke();
+
+    // Ring label — on the ring itself
+    const labelRadius = currentRadius + ringWidth / 2;
+    const angle = -Math.PI / 2; // top
+    ctx.save();
+    ctx.translate(cx, cy);
+    ctx.rotate(angle);
+
+    // Label along the ring
+    ctx.fillStyle = isSelected || isHovered ? '#faf8f4' : 'rgba(250,248,244,0.4)';
+    ctx.font = ringWidth > 25 ?
+      '600 10px Segoe UI, system-ui, sans-serif' :
+      '600 8px Segoe UI, system-ui, sans-serif';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillText(ring.name, labelRadius, 0);
+
+    ctx.restore();
+
+    // Store ring bounds for hit detection
+    ring._innerR = currentRadius;
+    ring._outerR = outerRadius;
+
+    currentRadius = outerRadius + ringGap;
+  });
+
+  // Center — pith
+  ctx.beginPath();
+  ctx.arc(cx, cy, minRadius, 0, Math.PI * 2);
+  ctx.fillStyle = '#2a2520';
+  ctx.fill();
+  ctx.strokeStyle = 'rgba(196,144,48,0.3)';
+  ctx.lineWidth = 1;
+  ctx.stroke();
+
+  ctx.fillStyle = '#c49030';
+  ctx.font = '600 9px Segoe UI, system-ui, sans-serif';
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
+  ctx.fillText('PITH', cx, cy - 6);
+  ctx.fillStyle = '#6a6560';
+  ctx.font = '400 8px Segoe UI, system-ui, sans-serif';
+  ctx.fillText('origin', cx, cy + 6);
+
+  // Outer label — bark
+  ctx.fillStyle = 'rgba(250,248,244,0.15)';
+  ctx.font = '600 9px Segoe UI, system-ui, sans-serif';
+  ctx.textAlign = 'center';
+  ctx.fillText('B A R K', cx, cy - maxRadius - 15);
+  ctx.fillStyle = 'rgba(250,248,244,0.1)';
+  ctx.font = '400 8px Segoe UI, system-ui, sans-serif';
+  ctx.fillText('growth edge — you are here', cx, cy - maxRadius - 4);
+
+  ctx.restore();
+}
+
+function renderInfoPanel() {
+  const panel = document.getElementById('info-panel');
+
+  panel.innerHTML = RING_DEFS.map((ring, i) => {
+    const stats = getNodesForEra(ring.id);
+    const isSelected = selectedRing === i;
+
+    return `
+      <div class="ring-info ${isSelected ? 'selected' : ''}" data-ring="${i}" onclick="selectRing(${i})">
+        <div class="ring-era-label" style="color:${ring.color}">${ring.name}</div>
+        <div class="ring-date">${formatDate(ring.dateRange[0])} → ${formatDate(ring.dateRange[1])}</div>
+        <div class="ring-desc">${ring.label}</div>
+        ${ring.growth ? `<div class="ring-growth">${ring.growth}</div>` : ''}
+        <div class="ring-node-count">
+          ${stats.total} nodes${stats.pruned > 0 ? ` · <span class="ring-pruned-count">${stats.pruned} pruned</span>` : ''}
+        </div>
+      </div>
+    `;
+  }).join('');
+}
+
+function renderWalkProgress() {
+  const container = document.getElementById('walk-progress');
+  container.innerHTML = RING_DEFS.map((ring, i) => {
+    let cls = 'walk-dot';
+    if (i === selectedRing) cls += ' active';
+    else if (i < selectedRing) cls += ' visited';
+    return `<div class="${cls}" style="background:${i <= selectedRing ? ring.color : ''};border-color:${i <= selectedRing ? ring.color : ''}" title="${ring.name}"></div>`;
+  }).join('');
+}
+
+function selectRing(i) {
+  selectedRing = i;
+  drawRings();
+  renderInfoPanel();
+  renderWalkProgress();
+
+  const ring = RING_DEFS[i];
+  document.getElementById('walk-label').textContent = ring.name + ' — ' + formatDate(ring.dateRange[0]) + ' → ' + formatDate(ring.dateRange[1]);
+
+  document.getElementById('btn-prev').disabled = i <= 0;
+  document.getElementById('btn-next').disabled = i >= RING_DEFS.length - 1;
+
+  // Scroll info panel to selected
+  const infoItem = document.querySelector(`.ring-info[data-ring="${i}"]`);
+  if (infoItem) infoItem.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+}
+
+function setupCanvas() {
+  const area = document.querySelector('.ring-area');
+  canvas = document.getElementById('ring-canvas');
+  ctx = canvas.getContext('2d');
+
+  const size = Math.min(area.clientWidth, area.clientHeight);
+  canvas.width = size * window.devicePixelRatio;
+  canvas.height = size * window.devicePixelRatio;
+  canvas.style.width = size + 'px';
+  canvas.style.height = size + 'px';
+
+  // Hit detection
+  canvas.addEventListener('mousemove', e => {
+    const rect = canvas.getBoundingClientRect();
+    const x = e.clientX - rect.left - rect.width / 2;
+    const y = e.clientY - rect.top - rect.height / 2;
+    const dist = Math.sqrt(x * x + y * y);
+
+    let hit = -1;
+    RING_DEFS.forEach((ring, i) => {
+      if (dist >= ring._innerR && dist <= ring._outerR) hit = i;
+    });
+
+    if (hit !== hoveredRing) {
+      hoveredRing = hit;
+      canvas.style.cursor = hit >= 0 ? 'pointer' : 'default';
+      drawRings();
+    }
+  });
+
+  canvas.addEventListener('click', () => {
+    if (hoveredRing >= 0) selectRing(hoveredRing);
+  });
+
+  window.addEventListener('resize', () => {
+    const area = document.querySelector('.ring-area');
+    const size = Math.min(area.clientWidth, area.clientHeight);
+    canvas.width = size * window.devicePixelRatio;
+    canvas.height = size * window.devicePixelRatio;
+    canvas.style.width = size + 'px';
+    canvas.style.height = size + 'px';
+    drawRings();
+  });
+}
+
+async function init() {
+  const resp = await fetch('sapiens-tree-data.json');
+  treeData = await resp.json();
+  flattenTree(treeData.tree, 0);
+
+  setupCanvas();
+  drawRings();
+  renderInfoPanel();
+  renderWalkProgress();
+
+  // Walk controls
+  document.getElementById('btn-prev').addEventListener('click', () => {
+    if (selectedRing > 0) selectRing(selectedRing - 1);
+  });
+  document.getElementById('btn-next').addEventListener('click', () => {
+    if (selectedRing < RING_DEFS.length - 1) selectRing(selectedRing + 1);
+  });
+
+  // Keyboard
+  document.addEventListener('keydown', e => {
+    if (e.key === 'ArrowLeft' && selectedRing > 0) selectRing(selectedRing - 1);
+    if (e.key === 'ArrowRight' && selectedRing < RING_DEFS.length - 1) selectRing(selectedRing + 1);
+  });
+}
+
+init();
+</script>
+</body>
+</html>

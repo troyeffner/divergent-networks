@@ -1,0 +1,1364 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Sapiens — The Microscope</title>
+<style>
+:root {
+  --bg: #1a1612;
+  --bg-subtle: #231f1a;
+  --bg-panel: #1e1a16;
+  --text: #e8e0d4;
+  --text-muted: #a09888;
+  --text-dim: #706858;
+  --accent: #c49030;
+  --accent-dim: #8a6820;
+  --accent-glow: rgba(196, 144, 48, 0.3);
+  --border: #3a3428;
+  --border-focus: #c49030;
+  --force-fiction: #d4a040;
+  --force-pruning: #8a7560;
+  --force-scaling: #b07040;
+  --force-ignorance: #4a7a9a;
+  --force-energy: #5ab4a0;
+  --force-happiness: #c47058;
+  --type-root: #c49030;
+  --type-trunk: #b08830;
+  --type-branch: #7ab870;
+  --type-event-horizon: #d4a040;
+  --type-pruned: #8a5040;
+  --type-leaf: #5a8a6a;
+  --transition-contract: 200ms;
+  --transition-threshold: 100ms;
+  --transition-expand: 300ms;
+  --transition-settle: 200ms;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  :root {
+    --transition-contract: 0ms;
+    --transition-threshold: 0ms;
+    --transition-expand: 0ms;
+    --transition-settle: 0ms;
+  }
+}
+
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: 'Georgia', 'Times New Roman', serif;
+  overflow: hidden;
+  height: 100vh;
+  width: 100vw;
+}
+
+/* HEADER */
+#header {
+  position: fixed;
+  top: 0; left: 0; right: 0;
+  height: 48px;
+  background: var(--bg);
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 20px;
+  z-index: 100;
+}
+
+#header h1 {
+  font-size: 16px;
+  font-weight: 400;
+  color: var(--text);
+  letter-spacing: 1px;
+}
+
+#header h1 span {
+  color: var(--text-muted);
+  font-size: 13px;
+  margin-left: 8px;
+}
+
+#header-links {
+  display: flex;
+  gap: 16px;
+  font-size: 12px;
+}
+
+#header-links a {
+  color: var(--text-muted);
+  text-decoration: none;
+  transition: color 150ms;
+}
+
+#header-links a:hover,
+#header-links a:focus-visible {
+  color: var(--accent);
+}
+
+/* BREADCRUMB */
+#breadcrumb-bar {
+  position: fixed;
+  top: 48px; left: 0; right: 0;
+  height: 36px;
+  background: var(--bg-subtle);
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 20px;
+  z-index: 99;
+  font-size: 13px;
+}
+
+#breadcrumb {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  overflow-x: auto;
+  white-space: nowrap;
+  flex: 1;
+}
+
+#breadcrumb .crumb {
+  color: var(--text-muted);
+  cursor: pointer;
+  padding: 2px 4px;
+  border-radius: 3px;
+  border: 1px solid transparent;
+  transition: color 150ms, border-color 150ms;
+  background: none;
+  font-family: inherit;
+  font-size: 13px;
+}
+
+#breadcrumb .crumb:hover,
+#breadcrumb .crumb:focus-visible {
+  color: var(--accent);
+  border-color: var(--border-focus);
+  outline: none;
+}
+
+#breadcrumb .crumb.current {
+  color: var(--accent);
+  font-weight: 600;
+}
+
+#breadcrumb .sep {
+  color: var(--text-dim);
+  margin: 0 2px;
+}
+
+#depth-counter {
+  color: var(--text-dim);
+  font-size: 11px;
+  margin-left: 12px;
+  flex-shrink: 0;
+}
+
+/* QUOTE BAR */
+#quote-bar {
+  position: fixed;
+  bottom: 0; left: 0; right: 0;
+  height: 40px;
+  background: var(--bg-subtle);
+  border-top: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0 20px;
+  z-index: 100;
+  font-size: 13px;
+  font-style: italic;
+  color: var(--text-muted);
+  letter-spacing: 0.3px;
+}
+
+/* CANVAS */
+#canvas-container {
+  position: fixed;
+  top: 84px;
+  left: 0;
+  right: 240px;
+  bottom: 40px;
+  overflow: hidden;
+}
+
+canvas#main-canvas {
+  display: block;
+  width: 100%;
+  height: 100%;
+  cursor: default;
+}
+
+/* SIDEBAR */
+#sidebar {
+  position: fixed;
+  top: 84px;
+  right: 0;
+  width: 240px;
+  bottom: 40px;
+  background: var(--bg-panel);
+  border-left: 1px solid var(--border);
+  overflow-y: auto;
+  padding: 16px;
+  z-index: 90;
+  font-size: 13px;
+}
+
+#sidebar h2 {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--accent);
+  margin-bottom: 12px;
+  letter-spacing: 0.5px;
+}
+
+#sidebar .group-title {
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  color: var(--text-dim);
+  margin: 16px 0 8px;
+}
+
+#sidebar .group-title:first-of-type {
+  margin-top: 0;
+}
+
+#sidebar .child-item {
+  padding: 6px 8px;
+  margin: 2px 0;
+  border-radius: 4px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  transition: background 150ms;
+  border: 1px solid transparent;
+}
+
+#sidebar .child-item:hover,
+#sidebar .child-item:focus-visible {
+  background: rgba(196, 144, 48, 0.1);
+  border-color: var(--border);
+  outline: none;
+}
+
+#sidebar .child-item .dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+#sidebar .child-item .name {
+  color: var(--text);
+  font-size: 12px;
+}
+
+.sidebar-btn {
+  display: block;
+  width: 100%;
+  padding: 8px 12px;
+  margin: 4px 0;
+  background: var(--bg-subtle);
+  color: var(--text-muted);
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  cursor: pointer;
+  font-family: inherit;
+  font-size: 12px;
+  text-align: center;
+  transition: all 150ms;
+}
+
+.sidebar-btn:hover,
+.sidebar-btn:focus-visible {
+  background: var(--accent-dim);
+  color: var(--text);
+  border-color: var(--accent);
+  outline: none;
+}
+
+#sidebar-nav {
+  margin-top: 16px;
+  padding-top: 12px;
+  border-top: 1px solid var(--border);
+}
+
+/* DETAIL PANEL */
+#detail-panel {
+  position: fixed;
+  bottom: 40px;
+  left: 20px;
+  width: 340px;
+  max-height: 260px;
+  background: var(--bg-panel);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 16px;
+  z-index: 95;
+  display: none;
+  overflow-y: auto;
+  font-size: 13px;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.4);
+}
+
+#detail-panel.visible { display: block; }
+
+#detail-panel h3 {
+  font-size: 15px;
+  color: var(--accent);
+  margin-bottom: 8px;
+}
+
+#detail-panel .detail-label {
+  color: var(--text);
+  line-height: 1.5;
+  margin-bottom: 10px;
+}
+
+#detail-panel .detail-ring {
+  color: var(--text-muted);
+  font-style: italic;
+  font-size: 12px;
+  line-height: 1.5;
+  margin-bottom: 10px;
+  padding: 6px 8px;
+  background: rgba(196, 144, 48, 0.05);
+  border-left: 2px solid var(--accent-dim);
+  border-radius: 2px;
+}
+
+#detail-panel .detail-soil {
+  color: var(--text-dim);
+  font-size: 12px;
+  line-height: 1.4;
+  margin-bottom: 10px;
+}
+
+#detail-panel .detail-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  margin-bottom: 10px;
+}
+
+#detail-panel .tag {
+  font-size: 10px;
+  padding: 2px 6px;
+  border-radius: 3px;
+  background: rgba(196, 144, 48, 0.1);
+  color: var(--text-muted);
+  border: 1px solid var(--border);
+}
+
+#detail-panel .go-inside-btn {
+  display: inline-block;
+  padding: 6px 16px;
+  background: var(--accent-dim);
+  color: var(--text);
+  border: 1px solid var(--accent);
+  border-radius: 4px;
+  cursor: pointer;
+  font-family: inherit;
+  font-size: 12px;
+  transition: all 150ms;
+}
+
+#detail-panel .go-inside-btn:hover,
+#detail-panel .go-inside-btn:focus-visible {
+  background: var(--accent);
+  color: var(--bg);
+  outline: none;
+}
+
+#detail-close {
+  position: absolute;
+  top: 8px;
+  right: 12px;
+  background: none;
+  border: none;
+  color: var(--text-dim);
+  cursor: pointer;
+  font-size: 16px;
+  padding: 4px;
+}
+
+#detail-close:hover { color: var(--text); }
+
+/* MINIMAP */
+#minimap {
+  position: fixed;
+  bottom: 52px;
+  left: 20px;
+  width: 120px;
+  height: 120px;
+  background: var(--bg-panel);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  z-index: 94;
+  display: none;
+  overflow: hidden;
+  cursor: pointer;
+  box-shadow: 0 2px 10px rgba(0,0,0,0.3);
+}
+
+#minimap.visible { display: block; }
+
+#minimap canvas {
+  width: 100%;
+  height: 100%;
+}
+
+/* Focus styles */
+:focus-visible {
+  outline: 2px solid var(--border-focus);
+  outline-offset: 2px;
+}
+
+/* Scrollbar */
+::-webkit-scrollbar { width: 6px; }
+::-webkit-scrollbar-track { background: var(--bg); }
+::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+</style>
+</head>
+<body>
+
+<!-- HEADER -->
+<header id="header" role="banner">
+  <h1>Sapiens<span>The Microscope</span></h1>
+  <nav id="header-links" aria-label="View navigation">
+    <a href="sapiens-temporal-tree.html">Timeline</a>
+    <a href="sapiens-fiber-view.html">Fiber View</a>
+    <a href="sapiens-growth-rings.html">Growth Rings</a>
+    <a href="sapiens-pruning-viewer.html">Pruning</a>
+  </nav>
+</header>
+
+<!-- BREADCRUMB -->
+<div id="breadcrumb-bar" role="navigation" aria-label="Zoom path">
+  <div id="breadcrumb"></div>
+  <div id="depth-counter" aria-live="polite">Depth: 0</div>
+</div>
+
+<!-- CANVAS -->
+<div id="canvas-container">
+  <canvas id="main-canvas" role="application" aria-label="Fractal tree microscope view. Double-click a node to enter it. Press Escape to zoom out." tabindex="0"></canvas>
+</div>
+
+<!-- SIDEBAR -->
+<aside id="sidebar" role="complementary" aria-label="Children list">
+  <h2 id="sidebar-title">Root</h2>
+  <div id="sidebar-children"></div>
+  <div id="sidebar-nav"></div>
+</aside>
+
+<!-- DETAIL PANEL -->
+<div id="detail-panel" role="dialog" aria-label="Node details">
+  <button id="detail-close" aria-label="Close detail panel">&times;</button>
+  <h3 id="detail-name"></h3>
+  <div id="detail-label" class="detail-label"></div>
+  <div id="detail-ring" class="detail-ring"></div>
+  <div id="detail-soil" class="detail-soil"></div>
+  <div id="detail-tags" class="detail-tags"></div>
+  <div id="detail-actions"></div>
+</div>
+
+<!-- MINIMAP -->
+<div id="minimap" role="img" aria-label="Minimap showing full tree. Click to return to root.">
+  <canvas id="minimap-canvas" width="240" height="240"></canvas>
+</div>
+
+<!-- QUOTE BAR -->
+<footer id="quote-bar" role="contentinfo">
+  <span id="quote-text">The tree remembers what linear history forgot.</span>
+</footer>
+
+<script>
+(function() {
+  'use strict';
+
+  // ── CONSTANTS ──
+  const FORCE_POSITIONS = {
+    'ignorance-revolution': { angle: -Math.PI / 2, label: 'Ignorance Revolution' },
+    'happiness-paradox':    { angle: -Math.PI / 6, label: 'Happiness Paradox' },
+    'scaling-traps':        { angle:  Math.PI / 6, label: 'Scaling Traps' },
+    'pruning-pattern':      { angle:  Math.PI / 2, label: 'Pruning Pattern' },
+    'fiction-engine':       { angle:  5 * Math.PI / 6, label: 'Fiction Engine' },
+    'energy-regimes':       { angle: -5 * Math.PI / 6, label: 'Energy Regimes' }
+  };
+
+  const FORCE_COLORS = {
+    'fiction-engine': '#d4a040',
+    'pruning-pattern': '#8a7560',
+    'scaling-traps': '#b07040',
+    'ignorance-revolution': '#4a7a9a',
+    'energy-regimes': '#5ab4a0',
+    'happiness-paradox': '#c47058'
+  };
+
+  const TYPE_COLORS = {
+    'root': '#c49030',
+    'trunk': '#b08830',
+    'branch': '#7ab870',
+    'event-horizon': '#d4a040',
+    'pruned': '#8a5040',
+    'leaf': '#5a8a6a'
+  };
+
+  const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+  // ── STATE ──
+  let treeData = null;
+  let patternVocab = {};
+  let zoomStack = []; // array of node refs, zoomStack[0] = root
+  let currentNode = null;
+  let childPositions = []; // {node, x, y, radius, isForce, forceId}
+  let placeholders = [];   // empty force placeholders
+  let hoveredChild = null;
+  let selectedChild = null;
+  let focusedIndex = -1;
+  let animPhase = null; // null | 'contract' | 'threshold' | 'expand' | 'settle'
+  let animStart = 0;
+  let animProgress = 0;
+  let canvas, ctx, dpr;
+  let canvasW, canvasH;
+
+  // ── INIT ──
+  async function init() {
+    canvas = document.getElementById('main-canvas');
+    ctx = canvas.getContext('2d');
+
+    try {
+      const resp = await fetch('sapiens-tree-data.json');
+      const data = await resp.json();
+      treeData = data.tree;
+      if (data.pattern_tag_vocabulary) {
+        data.pattern_tag_vocabulary.forEach(p => { patternVocab[p.tag] = p; });
+      }
+    } catch(e) {
+      console.error('Failed to load sapiens-tree-data.json:', e);
+      return;
+    }
+
+    currentNode = treeData;
+    zoomStack = [treeData];
+
+    resize();
+    window.addEventListener('resize', resize);
+    setupEvents();
+    computePositions();
+    updateUI();
+    requestAnimationFrame(draw);
+  }
+
+  function resize() {
+    const container = document.getElementById('canvas-container');
+    const rect = container.getBoundingClientRect();
+    dpr = window.devicePixelRatio || 1;
+    canvasW = rect.width;
+    canvasH = rect.height;
+    canvas.width = canvasW * dpr;
+    canvas.height = canvasH * dpr;
+    canvas.style.width = canvasW + 'px';
+    canvas.style.height = canvasH + 'px';
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    computePositions();
+  }
+
+  // ── LAYOUT ──
+  function computePositions() {
+    childPositions = [];
+    placeholders = [];
+    if (!currentNode) return;
+
+    const children = currentNode.children || [];
+    const cx = canvasW / 2;
+    const cy = canvasH / 2;
+    const primaryRadius = Math.min(canvasW, canvasH) * 0.3;
+    const nodeRadius = Math.min(36, Math.max(18, primaryRadius * 0.18));
+
+    // Separate force and non-force children
+    const forceChildren = [];
+    const nonForceChildren = [];
+    const occupiedForces = {};
+
+    children.forEach(child => {
+      if (child.force && FORCE_POSITIONS[child.force]) {
+        forceChildren.push(child);
+        occupiedForces[child.force] = true;
+      } else {
+        nonForceChildren.push(child);
+      }
+    });
+
+    // Force children in hexagonal positions
+    forceChildren.forEach(child => {
+      const fp = FORCE_POSITIONS[child.force];
+      const x = cx + Math.cos(fp.angle) * primaryRadius;
+      const y = cy + Math.sin(fp.angle) * primaryRadius;
+      childPositions.push({
+        node: child,
+        x, y,
+        radius: nodeRadius,
+        isForce: true,
+        forceId: child.force,
+        color: FORCE_COLORS[child.force] || TYPE_COLORS[child.type] || '#888'
+      });
+    });
+
+    // Placeholders for empty forces
+    Object.keys(FORCE_POSITIONS).forEach(fid => {
+      if (!occupiedForces[fid]) {
+        const fp = FORCE_POSITIONS[fid];
+        placeholders.push({
+          x: cx + Math.cos(fp.angle) * primaryRadius,
+          y: cy + Math.sin(fp.angle) * primaryRadius,
+          radius: nodeRadius * 0.5,
+          forceId: fid,
+          label: fp.label
+        });
+      }
+    });
+
+    // Non-force children in secondary ring
+    if (nonForceChildren.length > 0) {
+      const secondaryRadius = primaryRadius * 1.55;
+      const smallRadius = nodeRadius * 0.75;
+      const angleStep = (2 * Math.PI) / Math.max(nonForceChildren.length, 1);
+      const startAngle = -Math.PI / 2 + (angleStep / 2);
+
+      nonForceChildren.forEach((child, i) => {
+        const angle = startAngle + i * angleStep;
+        childPositions.push({
+          node: child,
+          x: cx + Math.cos(angle) * secondaryRadius,
+          y: cy + Math.sin(angle) * secondaryRadius,
+          radius: smallRadius,
+          isForce: false,
+          forceId: null,
+          color: TYPE_COLORS[child.type] || '#888'
+        });
+      });
+    }
+  }
+
+  // ── DRAWING ──
+  function draw(timestamp) {
+    ctx.clearRect(0, 0, canvasW, canvasH);
+
+    // Background
+    ctx.fillStyle = '#1a1612';
+    ctx.fillRect(0, 0, canvasW, canvasH);
+
+    const cx = canvasW / 2;
+    const cy = canvasH / 2;
+
+    // Animation handling
+    let globalAlpha = 1;
+    let childAlpha = 1;
+    let childScale = 1;
+
+    if (animPhase) {
+      const elapsed = timestamp - animStart;
+      const contractDur = reducedMotion ? 0 : 200;
+      const threshDur = reducedMotion ? 0 : 100;
+      const expandDur = reducedMotion ? 0 : 300;
+      const settleDur = reducedMotion ? 0 : 200;
+
+      if (animPhase === 'zooming-in') {
+        const totalDur = contractDur + threshDur + expandDur + settleDur;
+        if (elapsed >= totalDur) {
+          animPhase = null;
+        } else if (elapsed < contractDur) {
+          // Contract: old children fading out
+          childAlpha = 1 - (elapsed / Math.max(contractDur, 1));
+          childScale = 1 - 0.3 * (elapsed / Math.max(contractDur, 1));
+        } else if (elapsed < contractDur + threshDur) {
+          // Threshold: brief pause
+          childAlpha = 0;
+        } else if (elapsed < contractDur + threshDur + expandDur) {
+          // Expand: new children appearing
+          const t = (elapsed - contractDur - threshDur) / Math.max(expandDur, 1);
+          childAlpha = t;
+          childScale = 0.3 + 0.7 * t;
+        } else {
+          // Settle
+          const t = (elapsed - contractDur - threshDur - expandDur) / Math.max(settleDur, 1);
+          childAlpha = 1;
+          childScale = 1;
+        }
+      }
+    }
+
+    // Draw radial guides (subtle)
+    const primaryRadius = Math.min(canvasW, canvasH) * 0.3;
+    ctx.beginPath();
+    ctx.arc(cx, cy, primaryRadius, 0, Math.PI * 2);
+    ctx.strokeStyle = 'rgba(58, 52, 40, 0.3)';
+    ctx.lineWidth = 1;
+    ctx.stroke();
+
+    if (childPositions.some(cp => !cp.isForce)) {
+      ctx.beginPath();
+      ctx.arc(cx, cy, primaryRadius * 1.55, 0, Math.PI * 2);
+      ctx.strokeStyle = 'rgba(58, 52, 40, 0.15)';
+      ctx.stroke();
+    }
+
+    // Draw connecting lines from center to children
+    childPositions.forEach(cp => {
+      ctx.globalAlpha = childAlpha * 0.2;
+      ctx.beginPath();
+      ctx.moveTo(cx, cy);
+      ctx.lineTo(cp.x, cp.y);
+      ctx.strokeStyle = cp.color;
+      ctx.lineWidth = 1;
+      ctx.stroke();
+    });
+    ctx.globalAlpha = 1;
+
+    // Draw placeholders (empty forces)
+    placeholders.forEach(ph => {
+      ctx.globalAlpha = childAlpha * 0.2;
+      ctx.beginPath();
+      ctx.arc(ph.x, ph.y, ph.radius, 0, Math.PI * 2);
+      ctx.strokeStyle = 'rgba(160, 152, 136, 0.3)';
+      ctx.lineWidth = 1;
+      ctx.setLineDash([3, 3]);
+      ctx.stroke();
+      ctx.setLineDash([]);
+
+      // Label
+      ctx.font = '10px Georgia';
+      ctx.fillStyle = 'rgba(112, 104, 88, 0.4)';
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.fillText(FORCE_POSITIONS[ph.forceId].label, ph.x, ph.y);
+      ctx.globalAlpha = 1;
+    });
+
+    // Draw center node (current)
+    const centerRadius = Math.min(canvasW, canvasH) * 0.06;
+    const centerColor = currentNode.force
+      ? (FORCE_COLORS[currentNode.force] || '#c49030')
+      : (TYPE_COLORS[currentNode.type] || '#c49030');
+
+    // Glow
+    ctx.beginPath();
+    ctx.arc(cx, cy, centerRadius + 8, 0, Math.PI * 2);
+    const glow = ctx.createRadialGradient(cx, cy, centerRadius, cx, cy, centerRadius + 20);
+    glow.addColorStop(0, hexToRgba(centerColor, 0.15));
+    glow.addColorStop(1, 'transparent');
+    ctx.fillStyle = glow;
+    ctx.fill();
+
+    ctx.beginPath();
+    ctx.arc(cx, cy, centerRadius, 0, Math.PI * 2);
+    ctx.fillStyle = hexToRgba(centerColor, 0.15);
+    ctx.fill();
+    ctx.strokeStyle = centerColor;
+    ctx.lineWidth = 2;
+    ctx.stroke();
+
+    ctx.font = '13px Georgia';
+    ctx.fillStyle = '#e8e0d4';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    wrapText(ctx, currentNode.name, cx, cy, centerRadius * 1.6, 15);
+
+    // Draw child nodes
+    childPositions.forEach((cp, i) => {
+      const isHovered = hoveredChild === i;
+      const isSelected = selectedChild === i;
+      const isFocused = focusedIndex === i;
+      const scale = childScale;
+      const r = cp.radius * scale;
+
+      ctx.globalAlpha = childAlpha;
+
+      // Draw from center (scaled position)
+      const px = cx + (cp.x - cx) * scale;
+      const py = cy + (cp.y - cy) * scale;
+
+      // Glow on hover/focus
+      if (isHovered || isFocused || isSelected) {
+        ctx.beginPath();
+        ctx.arc(px, py, r + 6, 0, Math.PI * 2);
+        const hGlow = ctx.createRadialGradient(px, py, r, px, py, r + 15);
+        hGlow.addColorStop(0, hexToRgba(cp.color, 0.25));
+        hGlow.addColorStop(1, 'transparent');
+        ctx.fillStyle = hGlow;
+        ctx.fill();
+      }
+
+      // Node circle
+      ctx.beginPath();
+      ctx.arc(px, py, r, 0, Math.PI * 2);
+      ctx.fillStyle = hexToRgba(cp.color, isSelected ? 0.25 : 0.12);
+      ctx.fill();
+      ctx.strokeStyle = cp.color;
+      ctx.lineWidth = (isHovered || isFocused || isSelected) ? 2.5 : 1.5;
+      ctx.stroke();
+
+      // Has-children indicator
+      if (cp.node.children && cp.node.children.length > 0) {
+        ctx.beginPath();
+        ctx.arc(px + r * 0.6, py - r * 0.6, 4, 0, Math.PI * 2);
+        ctx.fillStyle = cp.color;
+        ctx.globalAlpha = childAlpha * 0.6;
+        ctx.fill();
+        ctx.globalAlpha = childAlpha;
+      }
+
+      // Pruned indicator
+      if (cp.node.type === 'pruned') {
+        ctx.save();
+        ctx.translate(px, py);
+        ctx.rotate(Math.PI / 4);
+        ctx.strokeStyle = hexToRgba('#8a5040', 0.4);
+        ctx.lineWidth = 1;
+        ctx.beginPath();
+        ctx.moveTo(-r * 0.5, 0);
+        ctx.lineTo(r * 0.5, 0);
+        ctx.stroke();
+        ctx.beginPath();
+        ctx.moveTo(0, -r * 0.5);
+        ctx.lineTo(0, r * 0.5);
+        ctx.stroke();
+        ctx.restore();
+      }
+
+      // Label
+      ctx.font = '11px Georgia';
+      ctx.fillStyle = '#e8e0d4';
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      wrapText(ctx, cp.node.name, px, py, r * 1.8, 13);
+
+      // Force label below
+      if (cp.isForce) {
+        ctx.font = '9px Georgia';
+        ctx.fillStyle = hexToRgba(cp.color, 0.6);
+        ctx.textAlign = 'center';
+        ctx.fillText(FORCE_POSITIONS[cp.forceId].label, px, py + r + 14);
+      }
+
+      ctx.globalAlpha = 1;
+    });
+
+    requestAnimationFrame(draw);
+  }
+
+  // ── TEXT WRAP ──
+  function wrapText(ctx, text, x, y, maxWidth, lineHeight) {
+    const words = text.split(' ');
+    const lines = [];
+    let line = '';
+
+    words.forEach(word => {
+      const test = line + (line ? ' ' : '') + word;
+      if (ctx.measureText(test).width > maxWidth && line) {
+        lines.push(line);
+        line = word;
+      } else {
+        line = test;
+      }
+    });
+    if (line) lines.push(line);
+
+    const startY = y - ((lines.length - 1) * lineHeight) / 2;
+    lines.forEach((ln, i) => {
+      ctx.fillText(ln, x, startY + i * lineHeight);
+    });
+  }
+
+  // ── EVENTS ──
+  function setupEvents() {
+    canvas.addEventListener('mousemove', onMouseMove);
+    canvas.addEventListener('click', onClick);
+    canvas.addEventListener('dblclick', onDblClick);
+    canvas.addEventListener('keydown', onKeyDown);
+    document.getElementById('detail-close').addEventListener('click', closeDetail);
+    document.getElementById('minimap').addEventListener('click', zoomToRoot);
+  }
+
+  function getHitChild(mx, my) {
+    for (let i = childPositions.length - 1; i >= 0; i--) {
+      const cp = childPositions[i];
+      const dx = mx - cp.x;
+      const dy = my - cp.y;
+      if (dx * dx + dy * dy <= cp.radius * cp.radius) return i;
+    }
+    return -1;
+  }
+
+  function onMouseMove(e) {
+    const rect = canvas.getBoundingClientRect();
+    const mx = e.clientX - rect.left;
+    const my = e.clientY - rect.top;
+    const hit = getHitChild(mx, my);
+    if (hit !== hoveredChild) {
+      hoveredChild = hit;
+      canvas.style.cursor = hit >= 0 ? 'pointer' : 'default';
+    }
+  }
+
+  function onClick(e) {
+    const rect = canvas.getBoundingClientRect();
+    const mx = e.clientX - rect.left;
+    const my = e.clientY - rect.top;
+    const hit = getHitChild(mx, my);
+    if (hit >= 0) {
+      selectedChild = hit;
+      focusedIndex = hit;
+      showDetail(childPositions[hit].node);
+    } else {
+      selectedChild = null;
+      closeDetail();
+    }
+  }
+
+  function onDblClick(e) {
+    const rect = canvas.getBoundingClientRect();
+    const mx = e.clientX - rect.left;
+    const my = e.clientY - rect.top;
+    const hit = getHitChild(mx, my);
+    if (hit >= 0) {
+      const node = childPositions[hit].node;
+      if (node.children && node.children.length > 0) {
+        zoomInto(node);
+      }
+    }
+  }
+
+  function onKeyDown(e) {
+    if (e.key === 'Escape' || e.key === 'Backspace') {
+      e.preventDefault();
+      zoomOut();
+    } else if (e.key === 'Tab') {
+      e.preventDefault();
+      if (childPositions.length === 0) return;
+      if (e.shiftKey) {
+        focusedIndex = focusedIndex <= 0 ? childPositions.length - 1 : focusedIndex - 1;
+      } else {
+        focusedIndex = (focusedIndex + 1) % childPositions.length;
+      }
+      selectedChild = focusedIndex;
+      showDetail(childPositions[focusedIndex].node);
+    } else if (e.key === 'Enter') {
+      if (focusedIndex >= 0 && focusedIndex < childPositions.length) {
+        const node = childPositions[focusedIndex].node;
+        if (node.children && node.children.length > 0) {
+          zoomInto(node);
+        }
+      }
+    }
+  }
+
+  // ── ZOOM ──
+  function zoomInto(node) {
+    zoomStack.push(node);
+    currentNode = node;
+    selectedChild = null;
+    hoveredChild = null;
+    focusedIndex = -1;
+
+    // Start animation
+    animPhase = 'zooming-in';
+    animStart = performance.now();
+
+    computePositions();
+    updateUI();
+    closeDetail();
+  }
+
+  function zoomOut() {
+    if (zoomStack.length <= 1) return;
+    zoomStack.pop();
+    currentNode = zoomStack[zoomStack.length - 1];
+    selectedChild = null;
+    hoveredChild = null;
+    focusedIndex = -1;
+
+    animPhase = 'zooming-in';
+    animStart = performance.now();
+
+    computePositions();
+    updateUI();
+    closeDetail();
+  }
+
+  function zoomToRoot() {
+    zoomStack = [treeData];
+    currentNode = treeData;
+    selectedChild = null;
+    hoveredChild = null;
+    focusedIndex = -1;
+    animPhase = null;
+    computePositions();
+    updateUI();
+    closeDetail();
+  }
+
+  function zoomToDepth(depth) {
+    if (depth >= zoomStack.length) return;
+    zoomStack = zoomStack.slice(0, depth + 1);
+    currentNode = zoomStack[zoomStack.length - 1];
+    selectedChild = null;
+    hoveredChild = null;
+    focusedIndex = -1;
+    computePositions();
+    updateUI();
+    closeDetail();
+  }
+
+  // ── UI UPDATE ──
+  function updateUI() {
+    updateBreadcrumb();
+    updateSidebar();
+    updateQuoteBar();
+    updateMinimap();
+  }
+
+  function updateBreadcrumb() {
+    const container = document.getElementById('breadcrumb');
+    container.innerHTML = '';
+
+    zoomStack.forEach((node, i) => {
+      if (i > 0) {
+        const sep = document.createElement('span');
+        sep.className = 'sep';
+        sep.textContent = ' \u203A ';
+        sep.setAttribute('aria-hidden', 'true');
+        container.appendChild(sep);
+      }
+
+      const btn = document.createElement('button');
+      btn.className = 'crumb' + (i === zoomStack.length - 1 ? ' current' : '');
+      btn.textContent = (i === 0 ? '\u25C9 ' : '') + node.name;
+      btn.setAttribute('aria-label', 'Zoom to ' + node.name);
+      const depth = i;
+      btn.addEventListener('click', () => zoomToDepth(depth));
+      container.appendChild(btn);
+    });
+
+    document.getElementById('depth-counter').textContent = 'Depth: ' + (zoomStack.length - 1);
+  }
+
+  function updateSidebar() {
+    const title = document.getElementById('sidebar-title');
+    title.textContent = currentNode.name;
+
+    const childrenEl = document.getElementById('sidebar-children');
+    childrenEl.innerHTML = '';
+
+    const children = currentNode.children || [];
+    if (children.length === 0) {
+      const empty = document.createElement('div');
+      empty.style.color = 'var(--text-dim)';
+      empty.style.fontSize = '12px';
+      empty.style.marginTop = '8px';
+      empty.textContent = 'Leaf node — no children to explore.';
+      childrenEl.appendChild(empty);
+    } else {
+      // Forces first
+      const forceKids = children.filter(c => c.force && FORCE_POSITIONS[c.force]);
+      const otherKids = children.filter(c => !c.force || !FORCE_POSITIONS[c.force]);
+
+      if (forceKids.length > 0) {
+        const gt = document.createElement('div');
+        gt.className = 'group-title';
+        gt.textContent = 'Forces';
+        childrenEl.appendChild(gt);
+        forceKids.forEach(child => addSidebarChild(childrenEl, child));
+      }
+
+      if (otherKids.length > 0) {
+        const gt = document.createElement('div');
+        gt.className = 'group-title';
+        gt.textContent = forceKids.length > 0 ? 'Other' : 'Children';
+        childrenEl.appendChild(gt);
+        otherKids.forEach(child => addSidebarChild(childrenEl, child));
+      }
+    }
+
+    // Navigation buttons
+    const navEl = document.getElementById('sidebar-nav');
+    navEl.innerHTML = '';
+
+    if (zoomStack.length > 1) {
+      const outBtn = document.createElement('button');
+      outBtn.className = 'sidebar-btn';
+      outBtn.textContent = '\u2190 Zoom Out';
+      outBtn.addEventListener('click', zoomOut);
+      navEl.appendChild(outBtn);
+
+      if (zoomStack.length > 2) {
+        const rootBtn = document.createElement('button');
+        rootBtn.className = 'sidebar-btn';
+        rootBtn.textContent = '\u25C9 Back to Root';
+        rootBtn.addEventListener('click', zoomToRoot);
+        navEl.appendChild(rootBtn);
+      }
+    }
+  }
+
+  function addSidebarChild(container, child) {
+    const item = document.createElement('div');
+    item.className = 'child-item';
+    item.setAttribute('tabindex', '0');
+    item.setAttribute('role', 'button');
+    item.setAttribute('aria-label', child.name + (child.children && child.children.length > 0 ? ' (has children, double-click to enter)' : ''));
+
+    const dot = document.createElement('div');
+    dot.className = 'dot';
+    const color = child.force && FORCE_COLORS[child.force] ? FORCE_COLORS[child.force] : (TYPE_COLORS[child.type] || '#888');
+    dot.style.background = color;
+    item.appendChild(dot);
+
+    const name = document.createElement('span');
+    name.className = 'name';
+    name.textContent = child.name;
+    if (child.children && child.children.length > 0) {
+      name.textContent += ' \u203A';
+    }
+    item.appendChild(name);
+
+    item.addEventListener('click', () => {
+      // Find index in childPositions
+      const idx = childPositions.findIndex(cp => cp.node.id === child.id);
+      if (idx >= 0) {
+        selectedChild = idx;
+        focusedIndex = idx;
+      }
+      showDetail(child);
+    });
+
+    item.addEventListener('dblclick', () => {
+      if (child.children && child.children.length > 0) {
+        zoomInto(child);
+      }
+    });
+
+    item.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') {
+        if (child.children && child.children.length > 0) {
+          zoomInto(child);
+        } else {
+          showDetail(child);
+        }
+      }
+    });
+
+    container.appendChild(item);
+  }
+
+  function updateQuoteBar() {
+    const quoteEl = document.getElementById('quote-text');
+    if (currentNode.growth_ring) {
+      quoteEl.textContent = currentNode.growth_ring;
+    } else {
+      quoteEl.textContent = 'The tree remembers what linear history forgot.';
+    }
+  }
+
+  function updateMinimap() {
+    const minimap = document.getElementById('minimap');
+    const depth = zoomStack.length - 1;
+
+    if (depth > 0) {
+      minimap.classList.add('visible');
+      drawMinimap();
+    } else {
+      minimap.classList.remove('visible');
+    }
+  }
+
+  function drawMinimap() {
+    const mc = document.getElementById('minimap-canvas');
+    const mctx = mc.getContext('2d');
+    const w = 240;
+    const h = 240;
+    mctx.clearRect(0, 0, w, h);
+    mctx.fillStyle = '#1a1612';
+    mctx.fillRect(0, 0, w, h);
+
+    if (!treeData || !treeData.children) return;
+
+    const cx = w / 2;
+    const cy = h / 2;
+    const r = 40;
+
+    // Root
+    mctx.beginPath();
+    mctx.arc(cx, cy, 6, 0, Math.PI * 2);
+    mctx.fillStyle = '#c49030';
+    mctx.fill();
+
+    // Root children
+    const children = treeData.children || [];
+    children.forEach((child, i) => {
+      const angle = -Math.PI / 2 + (i / children.length) * Math.PI * 2;
+      const x = cx + Math.cos(angle) * r;
+      const y = cy + Math.sin(angle) * r;
+
+      const isOnPath = zoomStack.some(n => n.id === child.id);
+      const echoesCurrent = currentNode.force && child.force === currentNode.force;
+
+      mctx.beginPath();
+      mctx.arc(x, y, 4, 0, Math.PI * 2);
+      const color = child.force && FORCE_COLORS[child.force] ? FORCE_COLORS[child.force] : '#888';
+
+      if (isOnPath) {
+        mctx.fillStyle = color;
+        mctx.fill();
+        mctx.strokeStyle = '#e8e0d4';
+        mctx.lineWidth = 1.5;
+        mctx.stroke();
+      } else if (echoesCurrent) {
+        // Cross-zoom echo glow
+        mctx.fillStyle = hexToRgba(color, 0.4);
+        mctx.fill();
+        const echoGlow = mctx.createRadialGradient(x, y, 3, x, y, 10);
+        echoGlow.addColorStop(0, hexToRgba(color, 0.3));
+        echoGlow.addColorStop(1, 'transparent');
+        mctx.fillStyle = echoGlow;
+        mctx.beginPath();
+        mctx.arc(x, y, 10, 0, Math.PI * 2);
+        mctx.fill();
+      } else {
+        mctx.fillStyle = hexToRgba(color, 0.3);
+        mctx.fill();
+      }
+
+      // Line to center
+      mctx.beginPath();
+      mctx.moveTo(cx, cy);
+      mctx.lineTo(x, y);
+      mctx.strokeStyle = hexToRgba(color, isOnPath ? 0.5 : 0.15);
+      mctx.lineWidth = 0.5;
+      mctx.stroke();
+    });
+
+    // Viewport indicator
+    const pathIdx = children.findIndex(c => zoomStack.some(n => n.id === c.id));
+    if (pathIdx >= 0) {
+      const angle = -Math.PI / 2 + (pathIdx / children.length) * Math.PI * 2;
+      const vx = cx + Math.cos(angle) * r;
+      const vy = cy + Math.sin(angle) * r;
+      mctx.strokeStyle = '#e8e0d4';
+      mctx.lineWidth = 1;
+      mctx.strokeRect(vx - 10, vy - 10, 20, 20);
+    }
+  }
+
+  // ── DETAIL PANEL ──
+  function showDetail(node) {
+    const panel = document.getElementById('detail-panel');
+    panel.classList.add('visible');
+
+    document.getElementById('detail-name').textContent = node.name;
+    document.getElementById('detail-label').textContent = node.label || '';
+
+    const ringEl = document.getElementById('detail-ring');
+    if (node.growth_ring) {
+      ringEl.textContent = node.growth_ring;
+      ringEl.style.display = 'block';
+    } else {
+      ringEl.style.display = 'none';
+    }
+
+    const soilEl = document.getElementById('detail-soil');
+    if (node.soil_contribution) {
+      soilEl.textContent = '\u2261 Soil: ' + node.soil_contribution;
+      soilEl.style.display = 'block';
+    } else {
+      soilEl.style.display = 'none';
+    }
+
+    const tagsEl = document.getElementById('detail-tags');
+    tagsEl.innerHTML = '';
+
+    // Type tag
+    const typeTag = document.createElement('span');
+    typeTag.className = 'tag';
+    typeTag.textContent = node.type;
+    typeTag.style.borderColor = TYPE_COLORS[node.type] || '#888';
+    tagsEl.appendChild(typeTag);
+
+    // Pattern tags
+    if (node.pattern_tags) {
+      node.pattern_tags.forEach(pt => {
+        const tag = document.createElement('span');
+        tag.className = 'tag';
+        tag.textContent = pt.tag;
+        tag.title = pt.reason;
+        const vocab = patternVocab[pt.tag];
+        if (vocab && vocab.color) {
+          tag.style.borderColor = vocab.color;
+          tag.style.color = vocab.color;
+        }
+        tagsEl.appendChild(tag);
+      });
+    }
+
+    // Regular tags
+    if (node.tags) {
+      node.tags.forEach(t => {
+        const tag = document.createElement('span');
+        tag.className = 'tag';
+        tag.textContent = t;
+        tagsEl.appendChild(tag);
+      });
+    }
+
+    // Actions
+    const actionsEl = document.getElementById('detail-actions');
+    actionsEl.innerHTML = '';
+
+    if (node.children && node.children.length > 0) {
+      const btn = document.createElement('button');
+      btn.className = 'go-inside-btn';
+      btn.textContent = 'GO INSIDE \u2192';
+      btn.setAttribute('aria-label', 'Enter ' + node.name);
+      btn.addEventListener('click', () => zoomInto(node));
+      actionsEl.appendChild(btn);
+    }
+
+    // Move minimap out of the way if panel is visible
+    const minimap = document.getElementById('minimap');
+    if (minimap.classList.contains('visible')) {
+      minimap.style.bottom = '310px';
+    }
+  }
+
+  function closeDetail() {
+    document.getElementById('detail-panel').classList.remove('visible');
+    selectedChild = null;
+    const minimap = document.getElementById('minimap');
+    minimap.style.bottom = '52px';
+  }
+
+  // ── UTILS ──
+  function hexToRgba(hex, alpha) {
+    if (!hex || hex === 'transparent') return 'rgba(0,0,0,0)';
+    hex = hex.replace('#', '');
+    if (hex.length === 3) hex = hex[0]+hex[0]+hex[1]+hex[1]+hex[2]+hex[2];
+    const r = parseInt(hex.substr(0, 2), 16);
+    const g = parseInt(hex.substr(2, 2), 16);
+    const b = parseInt(hex.substr(4, 2), 16);
+    return 'rgba(' + r + ',' + g + ',' + b + ',' + alpha + ')';
+  }
+
+  // ── START ──
+  init();
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,811 @@
+{
+  "_trunk_stamp": "v61_20260310",
+  "_ndd_ref": "RE-028",
+  "_generated": "2026-03-10",
+  "_description": "The Human Tree — multi-axis fractal decomposition of human history. Ring 3: pattern tags as fibers, force decomposition at every level, extensible schema.",
+  "_ring": 3,
+  "_ring_note": "Ring 3: Added pattern_tags (cross-cutting fibers with reasons), pattern_tag_vocabulary, force fields on children, event-horizon and leaf types. Same schema at every depth.",
+  "meta": {
+    "sources": ["Sapiens: A Brief History of Humankind (Yuval Noah Harari, 2011)"],
+    "fractal_id": "human-tree-20260310",
+    "ring": 3,
+    "method": "Fractal Method — bottom-up decomposition. Multi-axis: structure + time + fiber.",
+    "extensible": true,
+    "note": "Sources array — add new sources as the tree grows beyond any single book.",
+    "eras": [
+      {"id": "pre-cognitive", "name": "Before the Spark", "range": [-2500000, -70000], "color": "#8a7560"},
+      {"id": "cognitive", "name": "The Cognitive Revolution", "range": [-70000, -12000], "color": "#d4a040"},
+      {"id": "agricultural", "name": "The Agricultural Revolution", "range": [-12000, -5000], "color": "#7ab870"},
+      {"id": "unification", "name": "The Unification of Humankind", "range": [-5000, 1500], "color": "#c49030"},
+      {"id": "scientific", "name": "The Scientific Revolution", "range": [1500, 1800], "color": "#5ab4a0"},
+      {"id": "industrial", "name": "The Industrial Revolution", "range": [1800, 1945], "color": "#b07040"},
+      {"id": "information", "name": "The Information Age", "range": [1945, 2025], "color": "#4a9ab4"}
+    ]
+  },
+  "pattern_tag_vocabulary": [
+    {
+      "tag": "disruption-of-myth",
+      "description": "A commonly held belief, origin story, or operating fiction gets overturned",
+      "color": "#c47058",
+      "examples": "Barter Economy Myth, Admission of Ignorance, Forager Cultures vs progress narrative"
+    },
+    {
+      "tag": "fiction-kills-fiction",
+      "description": "One imagined order replaces another through force, persuasion, or obsolescence",
+      "color": "#d4a040",
+      "examples": "Universal Religions replace polytheism, Nation State replaces Empire"
+    },
+    {
+      "tag": "scaling-break",
+      "description": "An institution, system, or organism fails because it can't scale to its new context",
+      "color": "#b07040",
+      "examples": "Agricultural Trap, Empire Trap, Dunbar's Number"
+    },
+    {
+      "tag": "soil-from-violence",
+      "description": "Destruction, death, or collapse creates the foundation for what comes next",
+      "color": "#8a5040",
+      "examples": "Failed Empires → infrastructure, Megafauna extinction → ecological niche, Indigenous pruning → ethnobotany"
+    },
+    {
+      "tag": "irreversible-pivot",
+      "description": "A moment after which the previous state cannot be restored",
+      "color": "#c44040",
+      "examples": "Cognitive Revolution, Agricultural Revolution, Energy Conversion"
+    },
+    {
+      "tag": "capture-by-tool",
+      "description": "The tool, system, or practice you adopt ends up capturing you",
+      "color": "#7a6040",
+      "examples": "Wheat domesticates farmers, Consumerism domesticates desire, Growth Loop"
+    },
+    {
+      "tag": "ghost-persists",
+      "description": "The pruned thing is still present — genetically, linguistically, culturally — in the living",
+      "color": "#6a8a7a",
+      "examples": "Neanderthal DNA, Dead Languages in living ones, Alchemy in science"
+    },
+    {
+      "tag": "simplicity-outlasts",
+      "description": "The simpler version endured longer than the complex one",
+      "color": "#5a8a6a",
+      "examples": "Homo Erectus (2M years), Forager Cultures, Fire"
+    },
+    {
+      "tag": "ignorance-consequence",
+      "description": "The actor didn't know — couldn't know — what their action would cause",
+      "color": "#4a7a9a",
+      "examples": "Megafauna hunters, Agricultural adopters, Science + Empire symbiosis"
+    },
+    {
+      "tag": "the-trap-is-the-feature",
+      "description": "The downside IS the mechanism of success. You can't separate them",
+      "color": "#9a6a4a",
+      "examples": "Agriculture, Empire, Consumerism, Growth Loop"
+    }
+  ],
+  "tree": {
+    "id": "sapiens-root",
+    "name": "Homo Sapiens",
+    "type": "root",
+    "date_range": [-2500000, 2025],
+    "eras": ["pre-cognitive", "cognitive", "agricultural", "unification", "scientific", "industrial", "information"],
+    "label": "The Human Story",
+    "tags": ["species", "origin", "full-tree"],
+    "pattern_tags": [],
+    "children": [
+      {
+        "id": "fiction-engine",
+        "name": "The Fiction Engine",
+        "type": "trunk",
+        "force": "fiction-engine",
+        "date_range": [-70000, 2025],
+        "eras": ["cognitive", "agricultural", "unification", "scientific", "industrial", "information"],
+        "label": "The core mechanism. Sapiens cooperates at scale because it believes in things that don't exist. Every other branch depends on this one.",
+        "tags": ["fiction", "cooperation", "core-mechanism", "root-spark"],
+        "pattern_tags": [
+          {"tag": "irreversible-pivot", "reason": "Once fictional language emerged, there was no going back to purely biological cooperation. Fiction became the operating system."}
+        ],
+        "growth_ring": "This is where the fractal begins. Fiction is not a phase — it is the operating system. Money, gods, nations, human rights, corporations: all fiction. All functional.",
+        "children": [
+          {
+            "id": "fictional-language",
+            "name": "Fictional Language",
+            "type": "event-horizon",
+            "date_range": [-70000, -30000],
+            "eras": ["cognitive"],
+            "label": "Not just 'lion at the river' but 'lion is guardian spirit of our tribe.' Fiction enables cooperation beyond Dunbar's number (150).",
+            "tags": ["language", "fiction", "cooperation", "dunbar"],
+            "pattern_tags": [
+              {"tag": "irreversible-pivot", "reason": "The cognitive revolution is the point of no return. Before: biology determines cooperation limits. After: fiction removes the ceiling. Every subsequent revolution depends on this one."},
+              {"tag": "scaling-break", "reason": "Dunbar's number (150) was the biological limit. Fictional language broke through it — enabling cities, empires, religions. The first scaling break in the tree."}
+            ],
+            "growth_ring": "The root spark. Before this: biology. After this: culture. The moment gossip became mythology."
+          },
+          {
+            "id": "imagined-orders",
+            "name": "Imagined Orders",
+            "type": "branch",
+            "date_range": [-8000, 2025],
+            "eras": ["agricultural", "unification", "scientific", "industrial", "information"],
+            "label": "Myths that scale cooperation. First gods, then laws, then constitutions. Each layer builds on the fiction below it.",
+            "tags": ["fiction", "cooperation", "mythology", "scaling"],
+            "pattern_tags": [
+              {"tag": "fiction-kills-fiction", "reason": "Each imagined order replaces the previous one. Polytheism → monotheism → secularism → humanism. The mechanism stays; the content rotates."}
+            ],
+            "children": [
+              {
+                "id": "early-religions",
+                "name": "Early Religions",
+                "type": "branch",
+                "date_range": [-8000, -3000],
+                "eras": ["agricultural"],
+                "label": "Animism → polytheism. Gods explain harvest, death, weather. Religion is the first shared operating system.",
+                "tags": ["religion", "animism", "polytheism", "first-os"],
+                "pattern_tags": []
+              },
+              {
+                "id": "universal-religions",
+                "name": "Universal Religions",
+                "type": "branch",
+                "date_range": [-2500, 2025],
+                "eras": ["unification", "scientific", "industrial", "information"],
+                "label": "Buddhism, Christianity, Islam. Local gods replaced by universal orders. One truth for all humanity. Fiction at planetary scale.",
+                "tags": ["religion", "universal", "monotheism", "buddhism", "planetary-fiction"],
+                "pattern_tags": [
+                  {"tag": "fiction-kills-fiction", "reason": "Universal religions didn't just add to local religions — they replaced them. One god killed many gods. The fiction engine consolidates."},
+                  {"tag": "scaling-break", "reason": "Local religions couldn't scale beyond their geography. Universal religions broke through by abstracting god from place."}
+                ]
+              },
+              {
+                "id": "nation-state",
+                "name": "The Nation State",
+                "type": "branch",
+                "date_range": [1789, 2025],
+                "eras": ["industrial", "information"],
+                "label": "Imagined community at industrial scale. Standardized language, education, military service. The nation replaces the empire as dominant political fiction.",
+                "tags": ["nation", "imagined-community", "standardization", "modern-fiction"],
+                "pattern_tags": [
+                  {"tag": "fiction-kills-fiction", "reason": "The nation-state replaced the empire as the dominant political fiction. 'We the people' killed 'divine right of kings.'"}
+                ]
+              },
+              {
+                "id": "dead-religions",
+                "name": "Dead Religions",
+                "type": "pruned",
+                "date_range": [-3000, 500],
+                "eras": ["unification"],
+                "label": "Marduk, Zeus, Ra, Odin. Once commanded millions. Now studied as mythology. Pruned, but their DNA is in every living religion.",
+                "tags": ["pruned", "mythology", "dead-gods"],
+                "pattern_tags": [
+                  {"tag": "ghost-persists", "reason": "Christmas trees are pagan. Sunday is the Sun's day. Wednesday is Woden's day. The dead gods haunt the calendar of the god that killed them."},
+                  {"tag": "fiction-kills-fiction", "reason": "Universal religions didn't just outcompete polytheism — they actively killed it. Temples demolished, priests executed, festivals rebranded."},
+                  {"tag": "disruption-of-myth", "reason": "Religions that once explained everything became 'mythology' — the word itself is a demotion. Yesterday's truth is today's fairy tale."}
+                ],
+                "prune_reason": "Replaced by universal religions and secularism",
+                "soil_contribution": "Every living religion carries DNA from its dead predecessors. Christmas trees are pagan. Sunday is the Sun's day."
+              }
+            ]
+          },
+          {
+            "id": "money",
+            "name": "Money",
+            "type": "branch",
+            "date_range": [-3000, 2025],
+            "eras": ["unification", "scientific", "industrial", "information"],
+            "label": "The most universal and efficient fiction ever devised. Shells, silver, gold, paper, digits — the medium changes, the fiction persists. The only story everyone on earth believes simultaneously.",
+            "tags": ["money", "trust", "fiction", "universal", "most-successful"],
+            "pattern_tags": [
+              {"tag": "irreversible-pivot", "reason": "Once money exists, you can't go back to a moneyless economy. The fiction is too useful. Even communist states kept money."}
+            ],
+            "children": [
+              {
+                "id": "barter-myth",
+                "name": "Barter Economy Myth",
+                "type": "pruned",
+                "date_range": [-3000, -3000],
+                "eras": ["unification"],
+                "label": "No evidence barter economies ever existed at scale. A pruned assumption that persists in economics textbooks.",
+                "tags": ["pruned", "myth", "economics", "zombie-fiction"],
+                "pattern_tags": [
+                  {"tag": "disruption-of-myth", "reason": "The barter story is taught as fact in every economics textbook. Anthropological evidence says it never happened. The fiction engine fictions about itself."},
+                  {"tag": "ghost-persists", "reason": "Despite being pruned by evidence, the barter myth persists in textbooks. A zombie fiction — dead but still walking."}
+                ],
+                "prune_reason": "Anthropological evidence doesn't support it",
+                "soil_contribution": "Reminder that origin stories are often fiction — even in science. The fiction engine fictions about itself."
+              }
+            ]
+          },
+          {
+            "id": "empires",
+            "name": "Empires",
+            "type": "branch",
+            "date_range": [-2300, 1900],
+            "eras": ["unification", "scientific", "industrial"],
+            "label": "Akkadian, Persian, Roman, Chinese. Empire is the default political order for most of history. Not an aberration — the norm. Fiction + violence at continental scale.",
+            "tags": ["empire", "political-order", "norm", "fiction-plus-force"],
+            "pattern_tags": [
+              {"tag": "the-trap-is-the-feature", "reason": "Empire's violence and authoritarianism are inseparable from its stability and infrastructure. You can't have Roman roads without Roman legions."}
+            ],
+            "children": [
+              {
+                "id": "failed-empires",
+                "name": "Failed Empires",
+                "type": "pruned",
+                "date_range": [-2300, 1900],
+                "eras": ["unification", "scientific", "industrial"],
+                "label": "Every empire is eventually pruned. But their infrastructure — roads, languages, laws — becomes soil for the next.",
+                "tags": ["pruned", "empire", "infrastructure-becomes-soil"],
+                "pattern_tags": [
+                  {"tag": "soil-from-violence", "reason": "Roman roads still underlie European highways. Latin still structures law and medicine. The violence is gone but the infrastructure persists."},
+                  {"tag": "ghost-persists", "reason": "The British Empire is gone but English is the global lingua franca. The ghost of empire speaks through every international business meeting."}
+                ],
+                "prune_reason": "Overextension, internal collapse, successor competition",
+                "soil_contribution": "Roman roads still underlie European highways. Latin still structures medical and legal language. Empire decomposes but its infrastructure persists."
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "id": "pruning-pattern",
+        "name": "The Pruning Pattern",
+        "type": "trunk",
+        "force": "pruning-pattern",
+        "date_range": [-2500000, 2025],
+        "eras": ["pre-cognitive", "cognitive", "agricultural", "unification", "scientific", "industrial", "information"],
+        "label": "Consolidation is the dominant force across all time. Many species → one. Many cultures → fewer. Many languages → fewer. Many religions → fewer. The tree keeps pruning itself.",
+        "tags": ["pruning", "consolidation", "dominant-force", "infrastructure-earth"],
+        "pattern_tags": [],
+        "growth_ring": "The counter-narrative. History looks like branching. But the deeper pattern is convergence. The tree prunes more than it grows. What it prunes becomes the soil everything else grows from.",
+        "children": [
+          {
+            "id": "species-pruning",
+            "name": "Species Pruning",
+            "type": "branch",
+            "date_range": [-2500000, -12000],
+            "eras": ["pre-cognitive", "cognitive"],
+            "label": "At least six human species once coexisted. Now one remains. The first and most complete pruning event.",
+            "tags": ["species", "extinction", "first-pruning"],
+            "pattern_tags": [
+              {"tag": "irreversible-pivot", "reason": "Once the other human species were gone, the possibility of a multi-species human world disappeared forever. We can never know what it would have been."}
+            ],
+            "children": [
+              {
+                "id": "neanderthals",
+                "name": "Neanderthals",
+                "type": "pruned",
+                "date_range": [-400000, -30000],
+                "eras": ["pre-cognitive", "cognitive"],
+                "label": "Larger brains, adapted to cold, buried their dead. Not inferior — different. Pruned from main trunk but DNA persists in modern humans.",
+                "tags": ["pruned", "europe", "dna-in-soil"],
+                "pattern_tags": [
+                  {"tag": "ghost-persists", "reason": "1-4% of non-African human DNA is Neanderthal. The pruned species is literally inside us. We carry our dead cousin's genes."},
+                  {"tag": "disruption-of-myth", "reason": "The myth that Neanderthals were brutish and stupid has been pruned by science. They had art, burial rituals, possibly language. The myth of Sapiens superiority is itself a fiction."}
+                ],
+                "prune_reason": "Outcompeted or absorbed after Cognitive Revolution",
+                "soil_contribution": "Interbreeding left 1-4% Neanderthal DNA in non-African populations. The tree remembers."
+              },
+              {
+                "id": "homo-erectus",
+                "name": "Homo Erectus",
+                "type": "pruned",
+                "date_range": [-1900000, -100000],
+                "eras": ["pre-cognitive"],
+                "label": "Most successful human species by duration. Nearly 2 million years. Pruned, but the longevity is in the soil.",
+                "tags": ["pruned", "asia", "longevity", "success-by-duration"],
+                "pattern_tags": [
+                  {"tag": "simplicity-outlasts", "reason": "Homo Erectus lasted 2 million years with simple tools and no fiction. Sapiens has been around for 300,000. Complexity is not durability."},
+                  {"tag": "disruption-of-myth", "reason": "Disrupts the myth that evolution trends toward complexity. The simplest human lasted longest."}
+                ],
+                "prune_reason": "Gradually replaced as Sapiens expanded",
+                "soil_contribution": "Proof that success is not about complexity. Simplicity endured longer than anything Sapiens has built."
+              },
+              {
+                "id": "denisovans",
+                "name": "Denisovans",
+                "type": "pruned",
+                "date_range": [-500000, -30000],
+                "eras": ["pre-cognitive", "cognitive"],
+                "label": "Known from a single finger bone and DNA. Ghost branch — barely visible but genetically confirmed.",
+                "tags": ["pruned", "asia", "ghost-branch", "dna-in-soil"],
+                "pattern_tags": [
+                  {"tag": "ghost-persists", "reason": "Tibetan altitude adaptation gene (EPAS1) came from Denisovan interbreeding. A species known from one bone still gives gifts to living humans."}
+                ],
+                "prune_reason": "Absorbed into Sapiens gene pool",
+                "soil_contribution": "Tibetan altitude adaptation gene (EPAS1) came from Denisovan interbreeding. The ghost still gives gifts."
+              },
+              {
+                "id": "homo-floresiensis",
+                "name": "Homo Floresiensis (Hobbits)",
+                "type": "pruned",
+                "date_range": [-100000, -12000],
+                "eras": ["pre-cognitive", "cognitive"],
+                "label": "Tiny humans on Flores island. Island dwarfism. Survived until after the Agricultural Revolution elsewhere.",
+                "tags": ["pruned", "island", "dwarfism"],
+                "pattern_tags": [
+                  {"tag": "simplicity-outlasts", "reason": "Smaller bodies, smaller brains, survived 88,000 years on a single island. Adaptation to constraint, not growth, was their survival strategy."},
+                  {"tag": "disruption-of-myth", "reason": "Disrupts the myth that bigger = better in evolution. Island dwarfism is adaptation, not degeneration."}
+                ],
+                "prune_reason": "Isolated population, eventually extinct",
+                "soil_contribution": "Evolution is not a ladder. Smaller can be adaptive. The tree branches in every direction, not just up."
+              }
+            ]
+          },
+          {
+            "id": "ecological-pruning",
+            "name": "Ecological Pruning",
+            "type": "branch",
+            "date_range": [-50000, 2025],
+            "eras": ["cognitive", "agricultural", "unification", "scientific", "industrial", "information"],
+            "label": "Sapiens prunes everything it touches. Megafauna, forests, ecosystems. The most efficient pruner the biosphere has ever produced.",
+            "tags": ["ecology", "extinction", "impact"],
+            "pattern_tags": [
+              {"tag": "ignorance-consequence", "reason": "Early Sapiens had no concept of extinction. They hunted what was there. The ecological devastation was entirely unintentional — and entirely predictable in hindsight."}
+            ],
+            "children": [
+              {
+                "id": "megafauna-extinction",
+                "name": "Megafauna Extinction",
+                "type": "pruned",
+                "date_range": [-50000, -10000],
+                "eras": ["cognitive", "agricultural"],
+                "label": "Giant sloths, mammoths, diprotodons. Pruned within centuries of Sapiens arrival on each continent.",
+                "tags": ["pruned", "extinction", "ecological-impact"],
+                "pattern_tags": [
+                  {"tag": "soil-from-violence", "reason": "The extinction of megafauna opened ecological niches that Sapiens filled with domesticated animals. The mammoth's death made room for the cow."},
+                  {"tag": "ignorance-consequence", "reason": "No hunter planned the extinction. Each kill was rational. The cumulative effect was invisible until it was irreversible."}
+                ],
+                "prune_reason": "Hunted to extinction by newly arrived Sapiens",
+                "soil_contribution": "First evidence that Sapiens is an ecological force, not just another species. The pattern starts here."
+              }
+            ]
+          },
+          {
+            "id": "cultural-pruning",
+            "name": "Cultural Pruning",
+            "type": "branch",
+            "date_range": [-12000, 2025],
+            "eras": ["agricultural", "unification", "scientific", "industrial", "information"],
+            "label": "Agriculture, empire, and globalization compress thousands of cultures into fewer, larger ones. The human story looks like diversification but the deep pattern is consolidation.",
+            "tags": ["culture", "consolidation", "compression"],
+            "pattern_tags": [],
+            "children": [
+              {
+                "id": "forager-cultures",
+                "name": "Forager Cultures",
+                "type": "pruned",
+                "date_range": [-70000, -12000],
+                "eras": ["cognitive"],
+                "label": "Diverse, adapted, often healthier than farmers. The original affluent society. Pruned by agriculture, wisdom in soil.",
+                "tags": ["pruned", "forager", "affluent-society", "wisdom-in-soil"],
+                "pattern_tags": [
+                  {"tag": "disruption-of-myth", "reason": "Disrupts the myth of linear progress. Foragers worked fewer hours, had better nutrition, more varied skills. By many metrics, agriculture was a step backward."},
+                  {"tag": "simplicity-outlasts", "reason": "Forager lifestyles lasted 58,000 years (cognitive revolution to agriculture). Agriculture has lasted 12,000. The simpler model has the longer track record."}
+                ],
+                "prune_reason": "Agriculture outcompeted by volume, not quality",
+                "soil_contribution": "Evidence that 'progress' is not linear improvement. Foragers worked fewer hours, had better nutrition, more varied skills."
+              },
+              {
+                "id": "nomadic-pastoralists",
+                "name": "Nomadic Pastoralists",
+                "type": "pruned",
+                "date_range": [-10000, -2000],
+                "eras": ["agricultural", "unification"],
+                "label": "Alternative to farming: follow the herds. Viable for millennia, gradually squeezed by expanding farms.",
+                "tags": ["pruned", "nomadic", "alternative-path"],
+                "pattern_tags": [
+                  {"tag": "disruption-of-myth", "reason": "Disrupts the myth that agriculture was the only option. Pastoralism was a viable, parallel path that scaled differently."}
+                ],
+                "prune_reason": "Territorial compression by agricultural expansion",
+                "soil_contribution": "Proof that agriculture wasn't the only viable path. The tree had more than one option — it chose the one that scaled."
+              },
+              {
+                "id": "indigenous-cultures-pruned",
+                "name": "Indigenous Cultures",
+                "type": "pruned",
+                "date_range": [1500, 1900],
+                "eras": ["scientific", "industrial"],
+                "label": "Thousands of cultures, languages, knowledge systems pruned by colonial expansion. The largest pruning event since the species pruning.",
+                "tags": ["pruned", "colonialism", "knowledge-loss", "massive-pruning"],
+                "pattern_tags": [
+                  {"tag": "soil-from-violence", "reason": "Colonial genocide and forced assimilation destroyed thousands of cultures. The soil — ethnobotany, land management, oral traditions — is immeasurably rich and mostly unexamined."},
+                  {"tag": "ignorance-consequence", "reason": "Colonizers didn't understand what they were destroying. Indigenous knowledge systems — pharmacology, ecology, agriculture — are only now being recognized as sophisticated."}
+                ],
+                "prune_reason": "Colonial expansion, disease, forced assimilation",
+                "soil_contribution": "Ethnobotany, indigenous land management, oral history traditions. The soil is immeasurably rich. Most of it is still unexamined."
+              },
+              {
+                "id": "dead-languages",
+                "name": "Dead Languages",
+                "type": "pruned",
+                "date_range": [-3000, 1900],
+                "eras": ["unification", "scientific", "industrial"],
+                "label": "Sumerian, Latin, Sanskrit, Aramaic. Thousands of languages pruned. Patterns persist in descendants and loanwords.",
+                "tags": ["pruned", "language", "patterns-in-soil"],
+                "pattern_tags": [
+                  {"tag": "ghost-persists", "reason": "English is Latin + Germanic + French + Norse. Every living language is a graveyard of dead ones. The ghosts speak through us every day."}
+                ],
+                "prune_reason": "Imperial and cultural dominance by successor languages",
+                "soil_contribution": "Every living language is soil from dead ones. English is Latin + Germanic + French + Norse. The tree remembers every pruned tongue."
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "id": "scaling-traps",
+        "name": "Scaling Traps",
+        "type": "trunk",
+        "force": "scaling-traps",
+        "date_range": [-12000, 2025],
+        "eras": ["agricultural", "unification", "scientific", "industrial", "information"],
+        "label": "Every mechanism Sapiens adopts to grow ends up growing Sapiens. The trap is the feature. Wheat domesticated humans. Consumerism domesticated desire. The tool always captures the user.",
+        "tags": ["scaling", "traps", "domestication", "capture"],
+        "pattern_tags": [
+          {"tag": "the-trap-is-the-feature", "reason": "The trunk-level insight: scaling traps are not bugs. They ARE the mechanism of growth. You can't have agriculture's food surplus without agriculture's drudgery. Inseparable."}
+        ],
+        "growth_ring": "The deepest structural pattern: the Agricultural Revolution was history's biggest fraud. Not because agriculture is bad — but because the thing you adopt to scale always scales you. The pattern repeats with every revolution.",
+        "children": [
+          {
+            "id": "agricultural-trap",
+            "name": "The Agricultural Trap",
+            "type": "branch",
+            "date_range": [-12000, -5000],
+            "eras": ["agricultural"],
+            "label": "History's biggest fraud. More food per acre, worse life per person. Population explodes, individual quality of life declines. The trap is irreversible — you can't go back once you've grown.",
+            "tags": ["agriculture", "fraud", "trap", "irreversible"],
+            "pattern_tags": [
+              {"tag": "irreversible-pivot", "reason": "Once population grows to depend on agriculture, you can't revert to foraging. The trap closes behind you."},
+              {"tag": "the-trap-is-the-feature", "reason": "More food = more people = more food needed = more work. The surplus creates the dependency. The benefit IS the trap."},
+              {"tag": "capture-by-tool", "reason": "Wheat captured humans. Farmers serve wheat's reproductive interests — planting, watering, weeding, protecting. Wheat's DNA spread worldwide by enslaving its cultivators."}
+            ],
+            "children": [
+              {
+                "id": "domestication",
+                "name": "Domestication (Both Directions)",
+                "type": "branch",
+                "date_range": [-12000, -8000],
+                "eras": ["agricultural"],
+                "label": "Wheat, rice, maize, sheep, goats, cattle. But who domesticated whom? Wheat spread its DNA worldwide by enslaving farmers to its schedule.",
+                "tags": ["domestication", "mutual", "wheat", "capture"],
+                "pattern_tags": [
+                  {"tag": "capture-by-tool", "reason": "The foundational example. Humans thought they domesticated wheat. Wheat's genome spread to every continent. By the metric of reproductive success, wheat domesticated us."}
+                ]
+              },
+              {
+                "id": "village-formation",
+                "name": "Permanent Settlements",
+                "type": "branch",
+                "date_range": [-10000, -5000],
+                "eras": ["agricultural"],
+                "label": "Villages, granaries, property. The concept of 'mine' is born. Social hierarchy follows storage. You can't own things if you can't stay put.",
+                "tags": ["settlement", "property", "hierarchy", "consequence-of-trap"],
+                "pattern_tags": [
+                  {"tag": "irreversible-pivot", "reason": "Once you build granaries, you need guards. Once you have guards, you have hierarchy. Once you have hierarchy, you can't go back. Each step locks in the next."}
+                ]
+              }
+            ]
+          },
+          {
+            "id": "empire-trap",
+            "name": "The Empire Trap",
+            "type": "branch",
+            "date_range": [-2300, 2025],
+            "eras": ["unification", "scientific", "industrial", "information"],
+            "label": "Empire is the default political order — not the exception. Once you build one, you can't unbuild it without building another. The pattern of capture at civilizational scale.",
+            "tags": ["empire", "default", "trap", "political-capture"],
+            "pattern_tags": [
+              {"tag": "the-trap-is-the-feature", "reason": "Empire's authoritarianism is inseparable from its stability. You can't have Pax Romana without Caesar. The peace requires the emperor."},
+              {"tag": "scaling-break", "reason": "Every empire reaches a size where its governance model breaks. The Roman Republic couldn't govern a continent. The British Empire couldn't hold after two world wars."}
+            ]
+          },
+          {
+            "id": "consumerism-trap",
+            "name": "The Consumerism Trap",
+            "type": "branch",
+            "date_range": [1850, 2025],
+            "eras": ["industrial", "information"],
+            "label": "The ethical revolution nobody noticed. Medieval: luxury is sin. Modern: spending is duty. The economy needs you to want. Desire becomes obligation.",
+            "tags": ["consumerism", "ethics", "desire", "economy", "modern-trap"],
+            "pattern_tags": [
+              {"tag": "capture-by-tool", "reason": "Consumerism captured desire itself. Wanting is no longer a feeling — it's an economic function. The system needs you to want, so it manufactures wanting."},
+              {"tag": "the-trap-is-the-feature", "reason": "Economic growth requires consumption. Consumption requires desire. The trap (manufactured wanting) IS the engine of growth."}
+            ]
+          },
+          {
+            "id": "science-capitalism-loop",
+            "name": "The Growth Loop",
+            "type": "branch",
+            "date_range": [1600, 2025],
+            "eras": ["scientific", "industrial", "information"],
+            "label": "Credit bets on the future. Science promises the future will be better. Together they create a loop that must keep growing. The trap: you can never stop.",
+            "tags": ["science", "capitalism", "credit", "growth-engine", "loop-trap"],
+            "pattern_tags": [
+              {"tag": "capture-by-tool", "reason": "Credit (the tool) requires growth (the outcome). Once you fund science with credit, you need science to produce growth to repay the credit. The loop captures both."},
+              {"tag": "the-trap-is-the-feature", "reason": "The growth loop has produced unprecedented material wealth. It has also made perpetual growth obligatory. You can't step off a treadmill while it's running."}
+            ]
+          }
+        ]
+      },
+      {
+        "id": "ignorance-revolution",
+        "name": "The Ignorance Revolution",
+        "type": "trunk",
+        "force": "ignorance-revolution",
+        "date_range": [1500, 2025],
+        "eras": ["scientific", "industrial", "information"],
+        "label": "The moment the tree discovered it could observe itself. Pre-science: holy books have all answers. Science: we don't know — let's find out. 'I don't know' becomes the most powerful sentence in history.",
+        "tags": ["science", "ignorance", "self-observation", "revolution"],
+        "pattern_tags": [
+          {"tag": "irreversible-pivot", "reason": "Once you admit you don't know, you can't go back to pretending you do. Science is irreversible — not because knowledge can't be lost, but because the METHOD of doubting can't be unlearned."},
+          {"tag": "disruption-of-myth", "reason": "Science disrupted the oldest myth of all: that the answers are already known. Every holy book, every tradition, every elder's wisdom — all provisional once 'I don't know' becomes respectable."}
+        ],
+        "growth_ring": "The tree grows eyes. Science is not a body of knowledge — it is the admission that knowledge is incomplete. The only revolution that starts with surrender.",
+        "children": [
+          {
+            "id": "admission-of-ignorance",
+            "name": "The Admission of Ignorance",
+            "type": "event-horizon",
+            "date_range": [1500, 1700],
+            "eras": ["scientific"],
+            "label": "Pre-science: holy books have all answers. Science: we don't know, let's find out. The most revolutionary idea in human history is 'I might be wrong.'",
+            "tags": ["epistemology", "ignorance", "revolution", "humility"],
+            "pattern_tags": [
+              {"tag": "disruption-of-myth", "reason": "The admission of ignorance disrupted every existing knowledge system simultaneously. If 'we don't know' is valid, then 'we already know' is suspect."},
+              {"tag": "irreversible-pivot", "reason": "Once the method of systematic doubt exists, every claim must defend itself against it. The pivot from 'received truth' to 'tested truth' cannot be undone."}
+            ]
+          },
+          {
+            "id": "science-empire-marriage",
+            "name": "Science + Empire Symbiosis",
+            "type": "branch",
+            "date_range": [1500, 1800],
+            "eras": ["scientific"],
+            "label": "Science needed funding (empire). Empire needed technology (science). Cook's voyage carries astronomers and botanists alongside marines. Knowledge and power travel together.",
+            "tags": ["science", "empire", "symbiosis", "funding"],
+            "pattern_tags": [
+              {"tag": "ignorance-consequence", "reason": "Scientists on colonial voyages didn't intend to enable genocide. But the knowledge they gathered — maps, resources, weaknesses — was weaponized by the empires that funded them."},
+              {"tag": "the-trap-is-the-feature", "reason": "Science's power comes from its alliance with power. The funding that enables discovery also directs it. You can't separate the knowledge from the patron."}
+            ]
+          },
+          {
+            "id": "writing-numbers",
+            "name": "Writing & Numbers",
+            "type": "branch",
+            "date_range": [-5000, 2025],
+            "eras": ["unification", "scientific", "industrial", "information"],
+            "label": "Sumer invents writing for accounting, not poetry. The first data structure. Memory escapes the brain. The prerequisite for science — you can't accumulate knowledge you can't record.",
+            "tags": ["writing", "data", "memory", "sumer", "prerequisite"],
+            "pattern_tags": [
+              {"tag": "capture-by-tool", "reason": "Writing was invented to track debts and grain. It captured human memory — once you can write, you must write. Records become obligations. The tool creates the bureaucracy."}
+            ]
+          },
+          {
+            "id": "alchemy-astrology",
+            "name": "Alchemy & Astrology",
+            "type": "pruned",
+            "date_range": [500, 1700],
+            "eras": ["unification", "scientific"],
+            "label": "Precursors to chemistry and astronomy. Pruned as pseudoscience, but their methods — observation, experimentation, record-keeping — are the soil of modern science.",
+            "tags": ["pruned", "pseudoscience", "methods-in-soil"],
+            "pattern_tags": [
+              {"tag": "ghost-persists", "reason": "Newton was an alchemist. Kepler was an astrologer. The scientific method grew from alchemical practice. The tree's eyes evolved from blind groping."},
+              {"tag": "disruption-of-myth", "reason": "Alchemy was 'disrupted' by chemistry. But the disruption was partial — the methods survived, only the conclusions were pruned."}
+            ],
+            "prune_reason": "Replaced by empirical method",
+            "soil_contribution": "Newton was an alchemist. The scientific method grew from alchemical practice. The tree's eyes evolved from blind groping."
+          }
+        ]
+      },
+      {
+        "id": "energy-regimes",
+        "name": "Energy Regimes",
+        "type": "trunk",
+        "force": "energy-regimes",
+        "date_range": [-2500000, 2025],
+        "eras": ["pre-cognitive", "cognitive", "agricultural", "unification", "scientific", "industrial", "information"],
+        "label": "Fire → agriculture → animal power → fossil fuels → nuclear. Each energy transition transforms everything above it. The tree runs on decomposed ancient trees. The literal botanical metaphor.",
+        "tags": ["energy", "conversion", "transformation", "literal-metaphor"],
+        "pattern_tags": [],
+        "growth_ring": "Fossil fuels are infrastructure earth from 300 million years ago. Ancient forests, decomposed, compressed, burned to power new growth. Energy IS the metaphor made real.",
+        "children": [
+          {
+            "id": "fire",
+            "name": "Fire",
+            "type": "branch",
+            "date_range": [-800000, 2025],
+            "eras": ["pre-cognitive", "cognitive", "agricultural", "unification", "scientific", "industrial", "information"],
+            "label": "The first energy regime. Cooking shrinks guts, grows brains. Fire clears land, scares predators, becomes the first tool that transforms the environment, not just the user.",
+            "tags": ["fire", "cooking", "first-regime", "brain-growth"],
+            "pattern_tags": [
+              {"tag": "simplicity-outlasts", "reason": "Fire has been continuously used for 800,000 years. No other technology comes close. The simplest energy regime is the most durable."},
+              {"tag": "irreversible-pivot", "reason": "Cooking shrank human guts and grew human brains. The biological change was irreversible — modern humans literally cannot survive on a raw diet."}
+            ]
+          },
+          {
+            "id": "agricultural-energy",
+            "name": "Agricultural Energy",
+            "type": "branch",
+            "date_range": [-12000, 1800],
+            "eras": ["agricultural", "unification", "scientific"],
+            "label": "Sunlight → plants → calories → labor. The energy regime that feeds billions but traps its operators. More energy per acre, more work per person.",
+            "tags": ["agriculture", "solar", "labor", "energy-trap"],
+            "pattern_tags": [
+              {"tag": "capture-by-tool", "reason": "Agricultural energy captured human labor. Farming requires more work per calorie than foraging. The energy source demands more from its operators than the previous one."}
+            ]
+          },
+          {
+            "id": "energy-conversion",
+            "name": "Energy Conversion",
+            "type": "event-horizon",
+            "date_range": [1800, 2025],
+            "eras": ["industrial", "information"],
+            "label": "Heat → movement → electricity. The single most important technical discovery. Not new energy sources — new conversion. The ability to transform one form of energy into another changes everything.",
+            "tags": ["energy", "conversion", "steam", "electricity", "transformation"],
+            "pattern_tags": [
+              {"tag": "irreversible-pivot", "reason": "Once you can convert energy forms, every previous energy regime is unlocked. Heat becomes motion becomes electricity. The pivot that enabled everything after 1800."}
+            ]
+          },
+          {
+            "id": "fossil-fuels",
+            "name": "Fossil Fuels",
+            "type": "branch",
+            "date_range": [1800, 2025],
+            "eras": ["industrial", "information"],
+            "label": "Coal, oil, gas. Decomposed ancient forests, compressed over 300 million years. The tree literally burns ancient trees to grow faster. Infrastructure earth as fuel.",
+            "tags": ["fossil-fuels", "ancient-earth", "decomposition", "acceleration"],
+            "pattern_tags": [
+              {"tag": "soil-from-violence", "reason": "Fossil fuels ARE ancient infrastructure earth. Forests that died 300 million years ago, compressed into fuel. The tree burns its ancestors to grow."}
+            ]
+          }
+        ]
+      },
+      {
+        "id": "happiness-paradox",
+        "name": "The Happiness Paradox",
+        "type": "trunk",
+        "force": "happiness-paradox",
+        "date_range": [-70000, 2025],
+        "eras": ["cognitive", "agricultural", "unification", "scientific", "industrial", "information"],
+        "label": "The persistent challenge: does any of this make anyone happier? More power, more capability, same suffering. The tree grows but doesn't know if growth is good.",
+        "tags": ["happiness", "paradox", "progress", "challenge"],
+        "pattern_tags": [
+          {"tag": "disruption-of-myth", "reason": "The happiness paradox disrupts the foundational myth of modernity: that progress = improvement. If agriculture, industry, and information haven't made us happier, what was it all for?"}
+        ],
+        "growth_ring": "The tree questioning its own growth. This branch has no resolution — it's the open question at the canopy edge. If the tree could feel, would it choose to have grown?",
+        "children": [
+          {
+            "id": "forager-baseline",
+            "name": "The Forager Baseline",
+            "type": "branch",
+            "date_range": [-70000, -12000],
+            "eras": ["cognitive"],
+            "label": "Fewer hours worked, better nutrition, more varied skills, richer social life. The baseline against which all 'progress' must be measured. By many metrics, it's been downhill since.",
+            "tags": ["forager", "baseline", "original-affluence", "measurement"],
+            "pattern_tags": [
+              {"tag": "simplicity-outlasts", "reason": "The forager lifestyle lasted 58,000 years. Agriculture has lasted 12,000. By duration alone, the simpler model is winning."},
+              {"tag": "disruption-of-myth", "reason": "The 'nasty, brutish, and short' myth of pre-agricultural life has been disrupted by anthropological evidence. Foragers were healthier, worked less, and had richer social lives."}
+            ]
+          },
+          {
+            "id": "progress-illusion",
+            "name": "The Progress Illusion",
+            "type": "branch",
+            "date_range": [-12000, 2025],
+            "eras": ["agricultural", "unification", "scientific", "industrial", "information"],
+            "label": "Each revolution promises improvement. Agriculture: more food (but worse health). Industry: more goods (but worse air). Information: more connection (but worse attention). The promise always partially lies.",
+            "tags": ["progress", "illusion", "each-revolution", "partial-lie"],
+            "pattern_tags": [
+              {"tag": "disruption-of-myth", "reason": "The progress illusion disrupts itself with each revolution. More food didn't mean better food. More connection didn't mean deeper connection. The pattern repeats."},
+              {"tag": "the-trap-is-the-feature", "reason": "Each revolution's benefit comes packaged with its cost. You can't have industrial abundance without industrial pollution. The progress and the price are the same thing."}
+            ]
+          },
+          {
+            "id": "self-designed-evolution",
+            "name": "Self-Designed Evolution",
+            "type": "canopy",
+            "date_range": [2025, null],
+            "eras": ["information"],
+            "label": "Sapiens begins to design its own evolution. Gene editing, AI, brain-computer interfaces. The next branch hasn't grown yet. We're standing at the tip.",
+            "tags": ["future", "posthuman", "open-question", "tip", "growth-edge", "self-design"],
+            "pattern_tags": [
+              {"tag": "irreversible-pivot", "reason": "If Sapiens modifies its own genome or merges with AI, the resulting species is no longer Sapiens. The pivot point is approaching — and it cannot be undone."}
+            ]
+          }
+        ]
+      },
+      {
+        "id": "information-age",
+        "name": "The Information Age",
+        "type": "canopy",
+        "date_range": [1945, 2025],
+        "eras": ["information"],
+        "label": "Current growth edge. Data, networks, AI. The tree begins to model itself. Every prior force — fiction, pruning, scaling, ignorance, energy — converges here. We are here.",
+        "tags": ["information", "networks", "ai", "growth-edge", "current", "convergence"],
+        "pattern_tags": [],
+        "growth_ring": "The growth edge. All six forces visible simultaneously. Fiction runs on servers. Pruning is algorithmic. Scaling traps are platform-shaped. The tree can see its own rings.",
+        "children": [
+          {
+            "id": "computers-networks",
+            "name": "Computers & Networks",
+            "type": "branch",
+            "date_range": [1945, 2000],
+            "eras": ["information"],
+            "label": "Turing machines, ARPANET, the internet. Information moves at light speed. Geography becomes optional. The fiction engine gets fiber-optic veins.",
+            "tags": ["computers", "internet", "networks"],
+            "pattern_tags": [
+              {"tag": "scaling-break", "reason": "The internet broke the scaling limit of information distribution. Before: knowledge travels at the speed of ships. After: at the speed of light. Every prior institution was designed for slow information."}
+            ]
+          },
+          {
+            "id": "globalization",
+            "name": "Globalization",
+            "type": "branch",
+            "date_range": [1980, 2025],
+            "eras": ["information"],
+            "label": "One economy, one culture? Or one trunk with a thousand branches? The tension between unification and diversity — the pruning pattern at planetary scale.",
+            "tags": ["globalization", "tension", "unification", "pruning-at-scale"],
+            "pattern_tags": [
+              {"tag": "the-trap-is-the-feature", "reason": "Globalization's connectivity is inseparable from its homogenization. You can't have a global market without eroding local economies. The connection IS the compression."}
+            ]
+          },
+          {
+            "id": "biotechnology",
+            "name": "Biotechnology & AI",
+            "type": "branch",
+            "date_range": [2000, 2025],
+            "eras": ["information"],
+            "label": "Sapiens begins to design its own evolution. Gene editing, AI, brain-computer interfaces. The tree reaches for its own roots. The ignorance revolution turns inward.",
+            "tags": ["biotech", "ai", "self-design", "growth-edge"],
+            "pattern_tags": [
+              {"tag": "capture-by-tool", "reason": "AI is the latest tool that may capture its user. We built it to serve us. The question is whether it will domesticate us the way wheat domesticated farmers."}
+            ]
+          }
+        ]
+      }
+    ]
+  },
+  "infrastructure_earth": {
+    "description": "Pruned branches whose soil feeds current growth. Nothing is lost — only composted. Organized by pruning pattern, not by era.",
+    "tagline": "The tree remembers what linear history forgot.",
+    "entries": [
+      {"ref": "neanderthals", "pattern": "species-pruning", "eras": ["pre-cognitive", "cognitive"], "state": "deferred", "soil": "DNA in modern humans (1-4% non-African populations)"},
+      {"ref": "homo-erectus", "pattern": "species-pruning", "eras": ["pre-cognitive"], "state": "deferred", "soil": "Proof that simplicity endures — 2M years, longer than anything we've built"},
+      {"ref": "denisovans", "pattern": "species-pruning", "eras": ["pre-cognitive", "cognitive"], "state": "deferred", "soil": "Tibetan altitude gene EPAS1 — the ghost still gives gifts"},
+      {"ref": "homo-floresiensis", "pattern": "species-pruning", "eras": ["pre-cognitive", "cognitive"], "state": "deferred", "soil": "Evolution is not a ladder — smaller can be adaptive"},
+      {"ref": "megafauna-extinction", "pattern": "ecological-pruning", "eras": ["cognitive", "agricultural"], "state": "deferred", "soil": "Sapiens as ecological force — the pattern starts here"},
+      {"ref": "forager-cultures", "pattern": "cultural-pruning", "eras": ["cognitive"], "state": "deferred", "soil": "Original affluent society — fewer hours, better nutrition, the baseline"},
+      {"ref": "nomadic-pastoralists", "pattern": "cultural-pruning", "eras": ["agricultural", "unification"], "state": "deferred", "soil": "Agriculture wasn't the only option — the tree chose the one that scaled"},
+      {"ref": "indigenous-cultures-pruned", "pattern": "cultural-pruning", "eras": ["scientific", "industrial"], "state": "deferred", "soil": "Ethnobotany, land management, oral traditions — immeasurably rich, mostly unexamined"},
+      {"ref": "dead-languages", "pattern": "cultural-pruning", "eras": ["unification", "scientific", "industrial"], "state": "deferred", "soil": "Every living language is soil from dead ones"},
+      {"ref": "barter-myth", "pattern": "fiction-pruning", "eras": ["unification"], "state": "incompatible-static", "soil": "Origin stories are often fiction — even in science"},
+      {"ref": "failed-empires", "pattern": "fiction-pruning", "eras": ["unification", "scientific", "industrial"], "state": "deferred", "soil": "Roads, languages, laws persist after empire falls"},
+      {"ref": "dead-religions", "pattern": "fiction-pruning", "eras": ["unification"], "state": "deferred", "soil": "Living religions carry dead predecessors' DNA"},
+      {"ref": "alchemy-astrology", "pattern": "ignorance-pruning", "eras": ["unification", "scientific"], "state": "deferred", "soil": "Scientific method grew from alchemical practice — the tree's eyes evolved from blind groping"}
+    ]
+  },
+  "visualization_branch": {
+    "description": "Existing pilot visualizations grafted into this tree as independent testing branch.",
+    "growth_velocity": "independent — different from temporal trunk",
+    "existing": [
+      {"file": "trunk-cross-section.html", "test_question": "Does compression show in the Sapiens trunk? Can you see cognitive revolution at center, information age at bark?"},
+      {"file": "trunk-density-map.html", "test_question": "Where are events densest? Scientific revolution onward should be visibly compressed in time."},
+      {"file": "fractalverse.html", "test_question": "Can Sapiens be navigated as nested fractal space? Fiction Engine inside Root?"},
+      {"file": "term-alignment-map.html", "test_question": "Do terms align across civilizations? Money, god, law — same function, different names."},
+      {"file": "synthesis-cycle-v5.html", "test_question": "Does the compression/expansion cycle map to empire rise/fall?"},
+      {"file": "causal-loop-synthesis-cycle.html", "test_question": "Can causal loops show how science funds empire funds science?"},
+      {"file": "mesh-builder-flower.html", "test_question": "Can trade routes and idea transmission be built as mesh?"},
+      {"file": "ndd-prototype.html", "test_question": "Can full NDD be applied to Sapiens as narrative-driven decomposition?"}
+    ],
+    "built": [
+      {"file": "sapiens-temporal-tree.html", "purpose": "The headline artifact — interactive tree of humanity"},
+      {"file": "sapiens-pruning-viewer.html", "purpose": "Infrastructure earth explorer — what was pruned and what soil it left"},
+      {"file": "sapiens-growth-rings.html", "purpose": "Ring-by-ring time walk through Sapiens"},
+      {"file": "sapiens-fiber-view.html", "purpose": "Forces as fibers running through time — dual-axis view of structure + era"},
+      {"file": "sapiens-instrument.html", "purpose": "Branch A: The Instrument — pluck fibers, watch resonance, pivot between patterns"},
+      {"file": "sapiens-microscope.html", "purpose": "Branch B: The Microscope — enter nodes, find self-similarity at every depth"},
+      {"file": "sapiens-map-room.html", "purpose": "Branch C: The Map Room — four-panel workspace, pin and compare any two nodes"}
+    ]
+  }
+}

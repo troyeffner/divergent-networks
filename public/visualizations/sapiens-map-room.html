@@ -1,0 +1,1379 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Sapiens — The Map Room</title>
+<meta name="engineer" content="TE.ENG_Fiona" />
+<meta name="purpose" content="Branch C: The Map Room — four-panel workspace for studying the tree. Pin and compare any two nodes." />
+<style>
+:root {
+  --bg-deep: #1a1612;
+  --bg-surface: #201c18;
+  --bg-elevated: #2a2520;
+  --bg-panel: #1e1a16;
+  --text-primary: #e8e0d4;
+  --text-secondary: #a09888;
+  --text-dim: #706858;
+  --accent: #c49030;
+  --accent-soft: rgba(196,144,48,0.15);
+  --accent-bright: #daa840;
+  --pin-a: #d4a040;
+  --pin-b: #5ab4a0;
+  --border: rgba(255,255,255,0.06);
+  --border-active: rgba(196,144,48,0.4);
+
+  --fiber-fiction: #d4a040;
+  --fiber-pruning: #c47058;
+  --fiber-scaling: #7ab870;
+  --fiber-ignorance: #5ab4a0;
+  --fiber-energy: #b07040;
+  --fiber-happiness: #9070b0;
+  --fiber-information: #4a9ab4;
+
+  --era-pre-cognitive: #8a7560;
+  --era-cognitive: #d4a040;
+  --era-agricultural: #7ab870;
+  --era-unification: #c49030;
+  --era-scientific: #5ab4a0;
+  --era-industrial: #b07040;
+  --era-information: #4a9ab4;
+
+  --type-root: #e8e0d4;
+  --type-trunk: #c49030;
+  --type-branch: #7ab870;
+  --type-leaf: #5ab4a0;
+  --type-pruned: #c47058;
+  --type-event-horizon: #d4a040;
+  --type-canopy: #4a9ab4;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  * { transition: none !important; animation: none !important; }
+}
+
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+body {
+  background: var(--bg-deep);
+  color: var(--text-primary);
+  font-family: 'Georgia', serif;
+  overflow: hidden;
+  height: 100vh;
+  width: 100vw;
+}
+
+/* Small screen gate */
+#small-screen-msg {
+  display: none;
+  position: fixed;
+  inset: 0;
+  background: var(--bg-deep);
+  z-index: 9999;
+  justify-content: center;
+  align-items: center;
+  text-align: center;
+  padding: 40px;
+  flex-direction: column;
+  gap: 16px;
+}
+#small-screen-msg h2 { color: var(--accent); font-size: 20px; font-weight: normal; }
+#small-screen-msg p { color: var(--text-secondary); font-size: 14px; max-width: 400px; }
+@media (max-width: 1023px) {
+  #small-screen-msg { display: flex; }
+  #app { display: none !important; }
+}
+
+/* Layout */
+#app {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  grid-template-rows: auto 1fr 1fr auto;
+  height: 100vh;
+  gap: 1px;
+  background: var(--border);
+}
+
+header {
+  grid-column: 1 / -1;
+  padding: 10px 24px;
+  background: var(--bg-surface);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+header h1 {
+  font-size: 15px;
+  font-weight: normal;
+  color: var(--text-secondary);
+  letter-spacing: 0.5px;
+}
+header h1 span { color: var(--accent); }
+
+.header-links {
+  display: flex;
+  gap: 16px;
+  font-size: 12px;
+}
+.header-links a {
+  color: var(--text-dim);
+  text-decoration: none;
+  transition: color 0.2s;
+}
+.header-links a:hover { color: var(--accent); }
+
+.panel {
+  background: var(--bg-panel);
+  position: relative;
+  overflow: hidden;
+}
+
+.panel-label {
+  position: absolute;
+  top: 8px;
+  left: 12px;
+  font-size: 10px;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  color: var(--text-dim);
+  z-index: 10;
+  pointer-events: none;
+}
+
+.panel-hint {
+  position: absolute;
+  top: 8px;
+  right: 12px;
+  font-size: 10px;
+  color: var(--text-dim);
+  z-index: 10;
+  pointer-events: none;
+  font-style: italic;
+}
+
+#tree-panel canvas,
+#timeline-panel canvas {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+/* Fiber Map (DOM-based) */
+#fiber-panel {
+  overflow: hidden;
+}
+#fiber-container {
+  position: absolute;
+  inset: 0;
+  top: 28px;
+}
+.fiber-node {
+  position: absolute;
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  cursor: pointer;
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+  z-index: 2;
+}
+.fiber-node:hover {
+  transform: scale(1.6);
+  z-index: 5;
+}
+.fiber-node.selected {
+  box-shadow: 0 0 0 3px var(--accent);
+  z-index: 6;
+}
+.fiber-node.pinned-a {
+  box-shadow: 0 0 0 3px var(--pin-a), 0 0 8px var(--pin-a);
+  z-index: 7;
+}
+.fiber-node.pinned-b {
+  box-shadow: 0 0 0 3px var(--pin-b), 0 0 8px var(--pin-b);
+  z-index: 7;
+}
+.fiber-node.dimmed { opacity: 0.2; }
+.fiber-node-label {
+  position: absolute;
+  font-size: 9px;
+  color: var(--text-secondary);
+  white-space: nowrap;
+  pointer-events: none;
+  z-index: 1;
+}
+.fiber-edge {
+  position: absolute;
+  top: 0;
+  left: 0;
+  pointer-events: none;
+  z-index: 0;
+}
+
+/* Comparison Panel */
+#compare-panel {
+  overflow-y: auto;
+  padding: 28px 16px 16px;
+}
+#compare-panel::-webkit-scrollbar { width: 4px; }
+#compare-panel::-webkit-scrollbar-track { background: transparent; }
+#compare-panel::-webkit-scrollbar-thumb { background: var(--text-dim); border-radius: 2px; }
+
+.compare-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  text-align: center;
+  gap: 12px;
+  padding: 20px;
+}
+.compare-empty .icon { font-size: 32px; color: var(--text-dim); }
+.compare-empty p { color: var(--text-dim); font-size: 13px; line-height: 1.6; }
+
+.compare-content { display: none; }
+.compare-content.active { display: block; }
+
+.compare-header {
+  display: flex;
+  gap: 12px;
+  margin-bottom: 16px;
+}
+.compare-node-card {
+  flex: 1;
+  padding: 10px;
+  border-radius: 4px;
+  background: var(--bg-elevated);
+  border-left: 3px solid;
+}
+.compare-node-card.pin-a { border-color: var(--pin-a); }
+.compare-node-card.pin-b { border-color: var(--pin-b); }
+.compare-node-card .node-name {
+  font-size: 13px;
+  font-weight: normal;
+  margin-bottom: 4px;
+}
+.compare-node-card .node-date {
+  font-size: 11px;
+  color: var(--text-dim);
+}
+
+.compare-section {
+  margin-bottom: 14px;
+}
+.compare-section-title {
+  font-size: 10px;
+  letter-spacing: 1.2px;
+  text-transform: uppercase;
+  color: var(--text-dim);
+  margin-bottom: 6px;
+  padding-bottom: 4px;
+  border-bottom: 1px solid var(--border);
+}
+.compare-value {
+  font-size: 13px;
+  color: var(--text-secondary);
+  line-height: 1.5;
+}
+.compare-value strong {
+  color: var(--text-primary);
+  font-weight: normal;
+}
+
+.shared-fiber {
+  background: var(--bg-elevated);
+  border-radius: 4px;
+  padding: 8px 10px;
+  margin-bottom: 6px;
+}
+.shared-fiber-tag {
+  font-size: 11px;
+  font-weight: normal;
+  margin-bottom: 4px;
+  display: inline-block;
+  padding: 1px 6px;
+  border-radius: 3px;
+}
+.shared-fiber-reasons {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+  margin-top: 6px;
+}
+.shared-fiber-reason {
+  font-size: 11px;
+  color: var(--text-dim);
+  line-height: 1.4;
+  padding-left: 8px;
+  border-left: 2px solid;
+}
+.shared-fiber-reason.pin-a { border-color: var(--pin-a); }
+.shared-fiber-reason.pin-b { border-color: var(--pin-b); }
+
+.insight-zone {
+  background: var(--accent-soft);
+  border-left: 3px solid var(--accent);
+  padding: 10px 12px;
+  border-radius: 0 4px 4px 0;
+  font-size: 13px;
+  color: var(--text-primary);
+  line-height: 1.6;
+  font-style: italic;
+}
+
+/* Quote Bar */
+#quote-bar {
+  grid-column: 1 / -1;
+  padding: 8px 24px;
+  background: var(--bg-surface);
+  font-size: 12px;
+  color: var(--text-dim);
+  font-style: italic;
+  min-height: 32px;
+  display: flex;
+  align-items: center;
+}
+
+/* Keyboard focus */
+.panel:focus-within { outline: 1px solid var(--border-active); outline-offset: -1px; }
+
+/* Node tooltip */
+#tooltip {
+  position: fixed;
+  background: var(--bg-elevated);
+  border: 1px solid var(--border-active);
+  padding: 8px 12px;
+  border-radius: 4px;
+  font-size: 12px;
+  color: var(--text-primary);
+  pointer-events: none;
+  z-index: 100;
+  max-width: 280px;
+  display: none;
+  line-height: 1.4;
+}
+#tooltip .tt-name { color: var(--accent); margin-bottom: 2px; }
+#tooltip .tt-type { color: var(--text-dim); font-size: 10px; text-transform: uppercase; letter-spacing: 0.5px; }
+#tooltip .tt-date { color: var(--text-secondary); font-size: 11px; margin-top: 2px; }
+</style>
+</head>
+<body>
+
+<div id="small-screen-msg" role="alert">
+  <h2>The Map Room</h2>
+  <p>The Map Room requires a larger screen. Please use a device with at least 1024px width to study the tree.</p>
+</div>
+
+<div id="app" role="application" aria-label="Sapiens Map Room — four-panel tree study workspace">
+  <header>
+    <h1><span>Sapiens</span> — The Map Room</h1>
+    <nav class="header-links" aria-label="Other views">
+      <a href="sapiens-temporal-tree.html">Temporal Tree</a>
+      <a href="sapiens-fiber-view.html">Fiber View</a>
+      <a href="sapiens-growth-rings.html">Growth Rings</a>
+      <a href="sapiens-pruning-viewer.html">Pruning Viewer</a>
+    </nav>
+  </header>
+
+  <div id="tree-panel" class="panel" role="region" aria-label="Tree View" tabindex="0">
+    <div class="panel-label">Tree View</div>
+    <div class="panel-hint">Click to select, Shift+Click to pin</div>
+    <canvas id="tree-canvas" aria-label="Structural tree visualization"></canvas>
+  </div>
+
+  <div id="timeline-panel" class="panel" role="region" aria-label="Timeline View" tabindex="0">
+    <div class="panel-label">Timeline</div>
+    <div class="panel-hint">Nodes by date and force</div>
+    <canvas id="timeline-canvas" aria-label="Timeline visualization with era bands"></canvas>
+  </div>
+
+  <div id="fiber-panel" class="panel" role="region" aria-label="Fiber Map" tabindex="0">
+    <div class="panel-label">Fiber Map</div>
+    <div class="panel-hint">Edges = shared pattern tags</div>
+    <div id="fiber-container"></div>
+    <svg id="fiber-edges" class="fiber-edge" aria-hidden="true"></svg>
+  </div>
+
+  <div id="compare-panel" class="panel" role="region" aria-label="Comparison Panel" tabindex="0">
+    <div class="panel-label">Comparison</div>
+    <div id="compare-empty" class="compare-empty">
+      <div class="icon" aria-hidden="true">&#x25C7;</div>
+      <p>Shift+Click any two nodes to pin them for comparison.<br>The Map Room will reveal what connects them.</p>
+    </div>
+    <div id="compare-content" class="compare-content"></div>
+  </div>
+
+  <div id="quote-bar" role="status" aria-live="polite">The tree as something you study. Click any node. Shift+Click two to compare.</div>
+</div>
+
+<div id="tooltip" role="tooltip"></div>
+
+<script>
+(function() {
+  'use strict';
+
+  // --- State ---
+  let DATA = null;
+  let allNodes = [];
+  let nodeMap = {};
+  let parentMap = {};
+  let selectedId = null;
+  let pinnedIds = []; // max 2
+  let forceList = [];
+  let eraList = [];
+  let tagVocab = {};
+
+  // Panel geometries
+  let treeGeo = { offsetX: 0, offsetY: 0, scale: 1, dragging: false, lastMouse: null };
+  let timelineGeo = { offsetX: 0, offsetY: 0, scale: 1, dragging: false, lastMouse: null };
+
+  // Tree layout positions
+  let treePositions = {};
+  let timelinePositions = {};
+  let fiberPositions = {};
+
+  // Force colors
+  const forceColors = {
+    'fiction-engine': '#d4a040',
+    'pruning-pattern': '#c47058',
+    'scaling-traps': '#7ab870',
+    'ignorance-revolution': '#5ab4a0',
+    'energy-regimes': '#b07040',
+    'happiness-paradox': '#9070b0',
+    'information-age': '#4a9ab4'
+  };
+
+  const typeColors = {
+    'root': '#e8e0d4',
+    'trunk': '#c49030',
+    'branch': '#7ab870',
+    'leaf': '#5ab4a0',
+    'pruned': '#c47058',
+    'event-horizon': '#d4a040',
+    'canopy': '#4a9ab4'
+  };
+
+  const quotes = {
+    tree: 'Structure reveals inheritance. Every node has a parent, every parent has a story.',
+    timeline: 'Time compresses unevenly. 2 million years of fire, 200 of electricity.',
+    fiber: 'Pattern tags are the fibers that connect distant branches. Same forces, different eras.',
+    compare: 'Two nodes pinned. The distance between them is the distance between two ideas.'
+  };
+
+  // --- Fetch Data ---
+  fetch('sapiens-tree-data.json')
+    .then(r => r.json())
+    .then(data => {
+      DATA = data;
+      eraList = data.meta.eras;
+      tagVocab = {};
+      (data.pattern_tag_vocabulary || []).forEach(v => { tagVocab[v.tag] = v; });
+      flattenTree(data.tree, null, null);
+      forceList = [...new Set(allNodes.map(n => n._force).filter(Boolean))];
+      init();
+    })
+    .catch(err => {
+      document.getElementById('quote-bar').textContent = 'Failed to load sapiens-tree-data.json: ' + err.message;
+    });
+
+  function flattenTree(node, parentId, inheritedForce) {
+    const force = node.force || inheritedForce;
+    const flat = Object.assign({}, node, { _force: force, _parentId: parentId });
+    delete flat.children;
+    allNodes.push(flat);
+    nodeMap[node.id] = flat;
+    if (parentId) parentMap[node.id] = parentId;
+    if (node.children) {
+      node.children.forEach(c => flattenTree(c, node.id, force));
+    }
+  }
+
+  // --- Init ---
+  function init() {
+    layoutTree();
+    layoutTimeline();
+    layoutFiber();
+    renderTreeCanvas();
+    renderTimelineCanvas();
+    renderFiberDOM();
+    renderComparison();
+    setupInteractions();
+    window.addEventListener('resize', debounce(onResize, 150));
+  }
+
+  // --- Tree Layout (top-down) ---
+  function layoutTree() {
+    // Rebuild tree structure for layout
+    const root = DATA.tree;
+    const positions = {};
+    const hSpacing = 140;
+    const vSpacing = 80;
+
+    function countLeaves(node) {
+      if (!node.children || node.children.length === 0) return 1;
+      return node.children.reduce((s, c) => s + countLeaves(c), 0);
+    }
+
+    function layout(node, depth, xStart) {
+      const leaves = countLeaves(node);
+      const width = leaves * hSpacing;
+      const x = xStart + width / 2;
+      const y = depth * vSpacing + 50;
+      positions[node.id] = { x, y };
+      if (node.children) {
+        let cx = xStart;
+        node.children.forEach(child => {
+          const cw = countLeaves(child) * hSpacing;
+          layout(child, depth + 1, cx);
+          cx += cw;
+        });
+      }
+    }
+
+    layout(root, 0, 0);
+    treePositions = positions;
+
+    // Center
+    const xs = Object.values(positions).map(p => p.x);
+    const ys = Object.values(positions).map(p => p.y);
+    const cx = (Math.min(...xs) + Math.max(...xs)) / 2;
+    const cy = (Math.min(...ys) + Math.max(...ys)) / 2;
+    const canvas = document.getElementById('tree-canvas');
+    const rect = canvas.getBoundingClientRect();
+    treeGeo.offsetX = rect.width / 2 - cx;
+    treeGeo.offsetY = rect.height / 2 - cy;
+  }
+
+  // --- Timeline Layout ---
+  function layoutTimeline() {
+    timelinePositions = {};
+    const canvas = document.getElementById('timeline-canvas');
+    const rect = canvas.getBoundingClientRect();
+    const padL = 60, padR = 30, padT = 40, padB = 30;
+    const w = rect.width - padL - padR;
+    const h = rect.height - padT - padB;
+
+    // Force rows
+    const rowH = h / Math.max(forceList.length, 1);
+
+    allNodes.forEach(node => {
+      const dr = node.date_range;
+      if (!dr) return;
+      const startDate = dr[0] || -2500000;
+      const endDate = dr[1] || 2025;
+      const midDate = (startDate + endDate) / 2;
+
+      const x = padL + dateToX(midDate, w);
+      const forceIdx = forceList.indexOf(node._force);
+      const y = padT + (forceIdx >= 0 ? forceIdx * rowH + rowH / 2 : h / 2);
+
+      // Jitter for overlapping
+      const jitter = (hashStr(node.id) % 20) - 10;
+      timelinePositions[node.id] = { x, y: y + jitter };
+    });
+  }
+
+  function dateToX(date, width) {
+    // Log-ish scale for deep past
+    const minDate = -2500000;
+    const maxDate = 2025;
+    // Use a pseudo-log that compresses deep past
+    function transform(d) {
+      if (d <= 0) return -Math.log10(Math.abs(d) + 1);
+      return Math.log10(d + 1);
+    }
+    const tMin = transform(minDate);
+    const tMax = transform(maxDate);
+    const t = transform(date);
+    return ((t - tMin) / (tMax - tMin)) * width;
+  }
+
+  function hashStr(s) {
+    let h = 0;
+    for (let i = 0; i < s.length; i++) h = ((h << 5) - h + s.charCodeAt(i)) | 0;
+    return Math.abs(h);
+  }
+
+  // --- Fiber Layout (force-directed) ---
+  function layoutFiber() {
+    const container = document.getElementById('fiber-container');
+    const rect = container.getBoundingClientRect();
+    const w = rect.width || 500;
+    const h = rect.height || 400;
+
+    // Build edges: shared pattern_tags
+    const edges = [];
+    for (let i = 0; i < allNodes.length; i++) {
+      const tagsA = (allNodes[i].pattern_tags || []).map(pt => pt.tag);
+      if (tagsA.length === 0) continue;
+      for (let j = i + 1; j < allNodes.length; j++) {
+        const tagsB = (allNodes[j].pattern_tags || []).map(pt => pt.tag);
+        const shared = tagsA.filter(t => tagsB.includes(t));
+        if (shared.length > 0) {
+          edges.push({ a: allNodes[i].id, b: allNodes[j].id, weight: shared.length, tags: shared });
+        }
+      }
+    }
+
+    // Init positions randomly
+    const pos = {};
+    allNodes.forEach(n => {
+      pos[n.id] = {
+        x: w * 0.2 + Math.random() * w * 0.6,
+        y: h * 0.2 + Math.random() * h * 0.6,
+        vx: 0, vy: 0
+      };
+    });
+
+    // Force-directed: 100 iterations
+    const iterations = 120;
+    const repulse = 3000;
+    const springK = 0.008;
+    const springLen = 60;
+    const damping = 0.85;
+    const gravity = 0.01;
+    const cx = w / 2, cy = h / 2;
+
+    for (let iter = 0; iter < iterations; iter++) {
+      // Repulsion (Coulomb)
+      for (let i = 0; i < allNodes.length; i++) {
+        const a = pos[allNodes[i].id];
+        for (let j = i + 1; j < allNodes.length; j++) {
+          const b = pos[allNodes[j].id];
+          let dx = a.x - b.x;
+          let dy = a.y - b.y;
+          let dist = Math.sqrt(dx * dx + dy * dy) || 1;
+          let force = repulse / (dist * dist);
+          let fx = (dx / dist) * force;
+          let fy = (dy / dist) * force;
+          a.vx += fx; a.vy += fy;
+          b.vx -= fx; b.vy -= fy;
+        }
+      }
+
+      // Springs (Hooke) for shared tags
+      edges.forEach(e => {
+        const a = pos[e.a];
+        const b = pos[e.b];
+        let dx = b.x - a.x;
+        let dy = b.y - a.y;
+        let dist = Math.sqrt(dx * dx + dy * dy) || 1;
+        let force = springK * (dist - springLen) * e.weight;
+        let fx = (dx / dist) * force;
+        let fy = (dy / dist) * force;
+        a.vx += fx; a.vy += fy;
+        b.vx -= fx; b.vy -= fy;
+      });
+
+      // Gravity toward center
+      allNodes.forEach(n => {
+        const p = pos[n.id];
+        p.vx += (cx - p.x) * gravity;
+        p.vy += (cy - p.y) * gravity;
+      });
+
+      // Apply velocity + damping
+      allNodes.forEach(n => {
+        const p = pos[n.id];
+        p.vx *= damping;
+        p.vy *= damping;
+        p.x += p.vx;
+        p.y += p.vy;
+        // Clamp
+        p.x = Math.max(20, Math.min(w - 20, p.x));
+        p.y = Math.max(20, Math.min(h - 20, p.y));
+      });
+    }
+
+    fiberPositions = {};
+    allNodes.forEach(n => {
+      fiberPositions[n.id] = { x: pos[n.id].x, y: pos[n.id].y };
+    });
+    fiberPositions._edges = edges;
+  }
+
+  // --- Render Tree Canvas ---
+  function renderTreeCanvas() {
+    const canvas = document.getElementById('tree-canvas');
+    const rect = canvas.parentElement.getBoundingClientRect();
+    const dpr = window.devicePixelRatio || 1;
+    canvas.width = rect.width * dpr;
+    canvas.height = rect.height * dpr;
+    canvas.style.width = rect.width + 'px';
+    canvas.style.height = rect.height + 'px';
+    const ctx = canvas.getContext('2d');
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    ctx.clearRect(0, 0, rect.width, rect.height);
+
+    const ox = treeGeo.offsetX;
+    const oy = treeGeo.offsetY;
+    const sc = treeGeo.scale;
+
+    ctx.save();
+    ctx.translate(ox, oy);
+    ctx.scale(sc, sc);
+
+    // Draw edges
+    allNodes.forEach(node => {
+      const pid = parentMap[node.id];
+      if (!pid) return;
+      const from = treePositions[pid];
+      const to = treePositions[node.id];
+      if (!from || !to) return;
+      ctx.strokeStyle = isNodeHighlighted(node.id) && isNodeHighlighted(pid)
+        ? 'rgba(196,144,48,0.5)' : 'rgba(255,255,255,0.08)';
+      ctx.lineWidth = 1;
+      ctx.beginPath();
+      ctx.moveTo(from.x, from.y);
+      ctx.lineTo(to.x, to.y);
+      ctx.stroke();
+    });
+
+    // Draw nodes
+    allNodes.forEach(node => {
+      const pos = treePositions[node.id];
+      if (!pos) return;
+      const r = getNodeRadius(node);
+      const highlighted = isNodeHighlighted(node.id);
+      const isPinA = pinnedIds[0] === node.id;
+      const isPinB = pinnedIds[1] === node.id;
+      const isSel = selectedId === node.id;
+
+      ctx.globalAlpha = highlighted || !selectedId ? 1 : 0.25;
+
+      ctx.beginPath();
+      ctx.arc(pos.x, pos.y, r, 0, Math.PI * 2);
+
+      if (node.type === 'pruned') {
+        ctx.strokeStyle = typeColors[node.type];
+        ctx.lineWidth = 1.5;
+        ctx.stroke();
+      } else {
+        ctx.fillStyle = typeColors[node.type] || '#aaa';
+        ctx.fill();
+      }
+
+      // Pin/selection rings
+      if (isPinA) {
+        ctx.beginPath(); ctx.arc(pos.x, pos.y, r + 4, 0, Math.PI * 2);
+        ctx.strokeStyle = '#d4a040'; ctx.lineWidth = 2; ctx.stroke();
+      }
+      if (isPinB) {
+        ctx.beginPath(); ctx.arc(pos.x, pos.y, r + 4, 0, Math.PI * 2);
+        ctx.strokeStyle = '#5ab4a0'; ctx.lineWidth = 2; ctx.stroke();
+      }
+      if (isSel && !isPinA && !isPinB) {
+        ctx.beginPath(); ctx.arc(pos.x, pos.y, r + 3, 0, Math.PI * 2);
+        ctx.strokeStyle = 'rgba(196,144,48,0.7)'; ctx.lineWidth = 1.5; ctx.stroke();
+      }
+
+      // Label
+      if (sc > 0.6 || node.type === 'root' || node.type === 'trunk') {
+        ctx.globalAlpha = highlighted || !selectedId ? 0.9 : 0.2;
+        ctx.fillStyle = '#e8e0d4';
+        ctx.font = node.type === 'root' || node.type === 'trunk' ? '11px Georgia' : '9px Georgia';
+        ctx.textAlign = 'center';
+        ctx.fillText(truncate(node.name, 20), pos.x, pos.y + r + 14);
+      }
+
+      ctx.globalAlpha = 1;
+    });
+
+    ctx.restore();
+  }
+
+  // --- Render Timeline Canvas ---
+  function renderTimelineCanvas() {
+    const canvas = document.getElementById('timeline-canvas');
+    const rect = canvas.parentElement.getBoundingClientRect();
+    const dpr = window.devicePixelRatio || 1;
+    canvas.width = rect.width * dpr;
+    canvas.height = rect.height * dpr;
+    canvas.style.width = rect.width + 'px';
+    canvas.style.height = rect.height + 'px';
+    const ctx = canvas.getContext('2d');
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    ctx.clearRect(0, 0, rect.width, rect.height);
+
+    const padL = 60, padR = 30, padT = 40, padB = 30;
+    const w = rect.width - padL - padR;
+    const h = rect.height - padT - padB;
+    const rowH = h / Math.max(forceList.length, 1);
+
+    // Era bands
+    eraList.forEach(era => {
+      const x1 = padL + dateToX(era.range[0], w);
+      const x2 = padL + dateToX(era.range[1], w);
+      ctx.fillStyle = era.color + '10';
+      ctx.fillRect(x1, padT, x2 - x1, h);
+      // Era label at top
+      ctx.fillStyle = era.color + '60';
+      ctx.font = '9px Georgia';
+      ctx.textAlign = 'center';
+      const ex = (x1 + x2) / 2;
+      if (x2 - x1 > 40) {
+        ctx.save();
+        ctx.translate(ex, padT - 6);
+        ctx.fillText(truncate(era.name, 18), 0, 0);
+        ctx.restore();
+      }
+    });
+
+    // Force row labels
+    ctx.textAlign = 'right';
+    ctx.font = '9px Georgia';
+    forceList.forEach((force, i) => {
+      const y = padT + i * rowH + rowH / 2;
+      ctx.fillStyle = (forceColors[force] || '#888') + '80';
+      const label = force.replace(/-/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
+      ctx.fillText(truncate(label, 14), padL - 6, y + 3);
+      // Row line
+      ctx.strokeStyle = 'rgba(255,255,255,0.04)';
+      ctx.beginPath();
+      ctx.moveTo(padL, y);
+      ctx.lineTo(padL + w, y);
+      ctx.stroke();
+    });
+
+    // Parent-child connections
+    allNodes.forEach(node => {
+      const pid = parentMap[node.id];
+      if (!pid) return;
+      const from = timelinePositions[pid];
+      const to = timelinePositions[node.id];
+      if (!from || !to) return;
+      const hl = isNodeHighlighted(node.id) && isNodeHighlighted(pid);
+      ctx.strokeStyle = hl ? 'rgba(196,144,48,0.3)' : 'rgba(255,255,255,0.04)';
+      ctx.lineWidth = 1;
+      ctx.beginPath();
+      ctx.moveTo(from.x, from.y);
+      ctx.lineTo(to.x, to.y);
+      ctx.stroke();
+    });
+
+    // Nodes
+    allNodes.forEach(node => {
+      const pos = timelinePositions[node.id];
+      if (!pos) return;
+      const r = 4;
+      const highlighted = isNodeHighlighted(node.id);
+      const isPinA = pinnedIds[0] === node.id;
+      const isPinB = pinnedIds[1] === node.id;
+      const isSel = selectedId === node.id;
+
+      ctx.globalAlpha = highlighted || !selectedId ? 1 : 0.2;
+
+      ctx.beginPath();
+      ctx.arc(pos.x, pos.y, r, 0, Math.PI * 2);
+      if (node.type === 'pruned') {
+        ctx.strokeStyle = typeColors[node.type];
+        ctx.lineWidth = 1.5;
+        ctx.stroke();
+      } else {
+        ctx.fillStyle = typeColors[node.type] || '#aaa';
+        ctx.fill();
+      }
+
+      if (isPinA) {
+        ctx.beginPath(); ctx.arc(pos.x, pos.y, r + 3, 0, Math.PI * 2);
+        ctx.strokeStyle = '#d4a040'; ctx.lineWidth = 2; ctx.stroke();
+      }
+      if (isPinB) {
+        ctx.beginPath(); ctx.arc(pos.x, pos.y, r + 3, 0, Math.PI * 2);
+        ctx.strokeStyle = '#5ab4a0'; ctx.lineWidth = 2; ctx.stroke();
+      }
+      if (isSel && !isPinA && !isPinB) {
+        ctx.beginPath(); ctx.arc(pos.x, pos.y, r + 2, 0, Math.PI * 2);
+        ctx.strokeStyle = 'rgba(196,144,48,0.7)'; ctx.lineWidth = 1; ctx.stroke();
+      }
+
+      ctx.globalAlpha = 1;
+    });
+  }
+
+  // --- Render Fiber DOM ---
+  function renderFiberDOM() {
+    const container = document.getElementById('fiber-container');
+    const svgEl = document.getElementById('fiber-edges');
+    container.innerHTML = '';
+
+    // Position SVG
+    const rect = container.getBoundingClientRect();
+    svgEl.setAttribute('width', rect.width);
+    svgEl.setAttribute('height', rect.height);
+    svgEl.style.width = rect.width + 'px';
+    svgEl.style.height = rect.height + 'px';
+    svgEl.innerHTML = '';
+    container.appendChild(svgEl);
+
+    const edges = fiberPositions._edges || [];
+
+    // Draw edges as SVG lines
+    edges.forEach(e => {
+      const a = fiberPositions[e.a];
+      const b = fiberPositions[e.b];
+      if (!a || !b) return;
+      const line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+      line.setAttribute('x1', a.x);
+      line.setAttribute('y1', a.y);
+      line.setAttribute('x2', b.x);
+      line.setAttribute('y2', b.y);
+      const hlA = isNodeHighlighted(e.a);
+      const hlB = isNodeHighlighted(e.b);
+      const hl = hlA && hlB;
+      line.setAttribute('stroke', hl ? 'rgba(196,144,48,0.4)' : 'rgba(255,255,255,0.06)');
+      line.setAttribute('stroke-width', Math.min(e.weight * 1.5, 4));
+      line.setAttribute('data-edge', e.a + ':' + e.b);
+      svgEl.appendChild(line);
+    });
+
+    // Draw nodes
+    allNodes.forEach(node => {
+      const pos = fiberPositions[node.id];
+      if (!pos) return;
+      const el = document.createElement('div');
+      el.className = 'fiber-node';
+      el.dataset.id = node.id;
+      el.style.left = (pos.x - 5) + 'px';
+      el.style.top = (pos.y - 5) + 'px';
+      el.style.backgroundColor = typeColors[node.type] || '#aaa';
+      if (node.type === 'pruned') {
+        el.style.backgroundColor = 'transparent';
+        el.style.border = '2px solid ' + (typeColors[node.type] || '#aaa');
+      }
+
+      const highlighted = isNodeHighlighted(node.id);
+      if (selectedId && !highlighted) el.classList.add('dimmed');
+      if (selectedId === node.id) el.classList.add('selected');
+      if (pinnedIds[0] === node.id) el.classList.add('pinned-a');
+      if (pinnedIds[1] === node.id) el.classList.add('pinned-b');
+
+      el.setAttribute('role', 'button');
+      el.setAttribute('aria-label', node.name);
+      el.setAttribute('tabindex', '0');
+
+      el.addEventListener('click', (ev) => handleNodeClick(node.id, ev.shiftKey));
+      el.addEventListener('keydown', (ev) => {
+        if (ev.key === 'Enter' || ev.key === ' ') {
+          ev.preventDefault();
+          handleNodeClick(node.id, ev.shiftKey);
+        }
+      });
+      el.addEventListener('mouseenter', (ev) => showTooltip(node, ev));
+      el.addEventListener('mouseleave', hideTooltip);
+
+      container.appendChild(el);
+
+      // Label for larger/trunk nodes
+      if (node.type === 'root' || node.type === 'trunk') {
+        const lbl = document.createElement('div');
+        lbl.className = 'fiber-node-label';
+        lbl.textContent = truncate(node.name, 16);
+        lbl.style.left = (pos.x + 8) + 'px';
+        lbl.style.top = (pos.y - 4) + 'px';
+        if (selectedId && !highlighted) lbl.style.opacity = '0.2';
+        container.appendChild(lbl);
+      }
+    });
+  }
+
+  // --- Render Comparison ---
+  function renderComparison() {
+    const emptyEl = document.getElementById('compare-empty');
+    const contentEl = document.getElementById('compare-content');
+
+    if (pinnedIds.length < 2) {
+      emptyEl.style.display = 'flex';
+      contentEl.classList.remove('active');
+      if (pinnedIds.length === 1) {
+        emptyEl.querySelector('p').innerHTML = 'One node pinned: <strong style="color:var(--pin-a)">' +
+          nodeMap[pinnedIds[0]].name + '</strong>.<br>Shift+Click a second node to compare.';
+      } else {
+        emptyEl.querySelector('p').innerHTML = 'Shift+Click any two nodes to pin them for comparison.<br>The Map Room will reveal what connects them.';
+      }
+      return;
+    }
+
+    emptyEl.style.display = 'none';
+    contentEl.classList.add('active');
+
+    const a = nodeMap[pinnedIds[0]];
+    const b = nodeMap[pinnedIds[1]];
+
+    // Temporal distance
+    const aMid = getMidDate(a);
+    const bMid = getMidDate(b);
+    const yearDist = Math.abs(aMid - bMid);
+    const distStr = yearDist > 1000 ? Math.round(yearDist / 1000) + ',000+ years' :
+                    yearDist > 1 ? Math.round(yearDist) + ' years' : 'same period';
+
+    // Ancestry
+    const ancestorsA = getAncestors(a.id);
+    const ancestorsB = getAncestors(b.id);
+    const sharedAncestors = ancestorsA.filter(id => ancestorsB.includes(id));
+    const totalAncestors = new Set([...ancestorsA, ...ancestorsB]).size;
+    const overlapPct = totalAncestors > 0 ? Math.round(sharedAncestors.length / totalAncestors * 100) : 0;
+
+    // Descendants
+    const descA = getDescendants(a.id);
+    const descB = getDescendants(b.id);
+    const sharedDesc = descA.filter(id => descB.includes(id));
+
+    // Shared pattern tags
+    const tagsA = (a.pattern_tags || []);
+    const tagsB = (b.pattern_tags || []);
+    const tagNamesA = tagsA.map(t => t.tag);
+    const tagNamesB = tagsB.map(t => t.tag);
+    const sharedTagNames = tagNamesA.filter(t => tagNamesB.includes(t));
+
+    // Shared forces
+    const forcesA = a._force ? [a._force] : [];
+    const forcesB = b._force ? [b._force] : [];
+    const sharedForces = forcesA.filter(f => forcesB.includes(f));
+    const allForces = [...new Set([...forcesA, ...forcesB])];
+
+    // Relationship
+    const aIsAncestorOfB = ancestorsB.includes(a.id);
+    const bIsAncestorOfA = ancestorsA.includes(b.id);
+    let relationship = 'different branches';
+    if (aIsAncestorOfB) relationship = 'the same line (ancestor/descendant)';
+    else if (bIsAncestorOfA) relationship = 'the same line (descendant/ancestor)';
+    else if (sharedAncestors.length > 1) relationship = 'sibling branches';
+
+    let html = '';
+
+    // Header cards
+    html += '<div class="compare-header">';
+    html += '<div class="compare-node-card pin-a"><div class="node-name" style="color:var(--pin-a)">' + a.name + '</div>';
+    html += '<div class="node-date">' + formatDateRange(a.date_range) + '</div></div>';
+    html += '<div class="compare-node-card pin-b"><div class="node-name" style="color:var(--pin-b)">' + b.name + '</div>';
+    html += '<div class="node-date">' + formatDateRange(b.date_range) + '</div></div>';
+    html += '</div>';
+
+    // Temporal distance
+    html += '<div class="compare-section"><div class="compare-section-title">Temporal Distance</div>';
+    html += '<div class="compare-value"><strong>' + distStr + '</strong></div></div>';
+
+    // Shared root path
+    html += '<div class="compare-section"><div class="compare-section-title">Shared Root Path</div>';
+    html += '<div class="compare-value">' + sharedAncestors.length + ' common ancestor' + (sharedAncestors.length !== 1 ? 's' : '') +
+      ' (' + overlapPct + '% overlap)';
+    if (sharedAncestors.length > 0) {
+      html += '<br>' + sharedAncestors.map(id => '<span style="color:var(--text-secondary)">' + (nodeMap[id] ? nodeMap[id].name : id) + '</span>').join(' &rarr; ');
+    }
+    html += '</div></div>';
+
+    // Shared canopy path
+    if (sharedDesc.length > 0) {
+      html += '<div class="compare-section"><div class="compare-section-title">Shared Canopy Path</div>';
+      html += '<div class="compare-value">' + sharedDesc.length + ' common descendant' + (sharedDesc.length !== 1 ? 's' : '') + '</div></div>';
+    }
+
+    // Force overlap
+    html += '<div class="compare-section"><div class="compare-section-title">Force Overlap</div>';
+    if (sharedForces.length > 0) {
+      html += '<div class="compare-value">Both share: ' + sharedForces.map(f =>
+        '<strong style="color:' + (forceColors[f] || '#aaa') + '">' + f.replace(/-/g, ' ') + '</strong>').join(', ') + '</div>';
+    } else {
+      html += '<div class="compare-value">Different forces: ' + allForces.map(f =>
+        '<span style="color:' + (forceColors[f] || '#aaa') + '">' + f.replace(/-/g, ' ') + '</span>').join(' vs ') + '</div>';
+    }
+    html += '</div>';
+
+    // Shared fibers
+    html += '<div class="compare-section"><div class="compare-section-title">Shared Fibers (' + sharedTagNames.length + ')</div>';
+    if (sharedTagNames.length > 0) {
+      sharedTagNames.forEach(tag => {
+        const vocab = tagVocab[tag] || {};
+        const reasonA = tagsA.find(t => t.tag === tag);
+        const reasonB = tagsB.find(t => t.tag === tag);
+        html += '<div class="shared-fiber">';
+        html += '<span class="shared-fiber-tag" style="background:' + (vocab.color || '#555') + '30;color:' + (vocab.color || '#aaa') + '">' + tag.replace(/-/g, ' ') + '</span>';
+        html += '<div class="shared-fiber-reasons">';
+        html += '<div class="shared-fiber-reason pin-a">' + (reasonA ? reasonA.reason : '—') + '</div>';
+        html += '<div class="shared-fiber-reason pin-b">' + (reasonB ? reasonB.reason : '—') + '</div>';
+        html += '</div></div>';
+      });
+    } else {
+      html += '<div class="compare-value">No shared pattern tags. These nodes are connected by structure, not by fiber.</div>';
+    }
+    html += '</div>';
+
+    // Insight zone
+    html += '<div class="insight-zone">';
+    html += 'These two events are <strong>' + distStr + '</strong> apart and on <strong>' + relationship +
+      '</strong> of the tree. But they share <strong>' + sharedTagNames.length + ' fiber' + (sharedTagNames.length !== 1 ? 's' : '') +
+      '</strong> and <strong>' + sharedForces.length + ' force' + (sharedForces.length !== 1 ? 's' : '') + '</strong>.';
+    html += '</div>';
+
+    contentEl.innerHTML = html;
+  }
+
+  // --- Interactions ---
+  function setupInteractions() {
+    // Tree canvas click/drag/zoom
+    const treeCanvas = document.getElementById('tree-canvas');
+    setupCanvasInteraction(treeCanvas, treeGeo, treePositions, renderTreeCanvas);
+
+    // Timeline canvas click only (no drag/zoom — fixed axes)
+    const timelineCanvas = document.getElementById('timeline-canvas');
+    setupStaticCanvasInteraction(timelineCanvas, timelinePositions);
+  }
+
+  function setupCanvasInteraction(canvas, geo, positions, renderFn) {
+    canvas.addEventListener('mousedown', (ev) => {
+      // Check if clicking a node
+      const hit = hitTestCanvas(ev, canvas, geo, positions);
+      if (hit) {
+        handleNodeClick(hit, ev.shiftKey);
+        return;
+      }
+      geo.dragging = true;
+      geo.lastMouse = { x: ev.clientX, y: ev.clientY };
+    });
+
+    canvas.addEventListener('mousemove', (ev) => {
+      if (geo.dragging && geo.lastMouse) {
+        geo.offsetX += ev.clientX - geo.lastMouse.x;
+        geo.offsetY += ev.clientY - geo.lastMouse.y;
+        geo.lastMouse = { x: ev.clientX, y: ev.clientY };
+        renderFn();
+      } else {
+        // Hover tooltip
+        const hit = hitTestCanvas(ev, canvas, geo, positions);
+        if (hit) {
+          canvas.style.cursor = 'pointer';
+          showTooltip(nodeMap[hit], ev);
+        } else {
+          canvas.style.cursor = 'grab';
+          hideTooltip();
+        }
+      }
+    });
+
+    canvas.addEventListener('mouseup', () => { geo.dragging = false; geo.lastMouse = null; });
+    canvas.addEventListener('mouseleave', () => { geo.dragging = false; geo.lastMouse = null; hideTooltip(); });
+
+    canvas.addEventListener('wheel', (ev) => {
+      ev.preventDefault();
+      const delta = ev.deltaY > 0 ? 0.9 : 1.1;
+      const newScale = Math.max(0.2, Math.min(5, geo.scale * delta));
+      // Zoom toward mouse
+      const rect = canvas.getBoundingClientRect();
+      const mx = ev.clientX - rect.left;
+      const my = ev.clientY - rect.top;
+      geo.offsetX = mx - (mx - geo.offsetX) * (newScale / geo.scale);
+      geo.offsetY = my - (my - geo.offsetY) * (newScale / geo.scale);
+      geo.scale = newScale;
+      renderFn();
+    }, { passive: false });
+
+    // Keyboard
+    canvas.addEventListener('keydown', (ev) => {
+      if (ev.key === 'Escape') {
+        selectedId = null;
+        renderAll();
+      }
+    });
+  }
+
+  function setupStaticCanvasInteraction(canvas, positions) {
+    canvas.addEventListener('click', (ev) => {
+      const hit = hitTestStaticCanvas(ev, canvas, positions);
+      if (hit) handleNodeClick(hit, ev.shiftKey);
+    });
+    canvas.addEventListener('mousemove', (ev) => {
+      const hit = hitTestStaticCanvas(ev, canvas, positions);
+      if (hit) {
+        canvas.style.cursor = 'pointer';
+        showTooltip(nodeMap[hit], ev);
+      } else {
+        canvas.style.cursor = 'default';
+        hideTooltip();
+      }
+    });
+    canvas.addEventListener('mouseleave', hideTooltip);
+    canvas.addEventListener('keydown', (ev) => {
+      if (ev.key === 'Escape') { selectedId = null; renderAll(); }
+    });
+  }
+
+  function hitTestStaticCanvas(ev, canvas, positions) {
+    const rect = canvas.getBoundingClientRect();
+    const mx = ev.clientX - rect.left;
+    const my = ev.clientY - rect.top;
+    let closest = null;
+    let closestDist = Infinity;
+    for (const id in positions) {
+      const p = positions[id];
+      const dx = p.x - mx;
+      const dy = p.y - my;
+      const d = Math.sqrt(dx * dx + dy * dy);
+      if (d < 15 && d < closestDist) {
+        closest = id;
+        closestDist = d;
+      }
+    }
+    return closest;
+  }
+
+  function hitTestCanvas(ev, canvas, geo, positions) {
+    const rect = canvas.getBoundingClientRect();
+    const mx = (ev.clientX - rect.left - geo.offsetX) / geo.scale;
+    const my = (ev.clientY - rect.top - geo.offsetY) / geo.scale;
+    let closest = null;
+    let closestDist = Infinity;
+    for (const id in positions) {
+      const p = positions[id];
+      const dx = p.x - mx;
+      const dy = p.y - my;
+      const d = Math.sqrt(dx * dx + dy * dy);
+      if (d < 15 && d < closestDist) {
+        closest = id;
+        closestDist = d;
+      }
+    }
+    return closest;
+  }
+
+  function handleNodeClick(id, shift) {
+    if (shift) {
+      // Pin logic
+      if (pinnedIds.includes(id)) {
+        pinnedIds = pinnedIds.filter(p => p !== id);
+      } else if (pinnedIds.length >= 2) {
+        pinnedIds = [pinnedIds[1], id];
+      } else {
+        pinnedIds.push(id);
+      }
+      selectedId = id;
+    } else {
+      if (selectedId === id) {
+        selectedId = null;
+      } else {
+        selectedId = id;
+      }
+    }
+    updateQuoteBar();
+    renderAll();
+  }
+
+  function renderAll() {
+    renderTreeCanvas();
+    renderTimelineCanvas();
+    renderFiberDOM();
+    renderComparison();
+  }
+
+  function isNodeHighlighted(id) {
+    if (!selectedId && pinnedIds.length === 0) return true;
+    if (id === selectedId) return true;
+    if (pinnedIds.includes(id)) return true;
+    // Highlight connected via parent chain to selected
+    if (selectedId) {
+      const anc = getAncestors(selectedId);
+      const desc = getDescendants(selectedId);
+      if (anc.includes(id) || desc.includes(id)) return true;
+    }
+    return false;
+  }
+
+  // --- Helpers ---
+  function getAncestors(id) {
+    const result = [];
+    let current = parentMap[id];
+    while (current) {
+      result.push(current);
+      current = parentMap[current];
+    }
+    return result.reverse();
+  }
+
+  function getDescendants(id) {
+    const result = [];
+    allNodes.forEach(n => {
+      if (n.id === id) return;
+      let cur = parentMap[n.id];
+      while (cur) {
+        if (cur === id) { result.push(n.id); break; }
+        cur = parentMap[cur];
+      }
+    });
+    return result;
+  }
+
+  function getMidDate(node) {
+    const dr = node.date_range || [0, 0];
+    return ((dr[0] || 0) + (dr[1] || 2025)) / 2;
+  }
+
+  function getNodeRadius(node) {
+    switch (node.type) {
+      case 'root': return 8;
+      case 'trunk': return 6;
+      case 'event-horizon': return 5;
+      case 'canopy': return 5;
+      default: return 4;
+    }
+  }
+
+  function formatDateRange(dr) {
+    if (!dr) return '?';
+    const fmt = d => {
+      if (d === null) return 'now';
+      if (d < -10000) return Math.round(d / -1000) + 'k BCE';
+      if (d < 0) return Math.abs(d) + ' BCE';
+      return d + ' CE';
+    };
+    return fmt(dr[0]) + ' — ' + fmt(dr[1]);
+  }
+
+  function truncate(s, n) {
+    return s.length > n ? s.slice(0, n - 1) + '\u2026' : s;
+  }
+
+  function showTooltip(node, ev) {
+    const tt = document.getElementById('tooltip');
+    tt.innerHTML = '<div class="tt-name">' + node.name + '</div>' +
+      '<div class="tt-type">' + node.type + (node._force ? ' / ' + node._force.replace(/-/g, ' ') : '') + '</div>' +
+      '<div class="tt-date">' + formatDateRange(node.date_range) + '</div>';
+    tt.style.display = 'block';
+    tt.style.left = Math.min(ev.clientX + 12, window.innerWidth - 300) + 'px';
+    tt.style.top = (ev.clientY - 40) + 'px';
+  }
+
+  function hideTooltip() {
+    document.getElementById('tooltip').style.display = 'none';
+  }
+
+  function updateQuoteBar() {
+    const bar = document.getElementById('quote-bar');
+    if (pinnedIds.length === 2) {
+      bar.textContent = quotes.compare;
+    } else if (selectedId) {
+      const node = nodeMap[selectedId];
+      bar.textContent = node.label || node.name;
+    } else {
+      bar.textContent = 'The tree as something you study. Click any node. Shift+Click two to compare.';
+    }
+  }
+
+  function debounce(fn, ms) {
+    let timer;
+    return function() {
+      clearTimeout(timer);
+      timer = setTimeout(fn, ms);
+    };
+  }
+
+  function onResize() {
+    layoutTree();
+    layoutTimeline();
+    layoutFiber();
+    renderAll();
+  }
+})();
+</script>
+</body>
+</html>

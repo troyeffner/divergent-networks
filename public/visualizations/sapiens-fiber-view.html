@@ -1,0 +1,1039 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Sapiens Fiber View — Forces Through Time</title>
+<meta name="engineer" content="TE.ENG_Fiona" />
+<meta name="purpose" content="Dual-axis visualization: forces as fibers running through eras, each node traceable up and down" />
+<style>
+:root {
+  --bg-deep: #1a1612;
+  --bg-surface: #201c18;
+  --bg-elevated: #2a2520;
+  --text-primary: #e8e0d4;
+  --text-secondary: #a09888;
+  --text-dim: #706858;
+  --accent: #c49030;
+  --accent-soft: rgba(196,144,48,0.15);
+
+  --fiber-fiction: #d4a040;
+  --fiber-pruning: #c47058;
+  --fiber-scaling: #7ab870;
+  --fiber-ignorance: #5ab4a0;
+  --fiber-energy: #b07040;
+  --fiber-happiness: #9070b0;
+  --fiber-information: #4a9ab4;
+
+  --era-pre-cognitive: #8a7560;
+  --era-cognitive: #d4a040;
+  --era-agricultural: #7ab870;
+  --era-unification: #c49030;
+  --era-scientific: #5ab4a0;
+  --era-industrial: #b07040;
+  --era-information: #4a9ab4;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  * { transition: none !important; animation: none !important; }
+}
+
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+body {
+  background: var(--bg-deep);
+  color: var(--text-primary);
+  font-family: 'Georgia', serif;
+  overflow: hidden;
+  height: 100vh;
+  width: 100vw;
+}
+
+#app {
+  display: grid;
+  grid-template-columns: 1fr 380px;
+  grid-template-rows: auto 1fr;
+  height: 100vh;
+}
+
+header {
+  grid-column: 1 / -1;
+  padding: 12px 24px;
+  background: var(--bg-surface);
+  border-bottom: 1px solid rgba(255,255,255,0.06);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+header h1 {
+  font-size: 16px;
+  font-weight: normal;
+  color: var(--text-secondary);
+  letter-spacing: 0.5px;
+}
+
+header h1 span { color: var(--accent); }
+
+.header-links {
+  display: flex;
+  gap: 16px;
+  font-size: 12px;
+}
+
+.header-links a {
+  color: var(--text-dim);
+  text-decoration: none;
+  transition: color 0.2s;
+}
+.header-links a:hover { color: var(--text-primary); }
+
+#canvas-wrap {
+  position: relative;
+  overflow: hidden;
+}
+
+canvas {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+/* --- Trace Panel (right side) --- */
+#trace-panel {
+  background: var(--bg-surface);
+  border-left: 1px solid rgba(255,255,255,0.06);
+  overflow-y: auto;
+  padding: 20px;
+}
+
+.trace-empty {
+  color: var(--text-dim);
+  font-style: italic;
+  font-size: 14px;
+  padding-top: 40px;
+  text-align: center;
+  line-height: 1.6;
+}
+
+.trace-node-name {
+  font-size: 20px;
+  color: var(--text-primary);
+  margin-bottom: 4px;
+}
+
+.trace-node-type {
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 1.5px;
+  margin-bottom: 8px;
+  padding: 2px 8px;
+  border-radius: 3px;
+  display: inline-block;
+}
+
+.trace-node-era {
+  font-size: 12px;
+  color: var(--text-dim);
+  margin-bottom: 12px;
+}
+
+.trace-node-label {
+  font-size: 14px;
+  color: var(--text-secondary);
+  line-height: 1.6;
+  margin-bottom: 16px;
+  padding-bottom: 16px;
+  border-bottom: 1px solid rgba(255,255,255,0.06);
+}
+
+.trace-section {
+  margin-bottom: 20px;
+}
+
+.trace-section-title {
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 1.5px;
+  color: var(--text-dim);
+  margin-bottom: 8px;
+}
+
+.trace-item {
+  padding: 8px 12px;
+  margin-bottom: 4px;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 13px;
+  color: var(--text-secondary);
+  transition: background 0.15s;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.trace-item:hover {
+  background: rgba(255,255,255,0.04);
+  color: var(--text-primary);
+}
+
+.trace-item .dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.trace-item .era-tags {
+  font-size: 10px;
+  color: var(--text-dim);
+  margin-left: auto;
+}
+
+.trace-soil {
+  background: rgba(122,184,112,0.08);
+  border: 1px solid rgba(122,184,112,0.2);
+  border-radius: 6px;
+  padding: 12px 14px;
+  margin-bottom: 16px;
+}
+
+.trace-soil-title {
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 1.5px;
+  color: #7ab870;
+  margin-bottom: 6px;
+}
+
+.trace-soil-text {
+  font-size: 13px;
+  color: var(--text-secondary);
+  line-height: 1.5;
+  font-style: italic;
+}
+
+.trace-growth-ring {
+  background: rgba(196,144,48,0.08);
+  border: 1px solid rgba(196,144,48,0.2);
+  border-radius: 6px;
+  padding: 12px 14px;
+  margin-bottom: 16px;
+}
+
+.trace-growth-ring-title {
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 1.5px;
+  color: var(--accent);
+  margin-bottom: 6px;
+}
+
+.trace-growth-ring-text {
+  font-size: 13px;
+  color: var(--text-secondary);
+  line-height: 1.5;
+  font-style: italic;
+}
+
+/* --- Legend overlay --- */
+#legend {
+  position: absolute;
+  bottom: 16px;
+  left: 16px;
+  background: rgba(32,28,24,0.92);
+  border: 1px solid rgba(255,255,255,0.08);
+  border-radius: 6px;
+  padding: 12px 16px;
+  font-size: 11px;
+  z-index: 10;
+}
+
+#legend h3 {
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 1.5px;
+  color: var(--text-dim);
+  margin-bottom: 8px;
+}
+
+.legend-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 4px;
+  color: var(--text-secondary);
+}
+
+.legend-row .swatch {
+  width: 20px;
+  height: 3px;
+  border-radius: 2px;
+}
+
+/* --- Quote bar --- */
+#quote-bar {
+  position: absolute;
+  bottom: 16px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: rgba(32,28,24,0.85);
+  border: 1px solid rgba(255,255,255,0.06);
+  border-radius: 4px;
+  padding: 8px 20px;
+  font-size: 13px;
+  color: var(--text-dim);
+  font-style: italic;
+  z-index: 10;
+  white-space: nowrap;
+}
+
+/* --- Fiber filter buttons --- */
+#fiber-filters {
+  position: absolute;
+  top: 12px;
+  left: 16px;
+  display: flex;
+  gap: 6px;
+  z-index: 10;
+  flex-wrap: wrap;
+  max-width: 500px;
+}
+
+.fiber-btn {
+  background: rgba(32,28,24,0.85);
+  border: 1px solid rgba(255,255,255,0.1);
+  border-radius: 4px;
+  color: var(--text-secondary);
+  font-size: 11px;
+  padding: 4px 10px;
+  cursor: pointer;
+  transition: all 0.15s;
+  font-family: inherit;
+}
+
+.fiber-btn:hover { background: rgba(255,255,255,0.06); }
+.fiber-btn.active { border-color: currentColor; color: var(--text-primary); }
+
+/* --- Instructions tooltip --- */
+#instructions {
+  position: absolute;
+  top: 12px;
+  right: 16px;
+  background: rgba(32,28,24,0.85);
+  border: 1px solid rgba(255,255,255,0.08);
+  border-radius: 4px;
+  padding: 8px 12px;
+  font-size: 11px;
+  color: var(--text-dim);
+  z-index: 10;
+  line-height: 1.5;
+}
+</style>
+</head>
+<body>
+<div id="app">
+  <header>
+    <h1><span>Sapiens</span> — Fiber View: Forces Through Time</h1>
+    <div class="header-links">
+      <a href="sapiens-temporal-tree.html">Tree View</a>
+      <a href="sapiens-pruning-viewer.html">Pruning Viewer</a>
+      <a href="sapiens-growth-rings.html">Growth Rings</a>
+      <a href="index.html">All Visualizations</a>
+    </div>
+  </header>
+
+  <div id="canvas-wrap">
+    <canvas id="fiber-canvas"></canvas>
+    <div id="fiber-filters"></div>
+    <div id="instructions">Click a node to trace it ↑↓</div>
+    <div id="legend">
+      <h3>Fibers (Forces)</h3>
+    </div>
+    <div id="quote-bar">The tree remembers what linear history forgot.</div>
+  </div>
+
+  <div id="trace-panel">
+    <div class="trace-empty">
+      Select any node to trace it.<br><br>
+      <strong>↑ What supports it</strong> — ancestors, soil, prerequisites<br>
+      <strong>↓ Where it goes</strong> — children, branches, growth edge
+    </div>
+  </div>
+</div>
+
+<script>
+const canvas = document.getElementById('fiber-canvas');
+const ctx = canvas.getContext('2d');
+const wrap = document.getElementById('canvas-wrap');
+const tracePanel = document.getElementById('trace-panel');
+const quoteBar = document.getElementById('quote-bar');
+const legendEl = document.getElementById('legend');
+const filtersEl = document.getElementById('fiber-filters');
+
+const FIBER_COLORS = {
+  'fiction-engine': '#d4a040',
+  'pruning-pattern': '#c47058',
+  'scaling-traps': '#7ab870',
+  'ignorance-revolution': '#5ab4a0',
+  'energy-regimes': '#b07040',
+  'happiness-paradox': '#9070b0',
+  'information-age': '#4a9ab4'
+};
+
+const ERA_COLORS = {
+  'pre-cognitive': '#8a7560',
+  'cognitive': '#d4a040',
+  'agricultural': '#7ab870',
+  'unification': '#c49030',
+  'scientific': '#5ab4a0',
+  'industrial': '#b07040',
+  'information': '#4a9ab4'
+};
+
+const ERA_NAMES = {
+  'pre-cognitive': 'Before the Spark',
+  'cognitive': 'Cognitive Revolution',
+  'agricultural': 'Agricultural Revolution',
+  'unification': 'Unification',
+  'scientific': 'Scientific Revolution',
+  'industrial': 'Industrial Revolution',
+  'information': 'Information Age'
+};
+
+let DATA = null;
+let allNodes = [];
+let fiberNodes = {}; // fiberId -> [nodes]
+let selectedNode = null;
+let hoveredNode = null;
+let activeFibers = new Set();
+let eras = [];
+
+// --- Layout constants ---
+const MARGIN = { top: 60, right: 30, bottom: 60, left: 180 };
+const NODE_RADIUS = 6;
+const NODE_RADIUS_PRUNED = 5;
+
+// --- Time scale: logarithmic-ish to handle -2.5M to 2025 ---
+function timeToX(year, w) {
+  // Use log scale for pre-history, linear for recent
+  const minYear = -100000; // compress everything before this
+  const maxYear = 2025;
+  const usableW = w - MARGIN.left - MARGIN.right;
+
+  if (year === null) year = 2025;
+
+  // Clamp
+  const y = Math.max(-2500000, Math.min(2025, year));
+
+  // Split: 20% of width for pre-100k, 80% for -100k to 2025
+  const splitRatio = 0.15;
+  const splitX = MARGIN.left + usableW * splitRatio;
+
+  if (y < minYear) {
+    // Log scale for deep time
+    const logMin = Math.log10(2500000);
+    const logVal = Math.log10(Math.abs(y));
+    const t = logVal / logMin;
+    return MARGIN.left + (usableW * splitRatio) * t;
+  } else {
+    // Linear for recent history
+    const t = (y - minYear) / (maxYear - minYear);
+    return splitX + usableW * (1 - splitRatio) * t;
+  }
+}
+
+function fiberY(fiberIndex, totalFibers, h) {
+  const usableH = h - MARGIN.top - MARGIN.bottom;
+  const spacing = usableH / (totalFibers + 1);
+  return MARGIN.top + spacing * (fiberIndex + 1);
+}
+
+// --- Flatten tree into node list with ancestry ---
+function flattenTree(node, parent, fiber, depth) {
+  const flat = {
+    ...node,
+    parent: parent ? parent.id : null,
+    fiber: fiber,
+    depth: depth,
+    childIds: (node.children || []).map(c => c.id)
+  };
+  allNodes.push(flat);
+
+  if (depth === 1) fiber = node.id; // first-level children are fibers
+
+  if (!fiberNodes[fiber]) fiberNodes[fiber] = [];
+  if (depth >= 1) fiberNodes[fiber].push(flat);
+
+  (node.children || []).forEach(child => {
+    flattenTree(child, node, fiber, depth + 1);
+  });
+}
+
+// --- Build ancestry chain ---
+function getAncestors(nodeId) {
+  const chain = [];
+  let current = allNodes.find(n => n.id === nodeId);
+  while (current && current.parent) {
+    const parentNode = allNodes.find(n => n.id === current.parent);
+    if (parentNode) chain.push(parentNode);
+    current = parentNode;
+  }
+  return chain;
+}
+
+function getDescendants(nodeId) {
+  const node = allNodes.find(n => n.id === nodeId);
+  if (!node) return [];
+  const desc = [];
+  function walk(id) {
+    const n = allNodes.find(x => x.id === id);
+    if (!n) return;
+    (n.childIds || []).forEach(cid => {
+      const child = allNodes.find(x => x.id === cid);
+      if (child) {
+        desc.push(child);
+        walk(cid);
+      }
+    });
+  }
+  walk(nodeId);
+  return desc;
+}
+
+function getSiblings(nodeId) {
+  const node = allNodes.find(n => n.id === nodeId);
+  if (!node || !node.parent) return [];
+  return allNodes.filter(n => n.parent === node.parent && n.id !== nodeId);
+}
+
+// --- Compute node positions ---
+let nodePositions = {}; // id -> {x, y}
+
+function computePositions(w, h) {
+  nodePositions = {};
+  const fibers = Object.keys(fiberNodes);
+  const totalFibers = fibers.length;
+
+  fibers.forEach((fiberId, fi) => {
+    const baseY = fiberY(fi, totalFibers, h);
+    const nodes = fiberNodes[fiberId];
+
+    // Sort by start date
+    nodes.sort((a, b) => (a.date_range[0] || 0) - (b.date_range[0] || 0));
+
+    nodes.forEach((node, ni) => {
+      // Use midpoint of date_range for x
+      const startYear = node.date_range[0] || -2500000;
+      const endYear = node.date_range[1] || 2025;
+      const midYear = (startYear + endYear) / 2;
+      const x = timeToX(midYear, w);
+
+      // Offset children slightly from fiber line
+      let yOffset = 0;
+      if (node.depth > 2) {
+        yOffset = (node.depth - 2) * 14;
+        // Alternate above/below
+        if (ni % 2 === 0) yOffset = -yOffset;
+      }
+
+      nodePositions[node.id] = { x, y: baseY + yOffset, fiber: fiberId, fiberIndex: fi };
+    });
+  });
+}
+
+// --- Drawing ---
+function draw() {
+  const dpr = window.devicePixelRatio || 1;
+  const w = wrap.clientWidth;
+  const h = wrap.clientHeight;
+  canvas.width = w * dpr;
+  canvas.height = h * dpr;
+  canvas.style.width = w + 'px';
+  canvas.style.height = h + 'px';
+  ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+
+  computePositions(w, h);
+
+  // Clear
+  ctx.fillStyle = '#1a1612';
+  ctx.fillRect(0, 0, w, h);
+
+  // Draw era bands
+  drawEraBands(w, h);
+
+  // Draw fibers
+  const fibers = Object.keys(fiberNodes);
+  fibers.forEach((fiberId, fi) => {
+    if (activeFibers.size > 0 && !activeFibers.has(fiberId)) return;
+    drawFiber(fiberId, fi, fibers.length, w, h);
+  });
+
+  // Draw trace connections if selected
+  if (selectedNode) {
+    drawTraceLines(w, h);
+  }
+
+  // Draw nodes
+  fibers.forEach((fiberId) => {
+    if (activeFibers.size > 0 && !activeFibers.has(fiberId)) return;
+    const nodes = fiberNodes[fiberId];
+    nodes.forEach(node => {
+      drawNode(node, fiberId);
+    });
+  });
+
+  // Draw era labels on time axis
+  drawTimeAxis(w, h);
+}
+
+function drawEraBands(w, h) {
+  eras.forEach(era => {
+    const x1 = timeToX(era.range[0], w);
+    const x2 = timeToX(era.range[1], w);
+    ctx.fillStyle = ERA_COLORS[era.id] + '08';
+    ctx.fillRect(x1, MARGIN.top - 10, x2 - x1, h - MARGIN.top - MARGIN.bottom + 20);
+
+    // Era label at top
+    ctx.save();
+    ctx.fillStyle = ERA_COLORS[era.id] + '60';
+    ctx.font = '9px Georgia';
+    ctx.textAlign = 'center';
+    const cx = (x1 + x2) / 2;
+    ctx.fillText(era.name, cx, MARGIN.top - 16);
+    ctx.restore();
+  });
+}
+
+function drawFiber(fiberId, fi, total, w, h) {
+  const baseY = fiberY(fi, total, h);
+  const color = FIBER_COLORS[fiberId] || '#888';
+  const nodes = fiberNodes[fiberId];
+  if (!nodes.length) return;
+
+  // Find earliest and latest x
+  const positions = nodes.map(n => nodePositions[n.id]).filter(Boolean);
+  if (!positions.length) return;
+
+  const minX = Math.min(...positions.map(p => p.x));
+  const maxX = Math.max(...positions.map(p => p.x));
+
+  // Draw fiber line
+  const dimmed = activeFibers.size > 0 && !activeFibers.has(fiberId);
+  ctx.beginPath();
+  ctx.moveTo(minX - 20, baseY);
+  ctx.lineTo(maxX + 20, baseY);
+  ctx.strokeStyle = color + (dimmed ? '20' : '40');
+  ctx.lineWidth = 2;
+  ctx.stroke();
+
+  // Fiber label on left
+  ctx.save();
+  ctx.fillStyle = color + (dimmed ? '40' : 'cc');
+  ctx.font = '11px Georgia';
+  ctx.textAlign = 'right';
+  ctx.fillText(allNodes.find(n => n.id === fiberId)?.name || fiberId, MARGIN.left - 12, baseY + 4);
+  ctx.restore();
+}
+
+function drawNode(node, fiberId) {
+  const pos = nodePositions[node.id];
+  if (!pos) return;
+
+  const color = FIBER_COLORS[fiberId] || '#888';
+  const isPruned = node.type === 'pruned';
+  const isCanopy = node.type === 'canopy';
+  const isSelected = selectedNode && selectedNode.id === node.id;
+  const isHovered = hoveredNode && hoveredNode.id === node.id;
+  const isInTrace = selectedNode && (
+    getAncestors(selectedNode.id).some(a => a.id === node.id) ||
+    getDescendants(selectedNode.id).some(d => d.id === node.id) ||
+    node.id === selectedNode.id
+  );
+
+  let r = isPruned ? NODE_RADIUS_PRUNED : NODE_RADIUS;
+  if (isSelected || isHovered) r += 2;
+
+  // Dim nodes not in active fibers
+  let alpha = 1;
+  if (activeFibers.size > 0 && !activeFibers.has(fiberId)) alpha = 0.15;
+  if (selectedNode && !isInTrace && !isSelected) alpha = Math.min(alpha, 0.3);
+
+  ctx.save();
+  ctx.globalAlpha = alpha;
+
+  // Node circle
+  ctx.beginPath();
+  ctx.arc(pos.x, pos.y, r, 0, Math.PI * 2);
+
+  if (isPruned) {
+    ctx.fillStyle = '#1a1612';
+    ctx.fill();
+    ctx.strokeStyle = color;
+    ctx.lineWidth = 1.5;
+    ctx.setLineDash([2, 2]);
+    ctx.stroke();
+    ctx.setLineDash([]);
+  } else if (isCanopy) {
+    ctx.fillStyle = color;
+    ctx.fill();
+    // Pulse ring
+    ctx.beginPath();
+    ctx.arc(pos.x, pos.y, r + 4, 0, Math.PI * 2);
+    ctx.strokeStyle = color + '40';
+    ctx.lineWidth = 1;
+    ctx.stroke();
+  } else {
+    ctx.fillStyle = color;
+    ctx.fill();
+  }
+
+  // Growth ring indicator
+  if (node.growth_ring) {
+    ctx.beginPath();
+    ctx.arc(pos.x, pos.y, r + 3, 0, Math.PI * 2);
+    ctx.strokeStyle = '#c49030' + '80';
+    ctx.lineWidth = 1;
+    ctx.setLineDash([3, 3]);
+    ctx.stroke();
+    ctx.setLineDash([]);
+  }
+
+  // Selection ring
+  if (isSelected) {
+    ctx.beginPath();
+    ctx.arc(pos.x, pos.y, r + 6, 0, Math.PI * 2);
+    ctx.strokeStyle = '#fff';
+    ctx.lineWidth = 1.5;
+    ctx.stroke();
+  }
+
+  // Node name
+  if (isSelected || isHovered || r > 5) {
+    ctx.fillStyle = isSelected || isHovered ? '#e8e0d4' : '#a09888';
+    ctx.font = (isSelected || isHovered) ? 'bold 11px Georgia' : '10px Georgia';
+    ctx.textAlign = 'center';
+    ctx.fillText(node.name, pos.x, pos.y - r - 6);
+  }
+
+  ctx.restore();
+}
+
+function drawTraceLines(w, h) {
+  if (!selectedNode) return;
+
+  const ancestors = getAncestors(selectedNode.id);
+  const descendants = getDescendants(selectedNode.id);
+  const selectedPos = nodePositions[selectedNode.id];
+  if (!selectedPos) return;
+
+  // Draw lines to ancestors (below = supporting)
+  ancestors.forEach(anc => {
+    const ancPos = nodePositions[anc.id];
+    if (!ancPos) return;
+    ctx.beginPath();
+    ctx.moveTo(selectedPos.x, selectedPos.y);
+    ctx.lineTo(ancPos.x, ancPos.y);
+    ctx.strokeStyle = 'rgba(196,144,48,0.25)';
+    ctx.lineWidth = 1;
+    ctx.setLineDash([4, 4]);
+    ctx.stroke();
+    ctx.setLineDash([]);
+  });
+
+  // Draw lines to descendants (above = branching out)
+  descendants.forEach(desc => {
+    const descPos = nodePositions[desc.id];
+    if (!descPos) return;
+    ctx.beginPath();
+    ctx.moveTo(selectedPos.x, selectedPos.y);
+    ctx.lineTo(descPos.x, descPos.y);
+    ctx.strokeStyle = 'rgba(90,180,160,0.25)';
+    ctx.lineWidth = 1;
+    ctx.setLineDash([4, 4]);
+    ctx.stroke();
+    ctx.setLineDash([]);
+  });
+}
+
+function drawTimeAxis(w, h) {
+  const y = h - MARGIN.bottom + 30;
+  ctx.save();
+  ctx.fillStyle = '#504840';
+  ctx.font = '10px Georgia';
+  ctx.textAlign = 'center';
+
+  const markers = [
+    [-2500000, '2.5M BCE'],
+    [-500000, '500K BCE'],
+    [-100000, '100K BCE'],
+    [-70000, '70K BCE'],
+    [-12000, '12K BCE'],
+    [-5000, '5K BCE'],
+    [0, '0'],
+    [1500, '1500'],
+    [1800, '1800'],
+    [1945, '1945'],
+    [2025, 'Now']
+  ];
+
+  markers.forEach(([year, label]) => {
+    const x = timeToX(year, w);
+    ctx.fillText(label, x, y);
+
+    // Tick mark
+    ctx.beginPath();
+    ctx.moveTo(x, y - 14);
+    ctx.lineTo(x, y - 8);
+    ctx.strokeStyle = '#403830';
+    ctx.lineWidth = 1;
+    ctx.stroke();
+  });
+
+  ctx.restore();
+}
+
+// --- Interaction ---
+function getNodeAt(mx, my) {
+  let closest = null;
+  let closestDist = Infinity;
+
+  allNodes.forEach(node => {
+    if (node.depth === 0) return; // skip root
+    const pos = nodePositions[node.id];
+    if (!pos) return;
+    if (activeFibers.size > 0 && !activeFibers.has(pos.fiber)) return;
+    const dx = mx - pos.x;
+    const dy = my - pos.y;
+    const dist = Math.sqrt(dx * dx + dy * dy);
+    if (dist < 20 && dist < closestDist) {
+      closest = node;
+      closestDist = dist;
+    }
+  });
+
+  return closest;
+}
+
+canvas.addEventListener('pointermove', (e) => {
+  const rect = canvas.getBoundingClientRect();
+  const mx = e.clientX - rect.left;
+  const my = e.clientY - rect.top;
+  const node = getNodeAt(mx, my);
+
+  if (node !== hoveredNode) {
+    hoveredNode = node;
+    canvas.style.cursor = node ? 'pointer' : 'default';
+    draw();
+  }
+});
+
+canvas.addEventListener('pointerdown', (e) => {
+  const rect = canvas.getBoundingClientRect();
+  const mx = e.clientX - rect.left;
+  const my = e.clientY - rect.top;
+  const node = getNodeAt(mx, my);
+
+  if (node) {
+    selectedNode = node;
+    renderTracePanel(node);
+    updateQuoteBar(node);
+    draw();
+  }
+});
+
+function updateQuoteBar(node) {
+  if (node.soil_contribution) {
+    quoteBar.textContent = node.soil_contribution;
+  } else if (node.growth_ring) {
+    quoteBar.textContent = node.growth_ring;
+  } else if (node.label) {
+    quoteBar.textContent = node.label;
+  } else {
+    quoteBar.textContent = 'The tree remembers what linear history forgot.';
+  }
+}
+
+// --- Trace Panel Rendering ---
+function renderTracePanel(node) {
+  const ancestors = getAncestors(node.id).reverse(); // root first
+  const descendants = getDescendants(node.id);
+  const siblings = getSiblings(node.id);
+  const fiberColor = FIBER_COLORS[node.fiber] || '#888';
+
+  const eraLabels = (node.eras || []).map(e => ERA_NAMES[e] || e).join(' → ');
+  const dateStr = formatDateRange(node.date_range);
+
+  let html = '';
+
+  // Node header
+  html += `<div class="trace-node-name">${node.name}</div>`;
+  html += `<div class="trace-node-type" style="background:${fiberColor}20; color:${fiberColor}">${node.type}</div>`;
+  html += `<div class="trace-node-era">${dateStr} · ${eraLabels}</div>`;
+  html += `<div class="trace-node-label">${node.label}</div>`;
+
+  // Growth ring
+  if (node.growth_ring) {
+    html += `<div class="trace-growth-ring">`;
+    html += `<div class="trace-growth-ring-title">Growth Ring</div>`;
+    html += `<div class="trace-growth-ring-text">${node.growth_ring}</div>`;
+    html += `</div>`;
+  }
+
+  // Soil contribution (pruned)
+  if (node.soil_contribution) {
+    html += `<div class="trace-soil">`;
+    html += `<div class="trace-soil-title">Soil Contribution</div>`;
+    html += `<div class="trace-soil-text">${node.soil_contribution}</div>`;
+    html += `</div>`;
+    if (node.prune_reason) {
+      html += `<div style="font-size:12px; color:#706858; margin-bottom:16px;"><strong>Pruned:</strong> ${node.prune_reason}</div>`;
+    }
+  }
+
+  // ↑ What supports this (ancestors)
+  if (ancestors.length > 0) {
+    html += `<div class="trace-section">`;
+    html += `<div class="trace-section-title">↑ What supports this</div>`;
+    ancestors.forEach(anc => {
+      const aColor = FIBER_COLORS[anc.fiber || anc.id] || fiberColor;
+      const aEras = (anc.eras || []).slice(0, 2).join(', ');
+      html += `<div class="trace-item" data-id="${anc.id}">`;
+      html += `<span class="dot" style="background:${aColor}"></span>`;
+      html += `${anc.name}`;
+      html += `<span class="era-tags">${aEras}</span>`;
+      html += `</div>`;
+    });
+    html += `</div>`;
+  }
+
+  // ↓ Where it branches (children/descendants)
+  if (descendants.length > 0) {
+    html += `<div class="trace-section">`;
+    html += `<div class="trace-section-title">↓ Where it goes</div>`;
+    descendants.forEach(desc => {
+      const dColor = FIBER_COLORS[desc.fiber] || fiberColor;
+      const dEras = (desc.eras || []).slice(0, 2).join(', ');
+      const icon = desc.type === 'pruned' ? '◇' : desc.type === 'canopy' ? '◉' : '●';
+      html += `<div class="trace-item" data-id="${desc.id}">`;
+      html += `<span class="dot" style="background:${dColor}; ${desc.type === 'pruned' ? 'border:1px solid ' + dColor + '; background:transparent;' : ''}"></span>`;
+      html += `${desc.name}`;
+      html += `<span class="era-tags">${dEras}</span>`;
+      html += `</div>`;
+    });
+    html += `</div>`;
+  }
+
+  // ↔ Siblings (same level, same parent)
+  if (siblings.length > 0) {
+    html += `<div class="trace-section">`;
+    html += `<div class="trace-section-title">↔ Alongside it</div>`;
+    siblings.forEach(sib => {
+      const sColor = FIBER_COLORS[sib.fiber] || fiberColor;
+      html += `<div class="trace-item" data-id="${sib.id}">`;
+      html += `<span class="dot" style="background:${sColor}"></span>`;
+      html += `${sib.name}`;
+      html += `</div>`;
+    });
+    html += `</div>`;
+  }
+
+  tracePanel.innerHTML = html;
+
+  // Click handlers on trace items
+  tracePanel.querySelectorAll('.trace-item').forEach(el => {
+    el.addEventListener('click', () => {
+      const targetId = el.dataset.id;
+      const target = allNodes.find(n => n.id === targetId);
+      if (target) {
+        selectedNode = target;
+        renderTracePanel(target);
+        updateQuoteBar(target);
+        draw();
+      }
+    });
+  });
+}
+
+function formatDateRange(range) {
+  if (!range) return '';
+  const [start, end] = range;
+  const fmt = (y) => {
+    if (y === null) return 'Now →';
+    if (y < -10000) return Math.round(Math.abs(y) / 1000) + 'K BCE';
+    if (y < 0) return Math.abs(y) + ' BCE';
+    return y + ' CE';
+  };
+  return fmt(start) + ' — ' + fmt(end);
+}
+
+// --- Fiber filter buttons ---
+function buildFilters() {
+  const fibers = Object.keys(fiberNodes);
+  fibers.forEach(fiberId => {
+    const fiberNode = allNodes.find(n => n.id === fiberId);
+    const btn = document.createElement('button');
+    btn.className = 'fiber-btn active';
+    btn.textContent = fiberNode ? fiberNode.name : fiberId;
+    btn.style.borderColor = FIBER_COLORS[fiberId] || '#888';
+    btn.addEventListener('click', () => {
+      if (activeFibers.has(fiberId)) {
+        activeFibers.delete(fiberId);
+        btn.classList.remove('active');
+        btn.style.color = '';
+      } else {
+        activeFibers.add(fiberId);
+        btn.classList.add('active');
+        btn.style.color = FIBER_COLORS[fiberId];
+      }
+      // If all active or none active, show all
+      if (activeFibers.size === fibers.length || activeFibers.size === 0) {
+        activeFibers.clear();
+        filtersEl.querySelectorAll('.fiber-btn').forEach(b => {
+          b.classList.add('active');
+          b.style.color = '';
+        });
+      }
+      draw();
+    });
+    filtersEl.appendChild(btn);
+  });
+  // Start with all active
+  activeFibers.clear();
+}
+
+function buildLegend() {
+  const fibers = Object.keys(fiberNodes);
+  fibers.forEach(fiberId => {
+    const fiberNode = allNodes.find(n => n.id === fiberId);
+    const row = document.createElement('div');
+    row.className = 'legend-row';
+    row.innerHTML = `<span class="swatch" style="background:${FIBER_COLORS[fiberId]}"></span>${fiberNode ? fiberNode.name : fiberId}`;
+    legendEl.appendChild(row);
+  });
+}
+
+// --- Init ---
+async function init() {
+  try {
+    const resp = await fetch('sapiens-tree-data.json');
+    DATA = await resp.json();
+  } catch (e) {
+    tracePanel.innerHTML = '<div class="trace-empty">Failed to load data. Run from a local server.</div>';
+    return;
+  }
+
+  eras = DATA.meta.eras || [];
+  flattenTree(DATA.tree, null, 'root', 0);
+
+  buildFilters();
+  buildLegend();
+  draw();
+
+  window.addEventListener('resize', draw);
+}
+
+init();
+</script>
+</body>
+</html>

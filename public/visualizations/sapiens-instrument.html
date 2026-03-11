@@ -1,0 +1,1313 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Sapiens — The Instrument</title>
+<meta name="engineer" content="TE.ENG_Fiona" />
+<meta name="purpose" content="Branch A: The Instrument — pluck fibers (pattern tags), watch resonance ripple through the tree, pivot between patterns" />
+<style>
+:root {
+  --bg-deep: #1a1612;
+  --bg-surface: #201c18;
+  --bg-elevated: #2a2520;
+  --bg-fiber-bar: #1e1a16;
+  --text-primary: #e8e0d4;
+  --text-secondary: #a09888;
+  --text-dim: #706858;
+  --accent: #c49030;
+  --accent-soft: rgba(196,144,48,0.15);
+  --gold: #c49030;
+  --gold-glow: rgba(196,144,48,0.4);
+  --teal: #5ab4a0;
+  --copper: #c47058;
+  --blue-pulse: #4a9ab4;
+  --dim-opacity: 0.15;
+  --harmonic-gold: #ffd700;
+  --focus-ring: #c49030;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  * { transition: none !important; animation: none !important; }
+}
+
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+body {
+  background: var(--bg-deep);
+  color: var(--text-primary);
+  font-family: 'Georgia', serif;
+  overflow: hidden;
+  height: 100vh;
+  width: 100vw;
+}
+
+#app {
+  display: grid;
+  grid-template-rows: auto auto 1fr auto;
+  grid-template-columns: 1fr 340px;
+  height: 100vh;
+}
+
+/* --- HEADER --- */
+header {
+  grid-column: 1 / -1;
+  grid-row: 1;
+  padding: 10px 24px;
+  background: var(--bg-surface);
+  border-bottom: 1px solid rgba(255,255,255,0.06);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+header h1 {
+  font-size: 16px;
+  font-weight: normal;
+  color: var(--text-secondary);
+  letter-spacing: 0.5px;
+}
+header h1 span { color: var(--accent); }
+.header-links {
+  display: flex;
+  gap: 16px;
+  font-size: 12px;
+}
+.header-links a {
+  color: var(--text-dim);
+  text-decoration: none;
+  transition: color 0.2s;
+}
+.header-links a:hover, .header-links a:focus-visible { color: var(--text-primary); }
+
+/* --- FIBER BAR --- */
+#fiber-bar {
+  grid-column: 1 / -1;
+  grid-row: 2;
+  background: var(--bg-fiber-bar);
+  border-bottom: 1px solid rgba(255,255,255,0.06);
+  padding: 0;
+  overflow: hidden;
+  transition: max-height 0.3s ease;
+  max-height: 120px;
+}
+#fiber-bar.collapsed { max-height: 0; border-bottom: none; }
+#fiber-bar-inner {
+  display: flex;
+  align-items: stretch;
+  gap: 0;
+  padding: 8px 16px;
+  overflow-x: auto;
+  scrollbar-width: thin;
+  scrollbar-color: var(--text-dim) transparent;
+}
+.fiber-string {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 6px 12px;
+  cursor: pointer;
+  border-radius: 4px;
+  transition: background 0.2s, transform 0.1s;
+  min-width: 90px;
+  position: relative;
+  user-select: none;
+  -webkit-user-select: none;
+}
+.fiber-string:hover { background: rgba(255,255,255,0.04); }
+.fiber-string:focus-visible {
+  outline: 2px solid var(--focus-ring);
+  outline-offset: 2px;
+}
+.fiber-string.active { background: rgba(255,255,255,0.08); }
+.fiber-string.active .fiber-line { height: 4px; box-shadow: 0 0 8px currentColor; }
+.fiber-string.muted { opacity: 0.3; }
+.fiber-line {
+  width: 100%;
+  height: 2px;
+  border-radius: 1px;
+  margin-bottom: 4px;
+  transition: height 0.2s, box-shadow 0.3s;
+}
+.fiber-name {
+  font-size: 10px;
+  letter-spacing: 0.5px;
+  color: var(--text-secondary);
+  text-align: center;
+  line-height: 1.2;
+  white-space: nowrap;
+}
+.fiber-count {
+  font-size: 9px;
+  color: var(--text-dim);
+  margin-top: 2px;
+}
+#fiber-toggle {
+  position: absolute;
+  top: 0;
+  right: 16px;
+  background: var(--bg-elevated);
+  border: 1px solid rgba(255,255,255,0.08);
+  color: var(--text-dim);
+  font-size: 10px;
+  padding: 2px 10px;
+  cursor: pointer;
+  border-radius: 0 0 4px 4px;
+  z-index: 5;
+  transition: color 0.2s;
+}
+#fiber-toggle:hover, #fiber-toggle:focus-visible { color: var(--text-primary); }
+
+/* --- CANVAS --- */
+#canvas-wrap {
+  grid-column: 1;
+  grid-row: 3;
+  position: relative;
+  overflow: hidden;
+}
+canvas {
+  display: block;
+  width: 100%;
+  height: 100%;
+  touch-action: none;
+}
+
+/* --- SIDEBAR --- */
+#sidebar {
+  grid-column: 2;
+  grid-row: 3;
+  background: var(--bg-surface);
+  border-left: 1px solid rgba(255,255,255,0.06);
+  overflow-y: auto;
+  padding: 16px;
+  scrollbar-width: thin;
+  scrollbar-color: var(--text-dim) transparent;
+}
+.sidebar-title {
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 1.5px;
+  color: var(--text-dim);
+  margin-bottom: 12px;
+  padding-bottom: 6px;
+  border-bottom: 1px solid rgba(255,255,255,0.06);
+}
+.sidebar-group {
+  margin-bottom: 16px;
+}
+.sidebar-group-title {
+  font-size: 12px;
+  color: var(--text-secondary);
+  margin-bottom: 6px;
+  font-style: italic;
+}
+.sidebar-node {
+  padding: 6px 8px;
+  margin-bottom: 2px;
+  border-radius: 3px;
+  cursor: pointer;
+  font-size: 13px;
+  color: var(--text-secondary);
+  transition: background 0.15s, color 0.15s;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.sidebar-node:hover, .sidebar-node:focus-visible {
+  background: rgba(255,255,255,0.04);
+  color: var(--text-primary);
+}
+.sidebar-node.active {
+  background: var(--accent-soft);
+  color: var(--text-primary);
+}
+.sidebar-node-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+.sidebar-node-reason {
+  font-size: 11px;
+  color: var(--text-dim);
+  padding: 2px 8px 8px 20px;
+  line-height: 1.4;
+  font-style: italic;
+}
+.sidebar-empty {
+  color: var(--text-dim);
+  font-style: italic;
+  font-size: 13px;
+  padding: 20px 0;
+  text-align: center;
+  line-height: 1.6;
+}
+
+/* --- DETAIL PANEL (overlay on sidebar) --- */
+#detail-panel {
+  display: none;
+}
+#detail-panel.visible {
+  display: block;
+}
+.detail-close {
+  float: right;
+  background: none;
+  border: 1px solid rgba(255,255,255,0.1);
+  color: var(--text-dim);
+  font-size: 14px;
+  cursor: pointer;
+  padding: 2px 8px;
+  border-radius: 3px;
+  transition: color 0.2s;
+}
+.detail-close:hover, .detail-close:focus-visible { color: var(--text-primary); }
+.detail-name {
+  font-size: 18px;
+  color: var(--text-primary);
+  margin-bottom: 4px;
+  margin-top: 4px;
+}
+.detail-type {
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 1.5px;
+  padding: 2px 8px;
+  border-radius: 3px;
+  display: inline-block;
+  margin-bottom: 6px;
+}
+.detail-date {
+  font-size: 12px;
+  color: var(--text-dim);
+  margin-bottom: 8px;
+}
+.detail-label {
+  font-size: 13px;
+  color: var(--text-secondary);
+  line-height: 1.5;
+  margin-bottom: 14px;
+  padding-bottom: 10px;
+  border-bottom: 1px solid rgba(255,255,255,0.06);
+}
+.detail-section {
+  margin-bottom: 14px;
+}
+.detail-section-title {
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 1.2px;
+  color: var(--text-dim);
+  margin-bottom: 6px;
+}
+.detail-reason {
+  font-size: 12px;
+  color: var(--text-secondary);
+  line-height: 1.5;
+  font-style: italic;
+  padding: 6px 10px;
+  background: rgba(255,255,255,0.02);
+  border-left: 2px solid var(--accent);
+  border-radius: 2px;
+  margin-bottom: 6px;
+}
+.detail-nav {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 6px;
+}
+.detail-nav-btn {
+  background: none;
+  border: 1px solid rgba(255,255,255,0.1);
+  color: var(--text-dim);
+  font-size: 11px;
+  padding: 3px 10px;
+  cursor: pointer;
+  border-radius: 3px;
+  transition: color 0.2s, border-color 0.2s;
+}
+.detail-nav-btn:hover:not(:disabled), .detail-nav-btn:focus-visible:not(:disabled) {
+  color: var(--text-primary);
+  border-color: rgba(255,255,255,0.2);
+}
+.detail-nav-btn:disabled { opacity: 0.3; cursor: default; }
+.detail-fiber-tag {
+  display: inline-block;
+  padding: 2px 8px;
+  border-radius: 10px;
+  font-size: 11px;
+  cursor: pointer;
+  margin: 2px;
+  border: 1px solid;
+  transition: transform 0.1s, box-shadow 0.2s;
+}
+.detail-fiber-tag:hover, .detail-fiber-tag:focus-visible {
+  transform: scale(1.05);
+  box-shadow: 0 0 6px currentColor;
+}
+.detail-harmonic-node {
+  padding: 4px 8px;
+  font-size: 12px;
+  color: var(--text-secondary);
+  cursor: pointer;
+  border-radius: 3px;
+  transition: background 0.15s;
+}
+.detail-harmonic-node:hover { background: rgba(255,255,255,0.04); }
+.detail-growth-ring {
+  font-size: 12px;
+  color: var(--text-dim);
+  line-height: 1.5;
+  font-style: italic;
+  padding: 6px 10px;
+  background: rgba(196,144,48,0.05);
+  border-left: 2px solid var(--gold);
+  border-radius: 2px;
+}
+
+/* --- QUOTE BAR --- */
+#quote-bar {
+  grid-column: 1 / -1;
+  grid-row: 4;
+  background: var(--bg-surface);
+  border-top: 1px solid rgba(255,255,255,0.06);
+  padding: 8px 24px;
+  font-size: 13px;
+  color: var(--text-dim);
+  font-style: italic;
+  text-align: center;
+  min-height: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+</style>
+</head>
+<body>
+<div id="app">
+  <header>
+    <h1><span>Sapiens</span> — The Instrument</h1>
+    <nav class="header-links" aria-label="View navigation">
+      <a href="sapiens-temporal-tree.html">Temporal Tree</a>
+      <a href="sapiens-microscope.html">Microscope</a>
+      <a href="sapiens-map-room.html">Map Room</a>
+      <a href="sapiens-fiber-view.html">Fiber View</a>
+      <a href="index.html">Index</a>
+    </nav>
+  </header>
+
+  <div id="fiber-bar" role="toolbar" aria-label="Fiber strings">
+    <div id="fiber-bar-inner"></div>
+  </div>
+  <button id="fiber-toggle" aria-label="Toggle fiber bar">fibers</button>
+
+  <div id="canvas-wrap">
+    <canvas id="canvas" aria-label="Sapiens tree visualization canvas"></canvas>
+  </div>
+
+  <aside id="sidebar" aria-label="Sidebar">
+    <div id="sidebar-content"></div>
+    <div id="detail-panel"></div>
+  </aside>
+
+  <div id="quote-bar" role="status" aria-live="polite">The tree remembers what linear history forgot.</div>
+</div>
+
+<script>
+(function() {
+  'use strict';
+
+  // ---------- STATE ----------
+  let DATA = null;
+  let allNodes = [];
+  let nodeMap = {};
+  let fiberIndex = {}; // tag -> [node ids]
+  let activeFibers = []; // currently plucked fiber tags (max 2)
+  let selectedNodeId = null;
+  let hoveredFiberId = null;
+  let hoveredNodeId = null;
+  let canvasNodes = []; // {id, x, y, r, node}
+  let animFrame = null;
+  let pluckAnim = { active: false, fiber: null, t: 0 };
+  const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+  // ---------- FETCH DATA ----------
+  fetch('sapiens-tree-data.json')
+    .then(r => r.json())
+    .then(data => { DATA = data; init(); })
+    .catch(e => { document.getElementById('quote-bar').textContent = 'Failed to load data: ' + e.message; });
+
+  function init() {
+    flattenTree(DATA.tree, null, 0);
+    buildFiberIndex();
+    buildFiberBar();
+    buildSidebar();
+    setupCanvas();
+    layoutNodes();
+    render();
+    setupEvents();
+  }
+
+  // ---------- FLATTEN TREE ----------
+  function flattenTree(node, parentId, depth) {
+    const n = { ...node, parentId, depth, childIds: [] };
+    delete n.children;
+    allNodes.push(n);
+    nodeMap[n.id] = n;
+    if (parentId && nodeMap[parentId]) {
+      nodeMap[parentId].childIds.push(n.id);
+    }
+    if (node.children) {
+      for (const c of node.children) {
+        flattenTree(c, node.id, depth + 1);
+      }
+    }
+  }
+
+  // ---------- FIBER INDEX ----------
+  function buildFiberIndex() {
+    fiberIndex = {};
+    for (const v of DATA.pattern_tag_vocabulary) {
+      fiberIndex[v.tag] = [];
+    }
+    for (const n of allNodes) {
+      if (n.pattern_tags) {
+        for (const pt of n.pattern_tags) {
+          if (!fiberIndex[pt.tag]) fiberIndex[pt.tag] = [];
+          fiberIndex[pt.tag].push(n.id);
+        }
+      }
+    }
+  }
+
+  // ---------- FIBER BAR ----------
+  function buildFiberBar() {
+    const bar = document.getElementById('fiber-bar-inner');
+    bar.innerHTML = '';
+    for (const v of DATA.pattern_tag_vocabulary) {
+      const count = (fiberIndex[v.tag] || []).length;
+      const el = document.createElement('div');
+      el.className = 'fiber-string';
+      el.setAttribute('role', 'button');
+      el.setAttribute('tabindex', '0');
+      el.setAttribute('aria-label', v.tag.replace(/-/g, ' ') + ', ' + count + ' nodes');
+      el.setAttribute('data-tag', v.tag);
+      el.innerHTML = `
+        <div class="fiber-line" style="background:${v.color}; color:${v.color}"></div>
+        <div class="fiber-name">${v.tag.replace(/-/g, ' ')}</div>
+        <div class="fiber-count">${count}</div>
+      `;
+      el.addEventListener('click', e => handleFiberClick(v.tag, e));
+      el.addEventListener('keydown', e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); handleFiberClick(v.tag, e); }});
+      el.addEventListener('mouseenter', () => { hoveredFiberId = v.tag; render(); });
+      el.addEventListener('mouseleave', () => { hoveredFiberId = null; render(); });
+      bar.appendChild(el);
+    }
+  }
+
+  function handleFiberClick(tag, e) {
+    if (e.shiftKey && activeFibers.length === 1 && activeFibers[0] !== tag) {
+      // Dual resonance
+      activeFibers.push(tag);
+    } else if (activeFibers.includes(tag)) {
+      // Mute
+      activeFibers = activeFibers.filter(t => t !== tag);
+    } else {
+      // Pluck new
+      activeFibers = [tag];
+      triggerPluckAnim(tag);
+    }
+    selectedNodeId = null;
+    updateFiberBarState();
+    buildSidebar();
+    updateQuoteBar();
+    render();
+  }
+
+  function triggerPluckAnim(tag) {
+    if (prefersReducedMotion) return;
+    pluckAnim = { active: true, fiber: tag, t: 0 };
+  }
+
+  function updateFiberBarState() {
+    const strings = document.querySelectorAll('.fiber-string');
+    strings.forEach(el => {
+      const tag = el.getAttribute('data-tag');
+      el.classList.toggle('active', activeFibers.includes(tag));
+      el.classList.toggle('muted', activeFibers.length > 0 && !activeFibers.includes(tag));
+    });
+  }
+
+  // ---------- SIDEBAR ----------
+  function buildSidebar() {
+    const sc = document.getElementById('sidebar-content');
+    const dp = document.getElementById('detail-panel');
+
+    if (selectedNodeId) {
+      sc.style.display = 'none';
+      dp.classList.add('visible');
+      buildDetailPanel(selectedNodeId);
+      return;
+    }
+
+    dp.classList.remove('visible');
+    dp.innerHTML = '';
+    sc.style.display = 'block';
+
+    if (activeFibers.length > 0) {
+      // Fiber narrative mode
+      let html = '';
+      for (const tag of activeFibers) {
+        const vocab = DATA.pattern_tag_vocabulary.find(v => v.tag === tag);
+        const nodeIds = fiberIndex[tag] || [];
+        const nodes = nodeIds.map(id => nodeMap[id]).filter(Boolean);
+        nodes.sort((a, b) => (a.date_range?.[0] || 0) - (b.date_range?.[0] || 0));
+        html += `<div class="sidebar-title" style="border-bottom-color:${vocab.color}">${vocab.tag.replace(/-/g, ' ')}</div>`;
+        html += `<p style="font-size:12px;color:var(--text-dim);margin-bottom:12px;font-style:italic">${vocab.description}</p>`;
+        for (const n of nodes) {
+          const pt = n.pattern_tags.find(p => p.tag === tag);
+          const color = getNodeColor(n);
+          html += `<div class="sidebar-node" data-id="${n.id}" tabindex="0"><span class="sidebar-node-dot" style="background:${color}"></span>${n.name}</div>`;
+          if (pt && pt.reason) {
+            html += `<div class="sidebar-node-reason">${pt.reason}</div>`;
+          }
+        }
+        html += '<div style="height:12px"></div>';
+      }
+      sc.innerHTML = html;
+    } else {
+      // Default: group by force/trunk
+      const trunks = allNodes.filter(n => n.type === 'trunk');
+      let html = '<div class="sidebar-title">All Nodes by Force</div>';
+      // Root first
+      const root = nodeMap['sapiens-root'];
+      if (root) {
+        html += `<div class="sidebar-node" data-id="${root.id}" tabindex="0"><span class="sidebar-node-dot" style="background:var(--gold)"></span>${root.name}</div>`;
+      }
+      for (const trunk of trunks) {
+        html += `<div class="sidebar-group"><div class="sidebar-group-title">${trunk.name}</div>`;
+        const descendants = getDescendants(trunk.id);
+        const all = [trunk, ...descendants.map(id => nodeMap[id])];
+        for (const n of all) {
+          const color = getNodeColor(n);
+          html += `<div class="sidebar-node" data-id="${n.id}" tabindex="0"><span class="sidebar-node-dot" style="background:${color}"></span>${n.name}</div>`;
+        }
+        html += '</div>';
+      }
+      // Canopy nodes not under trunks
+      const canopyRoot = allNodes.filter(n => n.parentId === 'sapiens-root' && n.type === 'canopy');
+      if (canopyRoot.length) {
+        html += '<div class="sidebar-group"><div class="sidebar-group-title">Canopy</div>';
+        for (const c of canopyRoot) {
+          const descendants = getDescendants(c.id);
+          const all = [c, ...descendants.map(id => nodeMap[id])];
+          for (const n of all) {
+            const color = getNodeColor(n);
+            html += `<div class="sidebar-node" data-id="${n.id}" tabindex="0"><span class="sidebar-node-dot" style="background:${color}"></span>${n.name}</div>`;
+          }
+        }
+        html += '</div>';
+      }
+      sc.innerHTML = html;
+    }
+
+    // Attach click handlers
+    sc.querySelectorAll('.sidebar-node').forEach(el => {
+      el.addEventListener('click', () => selectNode(el.getAttribute('data-id')));
+      el.addEventListener('keydown', e => { if (e.key === 'Enter') selectNode(el.getAttribute('data-id')); });
+    });
+  }
+
+  function getDescendants(id) {
+    const node = nodeMap[id];
+    if (!node) return [];
+    let result = [];
+    for (const cid of (node.childIds || [])) {
+      result.push(cid);
+      result = result.concat(getDescendants(cid));
+    }
+    return result;
+  }
+
+  // ---------- DETAIL PANEL ----------
+  function buildDetailPanel(nodeId) {
+    const dp = document.getElementById('detail-panel');
+    const n = nodeMap[nodeId];
+    if (!n) return;
+
+    const color = getNodeColor(n);
+    const typeColor = getTypeColor(n);
+    const dateStr = formatDate(n.date_range);
+
+    let html = `<button class="detail-close" aria-label="Close detail panel">&times;</button>`;
+    html += `<div class="detail-name">${n.name}</div>`;
+    html += `<div class="detail-type" style="background:${typeColor};color:#1a1612">${n.type}</div>`;
+    html += `<div class="detail-date">${dateStr}</div>`;
+    html += `<div class="detail-label">${n.label || ''}</div>`;
+
+    // Growth ring
+    if (n.growth_ring) {
+      html += `<div class="detail-section"><div class="detail-section-title">Growth Ring</div>`;
+      html += `<div class="detail-growth-ring">${n.growth_ring}</div></div>`;
+    }
+
+    // ON THIS FIBER (if fiber active)
+    if (activeFibers.length > 0) {
+      for (const tag of activeFibers) {
+        const pt = (n.pattern_tags || []).find(p => p.tag === tag);
+        if (pt) {
+          const vocab = DATA.pattern_tag_vocabulary.find(v => v.tag === tag);
+          html += `<div class="detail-section"><div class="detail-section-title">On This Fiber: ${tag.replace(/-/g, ' ')}</div>`;
+          html += `<div class="detail-reason" style="border-left-color:${vocab.color}">${pt.reason}</div>`;
+
+          // Prev/next navigation on this fiber
+          const fiberNodes = (fiberIndex[tag] || []).map(id => nodeMap[id]).filter(Boolean);
+          fiberNodes.sort((a, b) => (a.date_range?.[0] || 0) - (b.date_range?.[0] || 0));
+          const idx = fiberNodes.findIndex(fn => fn.id === n.id);
+          const prev = idx > 0 ? fiberNodes[idx - 1] : null;
+          const next = idx < fiberNodes.length - 1 ? fiberNodes[idx + 1] : null;
+          html += `<div class="detail-nav">`;
+          html += `<button class="detail-nav-btn" ${prev ? 'data-nav="' + prev.id + '"' : 'disabled'}>${prev ? '< ' + prev.name.slice(0, 20) : '< prev'}</button>`;
+          html += `<button class="detail-nav-btn" ${next ? 'data-nav="' + next.id + '"' : 'disabled'}>${next ? next.name.slice(0, 20) + ' >' : 'next >'}</button>`;
+          html += `</div></div>`;
+        }
+      }
+    }
+
+    // HARMONIC CONNECTIONS
+    const harmonics = getHarmonicNodes(n);
+    if (harmonics.length > 0) {
+      html += `<div class="detail-section"><div class="detail-section-title">Harmonic Connections</div>`;
+      for (const h of harmonics.slice(0, 10)) {
+        const hn = nodeMap[h.id];
+        html += `<div class="detail-harmonic-node" data-id="${h.id}" tabindex="0">${hn.name} <span style="color:var(--text-dim);font-size:10px">(${h.shared} shared)</span></div>`;
+      }
+      html += `</div>`;
+    }
+
+    // ALL FIBERS ON THIS NODE (pivot points)
+    if (n.pattern_tags && n.pattern_tags.length > 0) {
+      html += `<div class="detail-section"><div class="detail-section-title">All Fibers on This Node</div><div>`;
+      for (const pt of n.pattern_tags) {
+        const vocab = DATA.pattern_tag_vocabulary.find(v => v.tag === pt.tag);
+        const isActive = activeFibers.includes(pt.tag);
+        html += `<span class="detail-fiber-tag" data-pivot="${pt.tag}" tabindex="0" style="color:${vocab.color};border-color:${vocab.color};${isActive ? 'background:rgba(255,255,255,0.08)' : ''}" role="button" aria-label="Pivot to ${pt.tag.replace(/-/g,' ')}">${pt.tag.replace(/-/g, ' ')}</span>`;
+      }
+      html += `</div></div>`;
+    }
+
+    // Prune info
+    if (n.prune_reason) {
+      html += `<div class="detail-section"><div class="detail-section-title">Prune Reason</div><div style="font-size:12px;color:var(--copper)">${n.prune_reason}</div></div>`;
+    }
+    if (n.soil_contribution) {
+      html += `<div class="detail-section"><div class="detail-section-title">Soil Contribution</div><div style="font-size:12px;color:var(--text-dim);font-style:italic">${n.soil_contribution}</div></div>`;
+    }
+
+    dp.innerHTML = html;
+
+    // Event handlers
+    dp.querySelector('.detail-close').addEventListener('click', () => { selectedNodeId = null; buildSidebar(); updateQuoteBar(); render(); });
+    dp.querySelectorAll('[data-nav]').forEach(btn => {
+      btn.addEventListener('click', () => selectNode(btn.getAttribute('data-nav')));
+    });
+    dp.querySelectorAll('[data-pivot]').forEach(el => {
+      el.addEventListener('click', () => pivotToFiber(el.getAttribute('data-pivot')));
+      el.addEventListener('keydown', e => { if (e.key === 'Enter') pivotToFiber(el.getAttribute('data-pivot')); });
+    });
+    dp.querySelectorAll('.detail-harmonic-node').forEach(el => {
+      el.addEventListener('click', () => selectNode(el.getAttribute('data-id')));
+    });
+  }
+
+  function pivotToFiber(tag) {
+    activeFibers = [tag];
+    triggerPluckAnim(tag);
+    updateFiberBarState();
+    buildSidebar();
+    updateQuoteBar();
+    render();
+  }
+
+  function selectNode(id) {
+    selectedNodeId = id;
+    buildSidebar();
+    updateQuoteBar();
+    render();
+  }
+
+  // ---------- HARMONIC ----------
+  function getHarmonicNodes(node) {
+    const myTags = new Set((node.pattern_tags || []).map(p => p.tag));
+    if (myTags.size === 0) return [];
+    const results = [];
+    for (const n of allNodes) {
+      if (n.id === node.id) continue;
+      const nTags = new Set((n.pattern_tags || []).map(p => p.tag));
+      let shared = 0;
+      for (const t of myTags) { if (nTags.has(t)) shared++; }
+      if (shared > 0) results.push({ id: n.id, shared });
+    }
+    results.sort((a, b) => b.shared - a.shared);
+    return results;
+  }
+
+  function getHarmonicStrength(node) {
+    if (activeFibers.length === 0) return 0;
+    const nodeTags = new Set((node.pattern_tags || []).map(p => p.tag));
+    // Get all resonating node IDs
+    const resonatingIds = new Set();
+    for (const tag of activeFibers) {
+      for (const id of (fiberIndex[tag] || [])) resonatingIds.add(id);
+    }
+    if (resonatingIds.has(node.id)) return -1; // directly on fiber
+    // Check shared tags with resonating nodes
+    let maxShared = 0;
+    let maxPossible = 1;
+    for (const rid of resonatingIds) {
+      const rn = nodeMap[rid];
+      const rTags = new Set((rn.pattern_tags || []).map(p => p.tag));
+      let shared = 0;
+      for (const t of nodeTags) { if (rTags.has(t)) shared++; }
+      if (shared > maxShared) maxShared = shared;
+      if (rTags.size > maxPossible) maxPossible = rTags.size;
+    }
+    return maxShared / Math.max(maxPossible, 1);
+  }
+
+  // ---------- QUOTE BAR ----------
+  function updateQuoteBar() {
+    const qb = document.getElementById('quote-bar');
+    if (activeFibers.length > 0 && selectedNodeId) {
+      const n = nodeMap[selectedNodeId];
+      const pt = (n.pattern_tags || []).find(p => activeFibers.includes(p.tag));
+      if (pt) {
+        qb.textContent = pt.reason;
+        return;
+      }
+    }
+    if (activeFibers.length > 0) {
+      const descriptions = activeFibers.map(tag => {
+        const vocab = DATA.pattern_tag_vocabulary.find(v => v.tag === tag);
+        const count = (fiberIndex[tag] || []).length;
+        return `${vocab.tag.replace(/-/g, ' ')}: ${vocab.description} (${count} nodes)`;
+      });
+      qb.textContent = descriptions.join(' | ');
+      return;
+    }
+    qb.textContent = 'The tree remembers what linear history forgot.';
+  }
+
+  // ---------- CANVAS SETUP ----------
+  const canvas = document.getElementById('canvas');
+  const ctx = canvas.getContext('2d');
+  let W = 0, H = 0;
+
+  function setupCanvas() {
+    const wrap = document.getElementById('canvas-wrap');
+    const dpr = window.devicePixelRatio || 1;
+    W = wrap.clientWidth;
+    H = wrap.clientHeight;
+    canvas.width = W * dpr;
+    canvas.height = H * dpr;
+    canvas.style.width = W + 'px';
+    canvas.style.height = H + 'px';
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  }
+
+  window.addEventListener('resize', () => {
+    setupCanvas();
+    layoutNodes();
+    render();
+  });
+
+  // ---------- LAYOUT ----------
+  function timeToX(year) {
+    // Logarithmic for deep past, linear for recent
+    const padL = 60, padR = 30;
+    const usable = W - padL - padR;
+    const minYear = -2500000;
+    const maxYear = 2025;
+    // Use log scale: map to 0..1
+    // Shift everything positive first
+    const shift = -minYear + 1;
+    const logMin = Math.log10(shift);
+    const logMax = Math.log10(maxYear + shift);
+    const logVal = Math.log10(Math.max(1, (year || minYear) + shift));
+    const t = (logVal - logMin) / (logMax - logMin);
+    return padL + t * usable;
+  }
+
+  function typeToY(node) {
+    const padT = 30, padB = 30;
+    const usable = H - padT - padB;
+    // Y lanes by force/type
+    const forceMap = {
+      'fiction-engine': 0,
+      'pruning-pattern': 1,
+      'scaling-traps': 2,
+      'ignorance-revolution': 3,
+      'energy-regimes': 4,
+      'happiness-paradox': 5
+    };
+    // Find which force this node belongs to
+    let force = node.force;
+    if (!force) {
+      let cur = node;
+      while (cur && !cur.force && cur.parentId) {
+        cur = nodeMap[cur.parentId];
+      }
+      force = cur ? cur.force : null;
+    }
+    // Root goes center
+    if (node.type === 'root') return padT + usable * 0.5;
+    // Canopy at top-level
+    if (!force && node.type === 'canopy') {
+      const idx = allNodes.filter(n => n.parentId === 'sapiens-root' && n.type === 'canopy').indexOf(node);
+      return padT + usable * 0.85 + idx * 20;
+    }
+    const laneCount = 6;
+    const laneIdx = forceMap[force] !== undefined ? forceMap[force] : 3;
+    const laneH = usable / laneCount;
+    const baseY = padT + laneIdx * laneH + laneH * 0.5;
+    // Offset by depth within lane
+    const depthOffset = (node.depth - 1) * 6;
+    // Small jitter by id hash to avoid overlap
+    const jitter = (hashStr(node.id) % 20) - 10;
+    return baseY + depthOffset + jitter;
+  }
+
+  function hashStr(s) {
+    let h = 0;
+    for (let i = 0; i < s.length; i++) h = ((h << 5) - h + s.charCodeAt(i)) | 0;
+    return Math.abs(h);
+  }
+
+  function nodeRadius(node) {
+    if (node.type === 'root') return 10;
+    if (node.type === 'trunk') return 7;
+    if (node.type === 'event-horizon') return 6;
+    if (node.type === 'canopy') return 5;
+    if (node.type === 'pruned') return 4;
+    return 5;
+  }
+
+  function layoutNodes() {
+    canvasNodes = [];
+    for (const n of allNodes) {
+      const x = timeToX(n.date_range ? n.date_range[0] : 0);
+      const y = typeToY(n);
+      const r = nodeRadius(n);
+      canvasNodes.push({ id: n.id, x, y, r, node: n });
+    }
+  }
+
+  // ---------- COLORS ----------
+  function getNodeColor(n) {
+    switch (n.type) {
+      case 'root': return '#c49030';
+      case 'trunk': return '#c49030';
+      case 'branch': return '#5ab4a0';
+      case 'pruned': return '#c47058';
+      case 'canopy': return '#4a9ab4';
+      case 'event-horizon': return '#e8e0d4';
+      default: return '#a09888';
+    }
+  }
+
+  function getTypeColor(n) {
+    switch (n.type) {
+      case 'root': return '#c49030';
+      case 'trunk': return '#c49030';
+      case 'branch': return '#5ab4a0';
+      case 'pruned': return '#c47058';
+      case 'canopy': return '#4a9ab4';
+      case 'event-horizon': return '#e8e0d4';
+      default: return '#a09888';
+    }
+  }
+
+  // ---------- RENDER ----------
+  function render() {
+    ctx.clearRect(0, 0, W, H);
+    drawEraBands();
+    drawParentLines();
+
+    if (activeFibers.length > 0) {
+      drawFiberLines();
+    }
+    if (hoveredFiberId && !activeFibers.includes(hoveredFiberId)) {
+      drawFiberPreview(hoveredFiberId);
+    }
+
+    drawNodes();
+
+    if (pluckAnim.active) {
+      drawPluckAnimation();
+    }
+  }
+
+  function drawEraBands() {
+    if (!DATA.meta.eras) return;
+    ctx.save();
+    ctx.globalAlpha = 0.06;
+    for (const era of DATA.meta.eras) {
+      const x1 = timeToX(era.range[0]);
+      const x2 = timeToX(era.range[1] || 2025);
+      ctx.fillStyle = era.color;
+      ctx.fillRect(x1, 0, x2 - x1, H);
+      // Era label
+      ctx.globalAlpha = 0.15;
+      ctx.font = '9px Georgia';
+      ctx.fillStyle = era.color;
+      ctx.textAlign = 'center';
+      ctx.fillText(era.name, (x1 + x2) / 2, 14);
+      ctx.globalAlpha = 0.06;
+    }
+    ctx.restore();
+  }
+
+  function drawParentLines() {
+    ctx.save();
+    ctx.globalAlpha = 0.1;
+    ctx.strokeStyle = '#a09888';
+    ctx.lineWidth = 0.5;
+    for (const cn of canvasNodes) {
+      if (cn.node.parentId) {
+        const parent = canvasNodes.find(c => c.id === cn.node.parentId);
+        if (parent) {
+          ctx.beginPath();
+          ctx.moveTo(parent.x, parent.y);
+          ctx.lineTo(cn.x, cn.y);
+          ctx.stroke();
+        }
+      }
+    }
+    ctx.restore();
+  }
+
+  function drawFiberLines() {
+    for (const tag of activeFibers) {
+      const vocab = DATA.pattern_tag_vocabulary.find(v => v.tag === tag);
+      const nodeIds = fiberIndex[tag] || [];
+      const pts = nodeIds.map(id => canvasNodes.find(c => c.id === id)).filter(Boolean);
+      pts.sort((a, b) => a.x - b.x);
+
+      if (pts.length < 2) continue;
+
+      ctx.save();
+      ctx.strokeStyle = vocab.color;
+      ctx.globalAlpha = 0.4;
+      ctx.lineWidth = 1.5;
+      ctx.setLineDash([6, 4]);
+
+      // Draw curved connections
+      for (let i = 0; i < pts.length - 1; i++) {
+        const a = pts[i], b = pts[i + 1];
+        const cpx = (a.x + b.x) / 2;
+        const cpy = Math.min(a.y, b.y) - 20 - Math.abs(b.x - a.x) * 0.05;
+        ctx.beginPath();
+        ctx.moveTo(a.x, a.y);
+        ctx.quadraticCurveTo(cpx, cpy, b.x, b.y);
+        ctx.stroke();
+      }
+      ctx.setLineDash([]);
+      ctx.restore();
+    }
+  }
+
+  function drawFiberPreview(tag) {
+    const vocab = DATA.pattern_tag_vocabulary.find(v => v.tag === tag);
+    const nodeIds = fiberIndex[tag] || [];
+    const pts = nodeIds.map(id => canvasNodes.find(c => c.id === id)).filter(Boolean);
+    pts.sort((a, b) => a.x - b.x);
+
+    if (pts.length < 2) return;
+
+    ctx.save();
+    ctx.strokeStyle = vocab.color;
+    ctx.globalAlpha = 0.15;
+    ctx.lineWidth = 1;
+    ctx.setLineDash([4, 6]);
+    for (let i = 0; i < pts.length - 1; i++) {
+      const a = pts[i], b = pts[i + 1];
+      const cpx = (a.x + b.x) / 2;
+      const cpy = Math.min(a.y, b.y) - 15 - Math.abs(b.x - a.x) * 0.04;
+      ctx.beginPath();
+      ctx.moveTo(a.x, a.y);
+      ctx.quadraticCurveTo(cpx, cpy, b.x, b.y);
+      ctx.stroke();
+    }
+    ctx.setLineDash([]);
+    ctx.restore();
+
+    // Faint glow on fiber nodes
+    for (const pt of pts) {
+      ctx.save();
+      ctx.globalAlpha = 0.2;
+      ctx.fillStyle = vocab.color;
+      ctx.beginPath();
+      ctx.arc(pt.x, pt.y, pt.r + 3, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.restore();
+    }
+  }
+
+  function drawNodes() {
+    const isResonating = activeFibers.length > 0;
+    // Build resonating set
+    const resonatingSet = new Set();
+    if (isResonating) {
+      for (const tag of activeFibers) {
+        for (const id of (fiberIndex[tag] || [])) resonatingSet.add(id);
+      }
+    }
+    // Dual resonance intersection
+    let intersectionSet = null;
+    if (activeFibers.length === 2) {
+      const set1 = new Set(fiberIndex[activeFibers[0]] || []);
+      const set2 = new Set(fiberIndex[activeFibers[1]] || []);
+      intersectionSet = new Set();
+      for (const id of set1) { if (set2.has(id)) intersectionSet.add(id); }
+    }
+
+    for (const cn of canvasNodes) {
+      const n = cn.node;
+      const color = getNodeColor(n);
+      const onFiber = resonatingSet.has(cn.id);
+      const inIntersection = intersectionSet && intersectionSet.has(cn.id);
+      const harmonic = isResonating && !onFiber ? getHarmonicStrength(n) : 0;
+      const isSelected = cn.id === selectedNodeId;
+      const isHovered = cn.id === hoveredNodeId;
+
+      ctx.save();
+
+      // Determine opacity
+      if (isResonating) {
+        if (onFiber) {
+          ctx.globalAlpha = 1;
+        } else if (harmonic > 0) {
+          ctx.globalAlpha = 0.3 + harmonic * 0.5;
+        } else {
+          ctx.globalAlpha = 0.15;
+        }
+      } else {
+        ctx.globalAlpha = 0.85;
+      }
+
+      // Glow for resonating/selected
+      if (onFiber || isSelected || isHovered) {
+        ctx.globalAlpha = 1;
+        const glowColor = inIntersection ? '#ffd700' : color;
+        ctx.shadowColor = glowColor;
+        ctx.shadowBlur = onFiber ? 12 : 8;
+      }
+
+      // Harmonic secondary glow
+      if (harmonic > 0 && !onFiber) {
+        ctx.shadowColor = '#ffd700';
+        ctx.shadowBlur = harmonic * 8;
+      }
+
+      // Draw node shape
+      ctx.fillStyle = inIntersection ? '#ffd700' : color;
+      ctx.strokeStyle = color;
+      ctx.lineWidth = 1;
+
+      if (n.type === 'event-horizon') {
+        // Sharp-edged diamond
+        const s = cn.r + 1;
+        ctx.beginPath();
+        ctx.moveTo(cn.x, cn.y - s);
+        ctx.lineTo(cn.x + s, cn.y);
+        ctx.lineTo(cn.x, cn.y + s);
+        ctx.lineTo(cn.x - s, cn.y);
+        ctx.closePath();
+        ctx.fill();
+        ctx.stroke();
+      } else if (n.type === 'pruned') {
+        // Dashed circle
+        ctx.beginPath();
+        ctx.arc(cn.x, cn.y, cn.r, 0, Math.PI * 2);
+        ctx.setLineDash([2, 2]);
+        ctx.stroke();
+        ctx.setLineDash([]);
+        ctx.globalAlpha *= 0.7;
+        ctx.fill();
+      } else if (n.type === 'canopy') {
+        // Pulsing circle
+        const pulseR = isResonating && onFiber ? cn.r + 2 : cn.r;
+        ctx.beginPath();
+        ctx.arc(cn.x, cn.y, pulseR, 0, Math.PI * 2);
+        ctx.fill();
+      } else {
+        ctx.beginPath();
+        ctx.arc(cn.x, cn.y, cn.r, 0, Math.PI * 2);
+        ctx.fill();
+      }
+
+      // Selection ring
+      if (isSelected) {
+        ctx.setLineDash([]);
+        ctx.strokeStyle = '#fff';
+        ctx.lineWidth = 2;
+        ctx.beginPath();
+        ctx.arc(cn.x, cn.y, cn.r + 3, 0, Math.PI * 2);
+        ctx.stroke();
+      }
+
+      ctx.restore();
+
+      // Label (only show for trunk+ or when resonating)
+      const showLabel = n.type === 'root' || n.type === 'trunk' || isSelected || isHovered ||
+                        (onFiber && activeFibers.length > 0);
+      if (showLabel) {
+        ctx.save();
+        ctx.font = n.type === 'root' ? '12px Georgia' : '10px Georgia';
+        ctx.fillStyle = isResonating && !onFiber && !isSelected ? 'rgba(232,224,212,0.15)' : 'rgba(232,224,212,0.8)';
+        ctx.textAlign = 'left';
+        ctx.textBaseline = 'middle';
+        const labelX = cn.x + cn.r + 5;
+        const text = n.name.length > 28 ? n.name.slice(0, 26) + '...' : n.name;
+        ctx.fillText(text, labelX, cn.y);
+        ctx.restore();
+      }
+    }
+  }
+
+  function drawPluckAnimation() {
+    if (!pluckAnim.active) return;
+    const tag = pluckAnim.fiber;
+    const vocab = DATA.pattern_tag_vocabulary.find(v => v.tag === tag);
+    const nodeIds = fiberIndex[tag] || [];
+    const pts = nodeIds.map(id => canvasNodes.find(c => c.id === id)).filter(Boolean);
+    pts.sort((a, b) => a.x - b.x);
+
+    if (pts.length < 2) { pluckAnim.active = false; return; }
+
+    const progress = pluckAnim.t;
+    const totalLen = pts.length - 1;
+    const currentSeg = Math.min(Math.floor(progress * totalLen), totalLen - 1);
+    const segProgress = (progress * totalLen) - currentSeg;
+
+    ctx.save();
+    ctx.strokeStyle = vocab.color;
+    ctx.globalAlpha = 0.8;
+    ctx.lineWidth = 2.5;
+    ctx.shadowColor = vocab.color;
+    ctx.shadowBlur = 10;
+
+    for (let i = 0; i <= currentSeg && i < pts.length - 1; i++) {
+      const a = pts[i], b = pts[i + 1];
+      const cpx = (a.x + b.x) / 2;
+      const cpy = Math.min(a.y, b.y) - 20 - Math.abs(b.x - a.x) * 0.05;
+      ctx.beginPath();
+      if (i < currentSeg) {
+        ctx.moveTo(a.x, a.y);
+        ctx.quadraticCurveTo(cpx, cpy, b.x, b.y);
+      } else {
+        // Partial segment
+        ctx.moveTo(a.x, a.y);
+        // Approximate partial quadratic
+        const steps = 20;
+        const endStep = Math.floor(segProgress * steps);
+        for (let s = 1; s <= endStep; s++) {
+          const t = s / steps;
+          const px = (1 - t) * (1 - t) * a.x + 2 * (1 - t) * t * cpx + t * t * b.x;
+          const py = (1 - t) * (1 - t) * a.y + 2 * (1 - t) * t * cpy + t * t * b.y;
+          ctx.lineTo(px, py);
+        }
+      }
+      ctx.stroke();
+    }
+    ctx.restore();
+
+    pluckAnim.t += prefersReducedMotion ? 1 : 0.03;
+    if (pluckAnim.t >= 1) {
+      pluckAnim.active = false;
+    } else {
+      requestAnimationFrame(render);
+    }
+  }
+
+  // ---------- EVENTS ----------
+  function setupEvents() {
+    // Canvas click/hover
+    canvas.addEventListener('pointermove', e => {
+      const rect = canvas.getBoundingClientRect();
+      const mx = e.clientX - rect.left;
+      const my = e.clientY - rect.top;
+      let found = null;
+      for (const cn of canvasNodes) {
+        const dx = mx - cn.x, dy = my - cn.y;
+        if (dx * dx + dy * dy < (cn.r + 4) * (cn.r + 4)) {
+          found = cn.id;
+          break;
+        }
+      }
+      if (found !== hoveredNodeId) {
+        hoveredNodeId = found;
+        canvas.style.cursor = found ? 'pointer' : 'default';
+        render();
+      }
+    });
+
+    canvas.addEventListener('pointerdown', e => {
+      const rect = canvas.getBoundingClientRect();
+      const mx = e.clientX - rect.left;
+      const my = e.clientY - rect.top;
+      for (const cn of canvasNodes) {
+        const dx = mx - cn.x, dy = my - cn.y;
+        if (dx * dx + dy * dy < (cn.r + 4) * (cn.r + 4)) {
+          selectNode(cn.id);
+          return;
+        }
+      }
+      // Click empty space: deselect node
+      if (selectedNodeId) {
+        selectedNodeId = null;
+        buildSidebar();
+        updateQuoteBar();
+        render();
+      }
+    });
+
+    // Fiber toggle
+    document.getElementById('fiber-toggle').addEventListener('click', () => {
+      document.getElementById('fiber-bar').classList.toggle('collapsed');
+    });
+
+    // Keyboard
+    document.addEventListener('keydown', e => {
+      if (e.key === 'Escape') {
+        if (selectedNodeId) {
+          selectedNodeId = null;
+          buildSidebar();
+          updateQuoteBar();
+          render();
+        } else if (activeFibers.length > 0) {
+          activeFibers = [];
+          updateFiberBarState();
+          buildSidebar();
+          updateQuoteBar();
+          render();
+        }
+      }
+    });
+  }
+
+  // ---------- UTIL ----------
+  function formatDate(range) {
+    if (!range) return '';
+    const fmt = y => {
+      if (y === null) return 'future';
+      if (y < -10000) return Math.round(y / -1000) + 'k BCE';
+      if (y < 0) return Math.abs(y) + ' BCE';
+      return y + ' CE';
+    };
+    if (range[0] === range[1]) return fmt(range[0]);
+    return fmt(range[0]) + ' - ' + fmt(range[1]);
+  }
+})();
+</script>
+</body>
+</html>
