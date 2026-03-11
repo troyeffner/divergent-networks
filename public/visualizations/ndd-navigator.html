@@ -1,0 +1,1232 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>The Fractal Navigator — NDD Spatial Navigation</title>
+<meta name="designer" content="TE.EE_Janet" />
+<meta name="engineer" content="TE.ENG_Fiona" />
+<meta name="purpose" content="Interactive NDD navigation — up/down/left/right through fractal space" />
+<style>
+/* === DESIGN TOKENS === */
+:root {
+  --bg-deep: #141210;
+  --bg-surface: #1c1914;
+  --bg-elevated: #26221c;
+  --bg-hover: rgba(255,255,255,0.03);
+  --accent: #c49030;
+  --accent-soft: rgba(196,144,48,0.15);
+  --accent-glow: rgba(196,144,48,0.08);
+  --color-port: #d4a040;
+  --color-drill: #5ab4a0;
+  --color-wormhole: #c47058;
+  --color-center: #c49030;
+  --color-pruned: #c47058;
+  --color-health-red: #ef4444;
+  --color-health-yellow: #eab308;
+  --color-health-green: #22c55e;
+  --text-primary: #f0ece6;
+  --text-secondary: #c4beb4;
+  --text-dim: #9a9288;
+  --text-quote: #b8ae9e;
+  --transition-fast: 0.15s ease;
+  --transition-medium: 0.3s ease;
+  --transition-nav: 0.5s cubic-bezier(0.25, 0.1, 0.25, 1);
+}
+@media (prefers-reduced-motion: reduce) {
+  :root {
+    --transition-fast: 0s;
+    --transition-medium: 0s;
+    --transition-nav: 0s;
+  }
+}
+
+*, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+body {
+  font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+  background: var(--bg-deep);
+  color: var(--text-primary);
+  overflow: hidden;
+  height: 100vh;
+  width: 100vw;
+}
+
+/* === LAYOUT === */
+.app { display: flex; flex-direction: column; height: 100vh; }
+
+/* Header */
+.header {
+  height: 52px;
+  padding: 0 24px;
+  background: var(--bg-surface);
+  border-bottom: 1px solid rgba(255,255,255,0.06);
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  flex-shrink: 0;
+  z-index: 100;
+}
+.header h1 {
+  font: 300 18px/1 Georgia, serif;
+  color: var(--accent);
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+}
+.header-sub {
+  font: 400 12px/1.4 'Segoe UI', system-ui, sans-serif;
+  color: var(--text-dim);
+}
+.header-right {
+  margin-left: auto;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+/* Breadcrumb */
+.breadcrumb {
+  padding: 8px 24px;
+  background: var(--bg-surface);
+  border-bottom: 1px solid rgba(255,255,255,0.04);
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-shrink: 0;
+  min-height: 36px;
+}
+.breadcrumb-item {
+  font: 400 12px/1 'Segoe UI', system-ui, sans-serif;
+  color: var(--text-dim);
+  cursor: pointer;
+  padding: 3px 6px;
+  border-radius: 3px;
+  transition: all var(--transition-fast);
+  background: none;
+  border: none;
+}
+.breadcrumb-item:hover { color: var(--text-secondary); background: rgba(255,255,255,0.04); }
+.breadcrumb-item.current { color: var(--accent); cursor: default; }
+.breadcrumb-item.current:hover { background: none; }
+.breadcrumb-sep { color: var(--text-dim); opacity: 0.4; font-size: 10px; }
+.breadcrumb-depth {
+  margin-left: auto;
+  font: 400 11px/1 'Segoe UI', system-ui, sans-serif;
+  color: var(--text-dim);
+  opacity: 0.6;
+}
+
+/* === NAVIGATOR GRID === */
+.navigator {
+  flex: 1;
+  display: grid;
+  grid-template-columns: 1fr 2fr 1fr;
+  grid-template-rows: auto 1fr auto;
+  grid-template-areas:
+    "ul  up    ur"
+    "left center right"
+    "dl  down  dr";
+  gap: 0;
+  padding: 20px;
+  overflow: hidden;
+  position: relative;
+}
+
+/* Interstitial space — background network */
+.interstitial-canvas {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+}
+
+/* Direction zones */
+.zone-up    { grid-area: up;     display: flex; justify-content: center; align-items: flex-end; padding-bottom: 12px; z-index: 1; }
+.zone-down  { grid-area: down;   display: flex; justify-content: center; align-items: flex-start; padding-top: 12px; flex-wrap: wrap; gap: 8px; z-index: 1; }
+.zone-left  { grid-area: left;   display: flex; flex-direction: column; justify-content: center; align-items: flex-end; padding-right: 12px; gap: 8px; z-index: 1; }
+.zone-right { grid-area: right;  display: flex; flex-direction: column; justify-content: center; align-items: flex-start; padding-left: 12px; gap: 8px; z-index: 1; }
+.zone-center { grid-area: center; display: flex; justify-content: center; align-items: center; z-index: 2; }
+
+/* Direction labels */
+.direction-label {
+  font: 600 9px/1 'Segoe UI', system-ui, sans-serif;
+  text-transform: uppercase;
+  letter-spacing: 1.5px;
+  padding: 4px 10px;
+  border-radius: 3px;
+  margin-bottom: 8px;
+  opacity: 0.5;
+}
+.direction-label.port { color: var(--color-port); }
+.direction-label.drill { color: var(--color-drill); }
+.direction-label.wormhole { color: var(--color-wormhole); }
+
+/* === FRACTAL UNIT (CENTER) === */
+.fractal-unit {
+  width: 100%;
+  max-width: 520px;
+  background: var(--bg-surface);
+  border: 2px solid var(--accent);
+  border-radius: 8px;
+  padding: 28px;
+  position: relative;
+  transition: all var(--transition-nav);
+}
+.fractal-unit.transitioning {
+  opacity: 0;
+  transform: scale(0.95);
+}
+.fu-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  margin-bottom: 16px;
+}
+.fu-name {
+  font: 600 22px/1.2 Georgia, serif;
+  color: var(--accent);
+}
+.fu-type {
+  font: 700 9px/1 'Segoe UI', system-ui, sans-serif;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  padding: 3px 8px;
+  border-radius: 3px;
+  flex-shrink: 0;
+}
+.fu-type.root { background: rgba(212,160,64,0.15); color: var(--color-port); }
+.fu-type.trunk { background: rgba(196,144,48,0.12); color: var(--color-center); }
+.fu-type.branch { background: rgba(90,180,160,0.12); color: var(--color-drill); }
+.fu-type.pruned { background: rgba(196,112,88,0.08); color: var(--color-pruned); }
+.fu-type.canopy { background: rgba(74,154,180,0.12); color: #4a9ab4; }
+.fu-type.event-horizon { background: rgba(212,160,64,0.15); color: var(--color-port); border: 1px solid rgba(212,160,64,0.3); }
+
+/* Three Questions */
+.fu-questions {
+  margin-bottom: 16px;
+}
+.fu-q-label {
+  font: 500 11px/1 'Segoe UI', system-ui, sans-serif;
+  color: var(--text-dim);
+  text-transform: uppercase;
+  letter-spacing: 0.8px;
+  margin-bottom: 6px;
+}
+.fu-q-value {
+  font: 400 15px/1.5 Georgia, serif;
+  color: var(--text-secondary);
+  margin-bottom: 14px;
+  padding: 8px 12px;
+  background: rgba(255,255,255,0.02);
+  border-left: 2px solid rgba(255,255,255,0.06);
+  border-radius: 0 4px 4px 0;
+}
+
+/* Status row */
+.fu-status {
+  display: flex;
+  gap: 16px;
+  align-items: center;
+  padding-top: 14px;
+  border-top: 1px solid rgba(255,255,255,0.06);
+}
+.fu-status-item {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font: 400 11px/1 'Segoe UI', system-ui, sans-serif;
+  color: var(--text-dim);
+}
+.fu-status-label {
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  font-weight: 600;
+}
+.validation-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+}
+.validation-dot.seed { background: #7ab870; }
+.validation-dot.tested { background: #eab308; }
+.validation-dot.measured { background: #5ab4a0; }
+.validation-dot.confirmed { background: #22c55e; }
+.validation-dot.cycling { background: #c49030; }
+.health-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+}
+.health-dot.none { background: #444; }
+.health-dot.red { background: var(--color-health-red); }
+.health-dot.yellow { background: var(--color-health-yellow); }
+.health-dot.green { background: var(--color-health-green); }
+
+/* Growth ring on fractal unit */
+.fu-ring {
+  font: italic 13px/1.5 Georgia, serif;
+  color: var(--text-quote);
+  padding: 8px 12px;
+  margin-top: 12px;
+  border-left: 2px solid var(--accent);
+  background: var(--accent-glow);
+  border-radius: 0 4px 4px 0;
+}
+
+/* Tags */
+.fu-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  margin-top: 12px;
+}
+.fu-tag {
+  font: 500 10px/1 'Segoe UI', system-ui, sans-serif;
+  padding: 3px 8px;
+  border-radius: 10px;
+  border: 1px solid rgba(255,255,255,0.1);
+  background: rgba(255,255,255,0.03);
+  color: var(--text-dim);
+  cursor: pointer;
+  transition: all var(--transition-fast);
+}
+.fu-tag:hover {
+  border-color: var(--color-wormhole);
+  color: var(--color-wormhole);
+  background: rgba(196,112,88,0.08);
+}
+
+/* === NAVIGATION CARDS === */
+.nav-card {
+  background: var(--bg-elevated);
+  border: 1px solid rgba(255,255,255,0.08);
+  border-radius: 6px;
+  padding: 12px 16px;
+  cursor: pointer;
+  transition: all var(--transition-fast);
+  min-width: 140px;
+  max-width: 220px;
+}
+.nav-card:hover {
+  background: rgba(255,255,255,0.04);
+}
+.nav-card:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+.nav-card.parent:hover { border-color: var(--color-port); }
+.nav-card.child:hover { border-color: var(--color-drill); }
+.nav-card.wormhole:hover { border-color: var(--color-wormhole); }
+
+.nav-card-name {
+  font: 500 13px/1.3 'Segoe UI', system-ui, sans-serif;
+  color: var(--text-secondary);
+  margin-bottom: 4px;
+}
+.nav-card-meta {
+  font: 400 10px/1 'Segoe UI', system-ui, sans-serif;
+  color: var(--text-dim);
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.nav-card-arrow {
+  font-size: 14px;
+  opacity: 0.4;
+  transition: opacity var(--transition-fast);
+}
+.nav-card:hover .nav-card-arrow { opacity: 1; }
+.nav-card.parent .nav-card-arrow { color: var(--color-port); }
+.nav-card.child .nav-card-arrow { color: var(--color-drill); }
+.nav-card.wormhole .nav-card-arrow { color: var(--color-wormhole); }
+
+/* Wormhole card special treatment */
+.nav-card.wormhole {
+  border-style: dashed;
+}
+.nav-card-wormhole-tag {
+  font: 500 9px/1 'Segoe UI', system-ui, sans-serif;
+  color: var(--color-wormhole);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin-bottom: 4px;
+  opacity: 0.7;
+}
+
+/* Empty state for directions */
+.nav-empty {
+  font: italic 12px/1.4 Georgia, serif;
+  color: var(--text-dim);
+  opacity: 0.4;
+  text-align: center;
+  padding: 16px;
+}
+
+/* Direction arrow indicators */
+.direction-arrow {
+  font: 300 20px/1 Georgia, serif;
+  color: var(--text-dim);
+  opacity: 0.2;
+  margin: 4px 0;
+}
+
+/* === QUOTE BAR === */
+.quote-bar {
+  padding: 8px 24px;
+  background: var(--bg-surface);
+  border-top: 1px solid rgba(255,255,255,0.06);
+  text-align: center;
+  min-height: 34px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+.quote-text {
+  font: italic 13px/1.4 Georgia, serif;
+  color: var(--text-quote);
+}
+
+/* === LEGEND === */
+.legend-bar {
+  position: absolute;
+  bottom: 8px;
+  left: 24px;
+  display: flex;
+  gap: 16px;
+  z-index: 10;
+  opacity: 0.5;
+}
+.legend-item {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  font: 400 10px/1 'Segoe UI', system-ui, sans-serif;
+  color: var(--text-dim);
+}
+.legend-arrow { font-size: 12px; }
+.legend-arrow.port { color: var(--color-port); }
+.legend-arrow.drill { color: var(--color-drill); }
+.legend-arrow.wormhole { color: var(--color-wormhole); }
+
+/* === CONVERGENCE ALERT === */
+.convergence-alert {
+  position: absolute;
+  top: 8px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: rgba(196,112,88,0.12);
+  border: 1px solid rgba(196,112,88,0.3);
+  border-radius: 6px;
+  padding: 8px 16px;
+  font: 500 11px/1.3 'Segoe UI', system-ui, sans-serif;
+  color: var(--color-wormhole);
+  z-index: 20;
+  display: none;
+  text-align: center;
+}
+.convergence-alert.visible { display: block; }
+
+/* Children overflow */
+.zone-down {
+  overflow-y: auto;
+  max-height: 100%;
+}
+.zone-down::-webkit-scrollbar { width: 3px; }
+.zone-down::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.08); border-radius: 2px; }
+.zone-left, .zone-right {
+  overflow-y: auto;
+  max-height: 100%;
+}
+</style>
+</head>
+<body>
+<div class="app">
+
+  <!-- Header -->
+  <div class="header">
+    <h1>Fractal Navigator</h1>
+    <span class="header-sub">NDD spatial navigation — every direction means something</span>
+    <div class="header-right">
+      <span style="font:400 11px/1 'Segoe UI',system-ui;color:var(--text-dim)">
+        Nodes: <span style="color:var(--accent);font-weight:600" id="node-count">0</span>
+      </span>
+      <span style="font:400 11px/1 'Segoe UI',system-ui;color:var(--text-dim)">
+        Depth: <span style="color:var(--accent);font-weight:600" id="current-depth">0</span>
+      </span>
+    </div>
+  </div>
+
+  <!-- Breadcrumb -->
+  <div class="breadcrumb" id="breadcrumb"></div>
+
+  <!-- Navigator -->
+  <div class="navigator">
+    <canvas class="interstitial-canvas" id="interstitial-canvas"></canvas>
+
+    <!-- Convergence alert -->
+    <div class="convergence-alert" id="convergence-alert"></div>
+
+    <!-- UP: Parents / Ports -->
+    <div class="zone-up" id="zone-up"></div>
+
+    <!-- LEFT: Wormholes -->
+    <div class="zone-left" id="zone-left"></div>
+
+    <!-- CENTER: Fractal Unit -->
+    <div class="zone-center">
+      <div class="fractal-unit" id="fractal-unit"></div>
+    </div>
+
+    <!-- RIGHT: Wormholes -->
+    <div class="zone-right" id="zone-right"></div>
+
+    <!-- DOWN: Children -->
+    <div class="zone-down" id="zone-down"></div>
+
+    <!-- Legend -->
+    <div class="legend-bar">
+      <div class="legend-item"><span class="legend-arrow port">&uarr;</span> Port up</div>
+      <div class="legend-item"><span class="legend-arrow drill">&darr;</span> Drill down</div>
+      <div class="legend-item"><span class="legend-arrow wormhole">&harr;</span> Wormhole</div>
+    </div>
+  </div>
+
+  <!-- Quote bar -->
+  <div class="quote-bar">
+    <span class="quote-text" id="quote-text">"Every direction in the UI means something in the fractal system."</span>
+  </div>
+
+</div>
+
+<script>
+// =============================================
+// NDD FRACTAL NAVIGATOR
+// Navigation: UP (port), DOWN (drill), LEFT/RIGHT (wormhole)
+// "No walking — always climbing or warping."
+// =============================================
+
+// Sample NDD tree — the method navigating itself
+const TREE_DATA = {
+  "id": "ndd-root",
+  "name": "Narrative Driven Design",
+  "type": "root",
+  "want": "A method where structure emerges from practice, not prescription. Work objects carry their own orientation.",
+  "relies_on": "Fractal decomposition. Append-only growth. The tree metaphor as operating system.",
+  "validation": "confirmed",
+  "health": "green",
+  "growth_ring": "The method is the product. The product is the proof.",
+  "tags": ["fractal", "method", "navigation", "growth"],
+  "children": [
+    {
+      "id": "fiction-engine",
+      "name": "The Fiction Engine",
+      "type": "trunk",
+      "want": "Shared fictions that enable cooperation at scale. Names, roles, processes — all fiction, all functional.",
+      "relies_on": "Language. Naming conventions. Vocabulary enforcement. Metaphor families.",
+      "validation": "confirmed",
+      "health": "green",
+      "growth_ring": "Fiction is not a phase — it is the operating system. Names carry weight because we agree they do.",
+      "tags": ["fiction", "naming", "cooperation", "vocabulary"],
+      "children": [
+        {
+          "id": "three-questions",
+          "name": "Three Questions Protocol",
+          "type": "branch",
+          "want": "Every fractal answers: What do you want? What does this rely on? Does this apply elsewhere?",
+          "relies_on": "The fractal unit schema. User input. Q3 cross-connection detection.",
+          "validation": "measured",
+          "health": "green",
+          "tags": ["protocol", "questions", "schema", "input"],
+          "children": [
+            {
+              "id": "q1-want",
+              "name": "Q1: So You Want To",
+              "type": "branch",
+              "want": "Capture intent in the user's own words. Not a title — a desire.",
+              "relies_on": "Free text input. No validation on format.",
+              "validation": "confirmed",
+              "health": "green",
+              "tags": ["intent", "input", "user-voice"]
+            },
+            {
+              "id": "q2-relies",
+              "name": "Q2: This Relies On",
+              "type": "branch",
+              "want": "Map dependencies. What must exist for this to work?",
+              "relies_on": "Tag-based linking to existing fractals. Free text fallback.",
+              "validation": "measured",
+              "health": "yellow",
+              "tags": ["dependencies", "linking", "schema"]
+            },
+            {
+              "id": "q3-applies",
+              "name": "Q3: Does This Apply Elsewhere?",
+              "type": "branch",
+              "want": "Detect cross-connections. Where else does this pattern show up?",
+              "relies_on": "Tag matching across branches. Convergence detection (3+ matches = root blocker).",
+              "validation": "seed",
+              "health": "yellow",
+              "growth_ring": "Q3 is the wormhole detector. It finds the interstitial space.",
+              "tags": ["cross-connection", "wormhole", "convergence", "pattern"]
+            }
+          ]
+        },
+        {
+          "id": "fractal-identity",
+          "name": "Fractal Identity",
+          "type": "branch",
+          "want": "Every fractal gets: persistent name, machine-addressable ID, position in tree, spark history (growth rings).",
+          "relies_on": "Naming conventions. ID schema. Growth ring recording.",
+          "validation": "confirmed",
+          "health": "green",
+          "tags": ["identity", "naming", "growth-rings", "addressing"]
+        },
+        {
+          "id": "vocabulary-enforcement",
+          "name": "Vocabulary Enforcement",
+          "type": "branch",
+          "want": "Words mean specific things. Fractal vs fractional vs fraction. Steward vs custodian vs practitioner.",
+          "relies_on": "Decision log. CLAUDE.md. Shared vocabulary document.",
+          "validation": "confirmed",
+          "health": "green",
+          "tags": ["vocabulary", "naming", "precision", "fiction"]
+        }
+      ]
+    },
+    {
+      "id": "pruning-pattern",
+      "name": "The Pruning Pattern",
+      "type": "trunk",
+      "want": "What gets cut feeds what grows. Infrastructure earth. Nothing is lost — only composted.",
+      "relies_on": "Append-only logging. Soil contribution capture. Prune reason recording.",
+      "validation": "confirmed",
+      "health": "green",
+      "growth_ring": "The counter-narrative. The tree prunes more than it grows. What it prunes becomes the soil.",
+      "tags": ["pruning", "soil", "infrastructure-earth", "composting"],
+      "children": [
+        {
+          "id": "infrastructure-earth",
+          "name": "Infrastructure Earth",
+          "type": "branch",
+          "want": "Pruned branches whose sparks can be replayed. Four states: Adopted, Deferred, Incompatible-Static, Incompatible-Dynamic.",
+          "relies_on": "Replayable spark record. State machine. Soil contribution field.",
+          "validation": "measured",
+          "health": "green",
+          "tags": ["pruning", "replay", "soil", "state-machine"]
+        },
+        {
+          "id": "growth-rings",
+          "name": "Growth Rings",
+          "type": "branch",
+          "want": "Spark history on a fractal. Not software versions — botanical rings. Growth IS the versioning.",
+          "relies_on": "Append-only spark recording. Ring ≠ version. Children ≠ versions.",
+          "validation": "confirmed",
+          "health": "green",
+          "growth_ring": "Versions and children are different axes. Rings = depth. Children = breadth.",
+          "tags": ["growth-rings", "versioning", "botanical", "spark-history"]
+        }
+      ]
+    },
+    {
+      "id": "navigation-model",
+      "name": "The Navigation Model",
+      "type": "trunk",
+      "want": "Move through the fractal system using spatial primitives. Every direction means something.",
+      "relies_on": "Port/tag/wormhole movement primitives. Fractal navigator UI. Interstitial space.",
+      "validation": "measured",
+      "health": "green",
+      "growth_ring": "No walking. Always climbing or warping. The space between nodes IS the wormhole.",
+      "tags": ["navigation", "spatial", "ports", "wormholes", "movement"],
+      "children": [
+        {
+          "id": "ports-up",
+          "name": "Ports — Ladder Up",
+          "type": "branch",
+          "want": "Exits upward. Out of the system. The book is a port. The PhD is a port. A port is a ladder to the world.",
+          "relies_on": "Parent-tagging interface. Impact Radius calculation (parent tag count = IR).",
+          "validation": "measured",
+          "health": "green",
+          "tags": ["ports", "upward", "exit", "impact-radius"]
+        },
+        {
+          "id": "tags-drill",
+          "name": "Tags — Drill Down",
+          "type": "branch",
+          "want": "Descend deeper into a topic. Tags as entry points, not categories.",
+          "relies_on": "Tag vocabulary. Depth auto-calculation from tree position.",
+          "validation": "confirmed",
+          "health": "green",
+          "tags": ["tags", "depth", "drill", "descent"]
+        },
+        {
+          "id": "wormholes",
+          "name": "Wormholes — Fractal Pivot",
+          "type": "event-horizon",
+          "want": "Instantaneous lateral jump to same-depth node on different branch. The space between nodes at every level.",
+          "relies_on": "Shared tags between nodes. Q3 cross-connection. Interstitial space model.",
+          "validation": "seed",
+          "health": "yellow",
+          "growth_ring": "I travel through wormholes — the space between the soil, between the cells, between the branches, between the leaves.",
+          "tags": ["wormhole", "lateral", "pivot", "interstitial", "cross-connection"]
+        }
+      ]
+    },
+    {
+      "id": "scaling-traps",
+      "name": "Scaling Traps",
+      "type": "trunk",
+      "want": "Name where the method breaks at scale. Recursive orientation failure. Property boundary crossing.",
+      "relies_on": "Real implementation at multiple scales. DavidOS (micro), Sapiens (macro), CommunityBoard (meso).",
+      "validation": "measured",
+      "health": "yellow",
+      "growth_ring": "The trap is the feature. If you can name the scaling break before it happens, you can design around it.",
+      "tags": ["scaling", "traps", "failure-modes", "boundaries"],
+      "children": [
+        {
+          "id": "orientation-failure",
+          "name": "Recursive Orientation Failure",
+          "type": "branch",
+          "want": "The named problem: orientation fails at boundary crossings. Each handoff loses context.",
+          "relies_on": "Orientation Header + Dispatch Envelope. Compiled abstraction from level above.",
+          "validation": "confirmed",
+          "health": "yellow",
+          "tags": ["orientation", "boundaries", "handoff", "context-loss"]
+        },
+        {
+          "id": "property-switch",
+          "name": "Property Boundary Crossing",
+          "type": "branch",
+          "want": "5 operations for on-to-off-property: Pass Through, Expand, Add, Transform, Strip.",
+          "relies_on": "Property switch rules. Brief self-containment for off-property workers.",
+          "validation": "measured",
+          "health": "green",
+          "tags": ["property", "boundaries", "off-property", "brief"]
+        }
+      ]
+    },
+    {
+      "id": "proof-trees",
+      "name": "The Proof Trees",
+      "type": "canopy",
+      "want": "Three instances at three scales. If the same patterns emerge independently, universality is proven.",
+      "relies_on": "DavidOS (micro/retrospective). Sapiens (macro/retrospective). CommunityBoard (meso/live).",
+      "validation": "seed",
+      "health": "yellow",
+      "growth_ring": "Three trees. Three scales. Same root pattern. Archaeology proves the fossil record. Ecology proves the living system.",
+      "tags": ["proof", "universality", "three-scales", "book", "phd"],
+      "children": [
+        {
+          "id": "david-os-proof",
+          "name": "DavidOS — Micro Scale",
+          "type": "canopy",
+          "want": "Prove fractal management works for one person's portfolio.",
+          "relies_on": "Troy's daily practice. Practitioner system. This tree.",
+          "validation": "measured",
+          "health": "green",
+          "tags": ["davidOS", "micro", "portfolio", "practice"]
+        },
+        {
+          "id": "sapiens-proof",
+          "name": "Sapiens — Macro Scale",
+          "type": "canopy",
+          "want": "Prove fractal decomposition works on historical knowledge. Retrospective analysis.",
+          "relies_on": "Sapiens visualizations. Ring 3 data. Pattern tag vocabulary.",
+          "validation": "measured",
+          "health": "green",
+          "tags": ["sapiens", "macro", "history", "visualization"]
+        },
+        {
+          "id": "communityboard-proof",
+          "name": "CommunityBoard — Meso Scale",
+          "type": "canopy",
+          "want": "Prove fractal decomposition works for a living community. Real-time, user-generated.",
+          "relies_on": "CommunityBoard launch. Empty tag space. Observation layer. Own big bang.",
+          "validation": "seed",
+          "health": "yellow",
+          "growth_ring": "Practice ends. The method seeds itself. CommunityBoard grows its own tree from its own root.",
+          "tags": ["communityboard", "meso", "live", "community", "big-bang"]
+        }
+      ]
+    }
+  ]
+};
+
+// State
+let allNodes = [];
+let nodeMap = {};
+let currentNode = null;
+let navigationHistory = [];
+
+// Flatten tree
+function flattenTree(node, parentId, depth) {
+  const entry = {
+    ...node,
+    parentId: parentId,
+    depth: depth,
+    children_ids: (node.children || []).map(c => c.id)
+  };
+  delete entry.children;
+  allNodes.push(entry);
+  nodeMap[node.id] = entry;
+  if (node.children) {
+    node.children.forEach(child => flattenTree(child, node.id, depth + 1));
+  }
+}
+
+// Find wormholes — nodes on different branches that share tags with current node
+function findWormholes(node) {
+  if (!node.tags || node.tags.length === 0) return [];
+
+  // Get all ancestors of current node (to exclude same-branch nodes)
+  const ancestors = new Set();
+  let current = node;
+  while (current) {
+    ancestors.add(current.id);
+    current = current.parentId ? nodeMap[current.parentId] : null;
+  }
+  // Get all descendants
+  const descendants = new Set();
+  function addDescendants(id) {
+    descendants.add(id);
+    const n = nodeMap[id];
+    if (n && n.children_ids) n.children_ids.forEach(addDescendants);
+  }
+  addDescendants(node.id);
+
+  const wormholes = [];
+  const nodeTags = new Set(node.tags);
+
+  allNodes.forEach(other => {
+    if (other.id === node.id) return;
+    if (ancestors.has(other.id) || descendants.has(other.id)) return;
+    if (!other.tags) return;
+
+    const shared = other.tags.filter(t => nodeTags.has(t));
+    if (shared.length > 0) {
+      wormholes.push({
+        node: other,
+        sharedTags: shared,
+        strength: shared.length / Math.max(node.tags.length, other.tags.length)
+      });
+    }
+  });
+
+  // Sort by strength (most shared tags first), limit to 6
+  return wormholes.sort((a, b) => b.strength - a.strength).slice(0, 6);
+}
+
+// Navigate to a node
+function navigateTo(nodeId, direction) {
+  const node = nodeMap[nodeId];
+  if (!node) return;
+
+  const unit = document.getElementById('fractal-unit');
+  const prefersRM = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+  if (prefersRM) {
+    currentNode = node;
+    render();
+    return;
+  }
+
+  // Animate transition
+  unit.classList.add('transitioning');
+  setTimeout(() => {
+    currentNode = node;
+    render();
+    setTimeout(() => unit.classList.remove('transitioning'), 30);
+  }, 250);
+}
+
+// Render everything
+function render() {
+  renderBreadcrumb();
+  renderCenter();
+  renderUp();
+  renderDown();
+  renderWormholes();
+  renderInterstitial();
+  updateQuote();
+  document.getElementById('current-depth').textContent = currentNode.depth;
+}
+
+// Breadcrumb
+function renderBreadcrumb() {
+  const bc = document.getElementById('breadcrumb');
+  const path = [];
+  let node = currentNode;
+  while (node) {
+    path.unshift(node);
+    node = node.parentId ? nodeMap[node.parentId] : null;
+  }
+
+  bc.innerHTML = '';
+  path.forEach((n, i) => {
+    if (i > 0) {
+      const sep = document.createElement('span');
+      sep.className = 'breadcrumb-sep';
+      sep.textContent = '\u203A';
+      bc.appendChild(sep);
+    }
+    const btn = document.createElement('button');
+    btn.className = 'breadcrumb-item' + (n.id === currentNode.id ? ' current' : '');
+    btn.textContent = n.name;
+    if (n.id !== currentNode.id) {
+      btn.addEventListener('click', () => navigateTo(n.id, 'up'));
+    }
+    bc.appendChild(btn);
+  });
+
+  const depth = document.createElement('span');
+  depth.className = 'breadcrumb-depth';
+  depth.textContent = 'depth ' + currentNode.depth;
+  bc.appendChild(depth);
+}
+
+// Center — fractal unit
+function renderCenter() {
+  const fu = document.getElementById('fractal-unit');
+  const n = currentNode;
+
+  let html = `
+    <div class="fu-header">
+      <div class="fu-name">${n.name}</div>
+      <span class="fu-type ${n.type}">${n.type}</span>
+    </div>
+    <div class="fu-questions">
+      <div class="fu-q-label">So you want to:</div>
+      <div class="fu-q-value">${n.want || ''}</div>
+      <div class="fu-q-label">This relies on:</div>
+      <div class="fu-q-value">${n.relies_on || ''}</div>
+    </div>
+    <div class="fu-status">
+      <div class="fu-status-item">
+        <span class="fu-status-label">Eval:</span>
+        <span class="validation-dot ${n.validation || 'seed'}"></span>
+        <span>${n.validation || 'seed'}</span>
+      </div>
+      <div class="fu-status-item">
+        <span class="fu-status-label">Health:</span>
+        <span class="health-dot ${n.health || 'none'}"></span>
+        <span>${n.health || 'none'}</span>
+      </div>
+      <div class="fu-status-item">
+        <span class="fu-status-label">Children:</span>
+        <span>${n.children_ids ? n.children_ids.length : 0}</span>
+      </div>
+    </div>
+  `;
+
+  if (n.growth_ring) {
+    html += `<div class="fu-ring">"${n.growth_ring}"</div>`;
+  }
+
+  if (n.tags && n.tags.length > 0) {
+    html += `<div class="fu-tags">`;
+    n.tags.forEach(t => {
+      html += `<span class="fu-tag" data-tag="${t}">${t}</span>`;
+    });
+    html += `</div>`;
+  }
+
+  fu.innerHTML = html;
+
+  // Tag click → highlight wormholes with that tag
+  fu.querySelectorAll('.fu-tag').forEach(tag => {
+    tag.addEventListener('click', () => {
+      const tagName = tag.dataset.tag;
+      document.querySelectorAll('.nav-card.wormhole').forEach(card => {
+        const shared = card.dataset.sharedTags;
+        if (shared && shared.includes(tagName)) {
+          card.style.borderColor = 'var(--color-wormhole)';
+          card.style.background = 'rgba(196,112,88,0.06)';
+          setTimeout(() => {
+            card.style.borderColor = '';
+            card.style.background = '';
+          }, 2000);
+        }
+      });
+    });
+  });
+}
+
+// Up — parent
+function renderUp() {
+  const zone = document.getElementById('zone-up');
+  if (!currentNode.parentId) {
+    zone.innerHTML = `
+      <div style="text-align:center">
+        <div class="direction-label port">&uarr; PORTS</div>
+        <div class="nav-empty">Root node — no parent. This is the origin.</div>
+      </div>
+    `;
+    return;
+  }
+
+  const parent = nodeMap[currentNode.parentId];
+  zone.innerHTML = `
+    <div style="text-align:center">
+      <div class="direction-label port">&uarr; PORT UP</div>
+      <div class="nav-card parent" tabindex="0" data-node-id="${parent.id}">
+        <div style="display:flex;align-items:center;gap:8px">
+          <span class="nav-card-arrow">&uarr;</span>
+          <div>
+            <div class="nav-card-name">${parent.name}</div>
+            <div class="nav-card-meta">
+              <span class="fu-type ${parent.type}" style="font-size:8px;padding:2px 5px">${parent.type}</span>
+              ${parent.children_ids ? parent.children_ids.length + ' children' : ''}
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  `;
+
+  zone.querySelector('.nav-card').addEventListener('click', () => navigateTo(parent.id, 'up'));
+}
+
+// Down — children
+function renderDown() {
+  const zone = document.getElementById('zone-down');
+  const children = (currentNode.children_ids || []).map(id => nodeMap[id]).filter(Boolean);
+
+  if (children.length === 0) {
+    zone.innerHTML = `
+      <div style="text-align:center;width:100%">
+        <div class="direction-label drill">&darr; DEPTH</div>
+        <div class="nav-empty">Leaf node — no children yet. This is the growth edge.</div>
+      </div>
+    `;
+    return;
+  }
+
+  let html = `<div style="text-align:center;width:100%"><div class="direction-label drill">&darr; DRILL DOWN</div></div>`;
+  html += `<div style="display:flex;flex-wrap:wrap;gap:8px;justify-content:center;width:100%">`;
+  children.forEach(child => {
+    // Check validation ceiling
+    const validationOrder = ['seed', 'tested', 'measured', 'confirmed', 'cycling'];
+    const childVal = child.validation || 'seed';
+
+    html += `
+      <div class="nav-card child" tabindex="0" data-node-id="${child.id}">
+        <div style="display:flex;align-items:center;gap:8px">
+          <span class="nav-card-arrow">&darr;</span>
+          <div>
+            <div class="nav-card-name">${child.name}</div>
+            <div class="nav-card-meta">
+              <span class="fu-type ${child.type}" style="font-size:8px;padding:2px 5px">${child.type}</span>
+              <span class="validation-dot ${childVal}" style="width:6px;height:6px"></span>
+              <span class="health-dot ${child.health || 'none'}" style="width:6px;height:6px"></span>
+              ${child.children_ids && child.children_ids.length > 0 ? child.children_ids.length + ' deep' : 'leaf'}
+            </div>
+          </div>
+        </div>
+      </div>
+    `;
+  });
+  html += `</div>`;
+  zone.innerHTML = html;
+
+  zone.querySelectorAll('.nav-card').forEach(card => {
+    card.addEventListener('click', () => navigateTo(card.dataset.nodeId, 'down'));
+  });
+}
+
+// Wormholes — left and right
+function renderWormholes() {
+  const wormholes = findWormholes(currentNode);
+  const leftZone = document.getElementById('zone-left');
+  const rightZone = document.getElementById('zone-right');
+  const alert = document.getElementById('convergence-alert');
+
+  // Split wormholes between left and right
+  const leftWorms = wormholes.filter((_, i) => i % 2 === 0);
+  const rightWorms = wormholes.filter((_, i) => i % 2 === 1);
+
+  function renderWormholeSide(zone, worms, direction) {
+    if (worms.length === 0) {
+      zone.innerHTML = `
+        <div class="direction-label wormhole">${direction === 'left' ? '&larr;' : '&rarr;'} WORMHOLES</div>
+        <div class="nav-empty">No cross-connections<br>from this node</div>
+      `;
+      return;
+    }
+
+    let html = `<div class="direction-label wormhole">${direction === 'left' ? '&larr;' : '&rarr;'} WORMHOLES</div>`;
+    worms.forEach(w => {
+      html += `
+        <div class="nav-card wormhole" tabindex="0" data-node-id="${w.node.id}" data-shared-tags="${w.sharedTags.join(',')}">
+          <div class="nav-card-wormhole-tag">via: ${w.sharedTags.join(', ')}</div>
+          <div style="display:flex;align-items:center;gap:8px">
+            <span class="nav-card-arrow">${direction === 'left' ? '&larr;' : '&rarr;'}</span>
+            <div>
+              <div class="nav-card-name">${w.node.name}</div>
+              <div class="nav-card-meta">
+                <span class="fu-type ${w.node.type}" style="font-size:8px;padding:2px 5px">${w.node.type}</span>
+                depth ${w.node.depth}
+              </div>
+            </div>
+          </div>
+        </div>
+      `;
+    });
+    zone.innerHTML = html;
+
+    zone.querySelectorAll('.nav-card').forEach(card => {
+      card.addEventListener('click', () => navigateTo(card.dataset.nodeId, 'wormhole'));
+    });
+  }
+
+  renderWormholeSide(leftZone, leftWorms, 'left');
+  renderWormholeSide(rightZone, rightWorms, 'right');
+
+  // Convergence detection — any tag shared by 3+ fractals
+  const tagCounts = {};
+  allNodes.forEach(n => {
+    if (n.tags) n.tags.forEach(t => {
+      tagCounts[t] = (tagCounts[t] || 0) + 1;
+    });
+  });
+  const convergences = Object.entries(tagCounts)
+    .filter(([tag, count]) => count >= 3 && currentNode.tags && currentNode.tags.includes(tag))
+    .sort((a, b) => b[1] - a[1]);
+
+  if (convergences.length > 0) {
+    const top = convergences[0];
+    alert.textContent = `Convergence: "${top[0]}" appears on ${top[1]} nodes. Possible root pattern.`;
+    alert.classList.add('visible');
+  } else {
+    alert.classList.remove('visible');
+  }
+}
+
+// Interstitial canvas — background network showing tree structure
+function renderInterstitial() {
+  const canvas = document.getElementById('interstitial-canvas');
+  const rect = canvas.parentElement.getBoundingClientRect();
+  const dpr = window.devicePixelRatio || 1;
+  canvas.width = rect.width * dpr;
+  canvas.height = rect.height * dpr;
+  canvas.style.width = rect.width + 'px';
+  canvas.style.height = rect.height + 'px';
+
+  const ctx = canvas.getContext('2d');
+  ctx.scale(dpr, dpr);
+  ctx.clearRect(0, 0, rect.width, rect.height);
+
+  // Draw faint network of all nodes
+  const cx = rect.width / 2;
+  const cy = rect.height / 2;
+
+  // Place nodes in a radial layout around center
+  const maxDepth = Math.max(...allNodes.map(n => n.depth));
+  const positions = {};
+
+  allNodes.forEach((node, i) => {
+    const depthFraction = node.depth / (maxDepth + 1);
+    const angle = (i / allNodes.length) * Math.PI * 2 - Math.PI / 2;
+    const radius = 40 + depthFraction * Math.min(rect.width, rect.height) * 0.38;
+    positions[node.id] = {
+      x: cx + Math.cos(angle) * radius,
+      y: cy + Math.sin(angle) * radius
+    };
+  });
+
+  // Draw connections
+  allNodes.forEach(node => {
+    if (!node.parentId || !positions[node.parentId]) return;
+    const from = positions[node.parentId];
+    const to = positions[node.id];
+
+    ctx.beginPath();
+    ctx.moveTo(from.x, from.y);
+    ctx.lineTo(to.x, to.y);
+    ctx.strokeStyle = node.id === currentNode.id || node.parentId === currentNode.id
+      ? 'rgba(196,144,48,0.12)' : 'rgba(255,255,255,0.02)';
+    ctx.lineWidth = 0.5;
+    ctx.stroke();
+  });
+
+  // Draw nodes
+  allNodes.forEach(node => {
+    const pos = positions[node.id];
+    if (!pos) return;
+    const isCurrent = node.id === currentNode.id;
+    const isRelated = node.parentId === currentNode.id ||
+      (currentNode.children_ids && currentNode.children_ids.includes(node.id));
+
+    ctx.beginPath();
+    ctx.arc(pos.x, pos.y, isCurrent ? 5 : isRelated ? 3 : 1.5, 0, Math.PI * 2);
+    ctx.fillStyle = isCurrent ? 'rgba(196,144,48,0.6)' :
+                    isRelated ? 'rgba(196,144,48,0.2)' : 'rgba(255,255,255,0.04)';
+    ctx.fill();
+
+    if (isCurrent) {
+      ctx.beginPath();
+      ctx.arc(pos.x, pos.y, 10, 0, Math.PI * 2);
+      ctx.strokeStyle = 'rgba(196,144,48,0.15)';
+      ctx.lineWidth = 1;
+      ctx.stroke();
+    }
+  });
+
+  // Draw wormhole connections (dashed)
+  const wormholes = findWormholes(currentNode);
+  wormholes.forEach(w => {
+    const from = positions[currentNode.id];
+    const to = positions[w.node.id];
+    if (!from || !to) return;
+
+    ctx.beginPath();
+    ctx.setLineDash([4, 4]);
+    ctx.moveTo(from.x, from.y);
+    const cpx = (from.x + to.x) / 2 + (to.y - from.y) * 0.2;
+    const cpy = (from.y + to.y) / 2 - (to.x - from.x) * 0.2;
+    ctx.quadraticCurveTo(cpx, cpy, to.x, to.y);
+    ctx.strokeStyle = `rgba(196,112,88,${0.06 + w.strength * 0.1})`;
+    ctx.lineWidth = 0.8;
+    ctx.stroke();
+    ctx.setLineDash([]);
+  });
+}
+
+// Quote bar
+function updateQuote() {
+  const el = document.getElementById('quote-text');
+  if (currentNode.growth_ring) {
+    el.textContent = `"${currentNode.growth_ring}"`;
+  } else if (currentNode.want) {
+    el.textContent = `"${currentNode.want}"`;
+  } else {
+    el.textContent = '"Every direction in the UI means something in the fractal system."';
+  }
+}
+
+// Keyboard navigation
+document.addEventListener('keydown', e => {
+  if (e.key === 'ArrowUp' && currentNode.parentId) {
+    navigateTo(currentNode.parentId, 'up');
+  } else if (e.key === 'ArrowDown' && currentNode.children_ids && currentNode.children_ids.length > 0) {
+    navigateTo(currentNode.children_ids[0], 'down');
+  } else if (e.key === 'ArrowLeft') {
+    const worms = findWormholes(currentNode).filter((_, i) => i % 2 === 0);
+    if (worms.length > 0) navigateTo(worms[0].node.id, 'wormhole');
+  } else if (e.key === 'ArrowRight') {
+    const worms = findWormholes(currentNode).filter((_, i) => i % 2 === 1);
+    if (worms.length > 0) navigateTo(worms[0].node.id, 'wormhole');
+  }
+});
+
+// Init
+function init() {
+  flattenTree(TREE_DATA, null, 0);
+  document.getElementById('node-count').textContent = allNodes.length;
+  currentNode = nodeMap['ndd-root'];
+  render();
+  window.addEventListener('resize', () => renderInterstitial());
+}
+
+init();
+</script>
+</body>
+</html>
