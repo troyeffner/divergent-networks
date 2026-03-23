@@ -1,0 +1,820 @@
+{
+  "id": "linkedin_research_surface_v1",
+  "title": "LinkedIn Research Surface: AI & Product Work",
+  "active_container": "LinkedIn Research Surface",
+  "snapshot_date": "2026-03-23",
+  "description": "Practitioner perspectives on AI from LinkedIn engagement. Liam captures, David reviews.",
+  "entities": [
+    {
+      "id": "t_fatigue",
+      "type": "theme",
+      "label": "AI Fatigue",
+      "subtitle": "Cognitive and signal overload from AI-generated output velocity",
+      "state": {
+        "lifecycle_stage": "density",
+        "maturity_within_stage": 0.8,
+        "density": 7,
+        "resolution_status": "held"
+      },
+      "visual": {
+        "hue": "#c97b6a"
+      }
+    },
+    {
+      "id": "t_builders",
+      "type": "theme",
+      "label": "Non-Tech Builders",
+      "subtitle": "Practitioners building with AI without traditional technical backgrounds",
+      "state": {
+        "lifecycle_stage": "soil",
+        "maturity_within_stage": 0.65,
+        "density": 7,
+        "resolution_status": "held"
+      },
+      "visual": {
+        "hue": "#c99550"
+      }
+    },
+    {
+      "id": "t_quality",
+      "type": "theme",
+      "label": "Quality & Output",
+      "subtitle": "Tension between speed of generation and meaningful output standards",
+      "state": {
+        "lifecycle_stage": "work",
+        "maturity_within_stage": 0.72,
+        "density": 8,
+        "resolution_status": "held"
+      },
+      "visual": {
+        "hue": "#c4a84a"
+      }
+    },
+    {
+      "id": "t_strategy",
+      "type": "theme",
+      "label": "Strategy in UX",
+      "subtitle": "Strategic framing as the missing layer above execution",
+      "state": {
+        "lifecycle_stage": "density",
+        "maturity_within_stage": 0.55,
+        "density": 6,
+        "resolution_status": "arriving"
+      },
+      "visual": {
+        "hue": "#6e9472"
+      }
+    },
+    {
+      "id": "t_synthesis",
+      "type": "theme",
+      "label": "Synthesizing Signals",
+      "subtitle": "Converting ambient signal into structured, actionable orientation",
+      "state": {
+        "lifecycle_stage": "soil",
+        "maturity_within_stage": 0.7,
+        "density": 8,
+        "resolution_status": "held"
+      },
+      "visual": {
+        "hue": "#4d8e90"
+      }
+    },
+    {
+      "id": "t_carry",
+      "type": "theme",
+      "label": "Translation Carry",
+      "subtitle": "Practitioners who move meaning across layers without loss",
+      "state": {
+        "lifecycle_stage": "work",
+        "maturity_within_stage": 0.6,
+        "density": 6,
+        "resolution_status": "arriving"
+      },
+      "visual": {
+        "hue": "#8878a8"
+      }
+    },
+    {
+      "id": "s_saturation",
+      "type": "structural_fractal",
+      "label": "Saturation",
+      "subtitle": "Signal volume exceeds processing and orientation capacity",
+      "state": {
+        "lifecycle_stage": "density",
+        "maturity_within_stage": 0.85,
+        "density": 8,
+        "resolution_status": "held"
+      },
+      "visual": {
+        "hue": "#7a8490"
+      }
+    },
+    {
+      "id": "s_misalign",
+      "type": "structural_fractal",
+      "label": "Human-System Misalignment",
+      "subtitle": "Gap between AI system operation and human meaning construction",
+      "state": {
+        "lifecycle_stage": "soil",
+        "maturity_within_stage": 0.62,
+        "density": 7,
+        "resolution_status": "held"
+      },
+      "visual": {
+        "hue": "#7a8490"
+      }
+    },
+    {
+      "id": "s_transgap",
+      "type": "structural_fractal",
+      "label": "Translation Gap",
+      "subtitle": "Signal present but no mechanism to move it across organizational layers",
+      "state": {
+        "lifecycle_stage": "work",
+        "maturity_within_stage": 0.78,
+        "density": 9,
+        "resolution_status": "held"
+      },
+      "visual": {
+        "hue": "#7a8490"
+      }
+    },
+    {
+      "id": "s_defgap",
+      "type": "structural_fractal",
+      "label": "Structural Definition Gap",
+      "subtitle": "Absence of shared criteria for what constitutes quality output",
+      "state": {
+        "lifecycle_stage": "density",
+        "maturity_within_stage": 0.5,
+        "density": 6,
+        "resolution_status": "arriving"
+      },
+      "visual": {
+        "hue": "#7a8490"
+      }
+    },
+    {
+      "id": "s_orientgap",
+      "type": "structural_fractal",
+      "label": "Orientation Gap",
+      "subtitle": "System produces output but has no mechanism to situate it in context",
+      "state": {
+        "lifecycle_stage": "soil",
+        "maturity_within_stage": 0.58,
+        "density": 7,
+        "resolution_status": "arriving"
+      },
+      "visual": {
+        "hue": "#7a8490"
+      }
+    },
+    {
+      "id": "s_coordgap",
+      "type": "structural_fractal",
+      "label": "Coordination Gap",
+      "subtitle": "Decision rights and meaning flow are structurally separated",
+      "state": {
+        "lifecycle_stage": "exploration",
+        "maturity_within_stage": 0.42,
+        "density": 5,
+        "resolution_status": "arriving"
+      },
+      "visual": {
+        "hue": "#7a8490"
+      }
+    },
+    {
+      "id": "p_martin",
+      "type": "purveyor",
+      "label": "Martin Ortlieb",
+      "subtitle": "Researcher focused on human-AI interaction and cognitive limits",
+      "state": {
+        "lifecycle_stage": "density",
+        "maturity_within_stage": 0.75,
+        "density": 6,
+        "resolution_status": "held"
+      },
+      "visual": {
+        "hue": "#c97b6a"
+      },
+      "themes": [
+        "t_fatigue"
+      ],
+      "structural": [
+        "s_saturation",
+        "s_misalign"
+      ]
+    },
+    {
+      "id": "p_uday",
+      "type": "purveyor",
+      "label": "Uday Gajendar",
+      "subtitle": "Design strategist examining AI's displacement of human judgment",
+      "state": {
+        "lifecycle_stage": "density",
+        "maturity_within_stage": 0.7,
+        "density": 7,
+        "resolution_status": "held"
+      },
+      "visual": {
+        "hue": "#c97b6a"
+      },
+      "themes": [
+        "t_fatigue",
+        "t_strategy"
+      ],
+      "structural": [
+        "s_misalign"
+      ]
+    },
+    {
+      "id": "p_lenny",
+      "type": "purveyor",
+      "label": "Lenny Rachitsky",
+      "subtitle": "Product practitioner tracking non-technical builder emergence",
+      "state": {
+        "lifecycle_stage": "soil",
+        "maturity_within_stage": 0.68,
+        "density": 7,
+        "resolution_status": "held"
+      },
+      "visual": {
+        "hue": "#c99550"
+      },
+      "themes": [
+        "t_builders"
+      ],
+      "structural": [
+        "s_transgap"
+      ]
+    },
+    {
+      "id": "p_amit",
+      "type": "purveyor",
+      "label": "Amit Singh",
+      "subtitle": "Builder-practitioner at the intersection of AI and product creation",
+      "state": {
+        "lifecycle_stage": "soil",
+        "maturity_within_stage": 0.52,
+        "density": 5,
+        "resolution_status": "arriving"
+      },
+      "visual": {
+        "hue": "#c99550"
+      },
+      "themes": [
+        "t_builders"
+      ],
+      "structural": [
+        "s_transgap"
+      ]
+    },
+    {
+      "id": "p_sophia",
+      "type": "purveyor",
+      "label": "Sophia V. Prater",
+      "subtitle": "OOUX practitioner applying object-based thinking to builder challenges",
+      "state": {
+        "lifecycle_stage": "soil",
+        "maturity_within_stage": 0.6,
+        "density": 6,
+        "resolution_status": "held"
+      },
+      "visual": {
+        "hue": "#c99550"
+      },
+      "themes": [
+        "t_builders"
+      ],
+      "structural": [
+        "s_transgap"
+      ]
+    },
+    {
+      "id": "p_peter",
+      "type": "purveyor",
+      "label": "Peter Merholz",
+      "subtitle": "UX leader focused on craft standards and the quality-velocity tension",
+      "state": {
+        "lifecycle_stage": "work",
+        "maturity_within_stage": 0.8,
+        "density": 8,
+        "resolution_status": "held"
+      },
+      "visual": {
+        "hue": "#c4a84a"
+      },
+      "themes": [
+        "t_quality"
+      ],
+      "structural": [
+        "s_defgap"
+      ]
+    },
+    {
+      "id": "p_vel",
+      "type": "purveyor",
+      "label": "Velocity Ave / P04",
+      "subtitle": "Systems thinker working on orientation and saturation pattern synthesis",
+      "state": {
+        "lifecycle_stage": "soil",
+        "maturity_within_stage": 0.72,
+        "density": 8,
+        "resolution_status": "held"
+      },
+      "visual": {
+        "hue": "#4d8e90"
+      },
+      "themes": [
+        "t_synthesis"
+      ],
+      "structural": [
+        "s_saturation",
+        "s_orientgap"
+      ]
+    },
+    {
+      "id": "p_jenny",
+      "type": "purveyor",
+      "label": "Jenny Shirey",
+      "subtitle": "Research strategist bridging UX insights and organizational translation",
+      "state": {
+        "lifecycle_stage": "density",
+        "maturity_within_stage": 0.58,
+        "density": 6,
+        "resolution_status": "arriving"
+      },
+      "visual": {
+        "hue": "#6e9472"
+      },
+      "themes": [
+        "t_strategy"
+      ],
+      "structural": [
+        "s_transgap"
+      ]
+    },
+    {
+      "id": "p_rob",
+      "type": "purveyor",
+      "label": "Rob Manzano",
+      "subtitle": "Practitioner mapping signal-to-structure translation patterns",
+      "state": {
+        "lifecycle_stage": "soil",
+        "maturity_within_stage": 0.62,
+        "density": 6,
+        "resolution_status": "held"
+      },
+      "visual": {
+        "hue": "#4d8e90"
+      },
+      "themes": [
+        "t_synthesis"
+      ],
+      "structural": [
+        "s_transgap"
+      ]
+    },
+    {
+      "id": "p_maya",
+      "type": "purveyor",
+      "label": "Maya Elise Joseph-Goteiner",
+      "subtitle": "UX practitioner examining saturation effects on design quality",
+      "state": {
+        "lifecycle_stage": "density",
+        "maturity_within_stage": 0.5,
+        "density": 5,
+        "resolution_status": "arriving"
+      },
+      "visual": {
+        "hue": "#c4a84a"
+      },
+      "themes": [
+        "t_quality"
+      ],
+      "structural": [
+        "s_saturation"
+      ]
+    },
+    {
+      "id": "p_paul",
+      "type": "purveyor",
+      "label": "Paul Ladipo / C. Wodtke",
+      "subtitle": "Leadership practitioners mapping human meaning to system behavior",
+      "state": {
+        "lifecycle_stage": "work",
+        "maturity_within_stage": 0.65,
+        "density": 6,
+        "resolution_status": "held"
+      },
+      "visual": {
+        "hue": "#8878a8"
+      },
+      "themes": [
+        "t_carry"
+      ],
+      "structural": [
+        "s_misalign"
+      ]
+    },
+    {
+      "id": "p_aguinis",
+      "type": "purveyor",
+      "label": "Aguinis et al.",
+      "subtitle": "Research collective quantifying signal saturation in organizational contexts",
+      "state": {
+        "lifecycle_stage": "density",
+        "maturity_within_stage": 0.8,
+        "density": 7,
+        "resolution_status": "held"
+      },
+      "visual": {
+        "hue": "#4d8e90"
+      },
+      "themes": [
+        "t_synthesis"
+      ],
+      "structural": [
+        "s_saturation"
+      ]
+    },
+    {
+      "id": "p_troy",
+      "type": "purveyor",
+      "label": "Troy Effner",
+      "subtitle": "Fractal systems practitioner. Translation Carry + synthesis orientation.",
+      "state": {
+        "lifecycle_stage": "work",
+        "maturity_within_stage": 0.88,
+        "density": 9,
+        "resolution_status": "held"
+      },
+      "visual": {
+        "hue": "#8878a8"
+      },
+      "themes": [
+        "t_carry",
+        "t_synthesis"
+      ],
+      "structural": [
+        "s_transgap",
+        "s_saturation"
+      ]
+    },
+    {
+      "id": "p_robert",
+      "type": "purveyor",
+      "label": "Robert Duebelbeis",
+      "subtitle": "Quality-focused practitioner examining structural definition in AI workflows",
+      "state": {
+        "lifecycle_stage": "work",
+        "maturity_within_stage": 0.72,
+        "density": 7,
+        "resolution_status": "held"
+      },
+      "visual": {
+        "hue": "#c4a84a"
+      },
+      "themes": [
+        "t_quality"
+      ],
+      "structural": [
+        "s_defgap"
+      ]
+    }
+  ],
+  "relationships": [
+    {
+      "id": "r01",
+      "type": "converges_to",
+      "from": "t_fatigue",
+      "to": "s_saturation",
+      "weight": 0.9,
+      "synthesis": "fatigue emerges from saturation velocity"
+    },
+    {
+      "id": "r02",
+      "type": "converges_to",
+      "from": "t_fatigue",
+      "to": "s_misalign",
+      "weight": 0.75,
+      "synthesis": "human meaning resists AI output cadence"
+    },
+    {
+      "id": "r03",
+      "type": "converges_to",
+      "from": "t_builders",
+      "to": "s_transgap",
+      "weight": 0.88,
+      "synthesis": "builders expose translation absence"
+    },
+    {
+      "id": "r04",
+      "type": "converges_to",
+      "from": "t_quality",
+      "to": "s_defgap",
+      "weight": 0.85,
+      "synthesis": "quality requires definition before it exists"
+    },
+    {
+      "id": "r05",
+      "type": "converges_to",
+      "from": "t_strategy",
+      "to": "s_transgap",
+      "weight": 0.7,
+      "synthesis": "strategy without translation stays inert"
+    },
+    {
+      "id": "r06",
+      "type": "converges_to",
+      "from": "t_synthesis",
+      "to": "s_orientgap",
+      "weight": 0.82,
+      "synthesis": "synthesis is orientation made visible"
+    },
+    {
+      "id": "r07",
+      "type": "converges_to",
+      "from": "t_synthesis",
+      "to": "s_saturation",
+      "weight": 0.72,
+      "synthesis": "filtering is the response to saturation"
+    },
+    {
+      "id": "r08",
+      "type": "converges_to",
+      "from": "t_carry",
+      "to": "s_transgap",
+      "weight": 0.9,
+      "synthesis": "carry is the body of translation"
+    },
+    {
+      "id": "r09",
+      "type": "converges_to",
+      "from": "t_carry",
+      "to": "s_misalign",
+      "weight": 0.65,
+      "synthesis": "translation carriers bridge misalignment"
+    },
+    {
+      "id": "r10",
+      "type": "converges_to",
+      "from": "t_strategy",
+      "to": "s_coordgap",
+      "weight": 0.68,
+      "synthesis": "strategy exposes coordination failures"
+    },
+    {
+      "id": "r11",
+      "type": "supports",
+      "from": "s_saturation",
+      "to": "s_orientgap",
+      "weight": 0.78,
+      "synthesis": "saturation precipitates orientation failure"
+    },
+    {
+      "id": "r12",
+      "type": "supports",
+      "from": "s_transgap",
+      "to": "s_coordgap",
+      "weight": 0.72,
+      "synthesis": "translation failure compounds coordination gaps"
+    },
+    {
+      "id": "r13",
+      "type": "supports",
+      "from": "s_misalign",
+      "to": "s_coordgap",
+      "weight": 0.6,
+      "synthesis": "misalignment manifests as coordination loss"
+    },
+    {
+      "id": "r20",
+      "type": "expresses",
+      "from": "p_martin",
+      "to": "t_fatigue",
+      "weight": 0.85
+    },
+    {
+      "id": "r21",
+      "type": "expresses",
+      "from": "p_uday",
+      "to": "t_fatigue",
+      "weight": 0.8
+    },
+    {
+      "id": "r22",
+      "type": "expresses",
+      "from": "p_uday",
+      "to": "t_strategy",
+      "weight": 0.65
+    },
+    {
+      "id": "r23",
+      "type": "expresses",
+      "from": "p_lenny",
+      "to": "t_builders",
+      "weight": 0.82
+    },
+    {
+      "id": "r24",
+      "type": "expresses",
+      "from": "p_amit",
+      "to": "t_builders",
+      "weight": 0.7
+    },
+    {
+      "id": "r25",
+      "type": "expresses",
+      "from": "p_sophia",
+      "to": "t_builders",
+      "weight": 0.75
+    },
+    {
+      "id": "r26",
+      "type": "expresses",
+      "from": "p_peter",
+      "to": "t_quality",
+      "weight": 0.9
+    },
+    {
+      "id": "r27",
+      "type": "expresses",
+      "from": "p_vel",
+      "to": "t_synthesis",
+      "weight": 0.88
+    },
+    {
+      "id": "r28",
+      "type": "expresses",
+      "from": "p_jenny",
+      "to": "t_strategy",
+      "weight": 0.78
+    },
+    {
+      "id": "r29",
+      "type": "expresses",
+      "from": "p_rob",
+      "to": "t_synthesis",
+      "weight": 0.75
+    },
+    {
+      "id": "r30",
+      "type": "expresses",
+      "from": "p_maya",
+      "to": "t_quality",
+      "weight": 0.65
+    },
+    {
+      "id": "r31",
+      "type": "expresses",
+      "from": "p_paul",
+      "to": "t_carry",
+      "weight": 0.8
+    },
+    {
+      "id": "r32",
+      "type": "expresses",
+      "from": "p_aguinis",
+      "to": "t_synthesis",
+      "weight": 0.82
+    },
+    {
+      "id": "r33",
+      "type": "expresses",
+      "from": "p_troy",
+      "to": "t_carry",
+      "weight": 0.92
+    },
+    {
+      "id": "r34",
+      "type": "expresses",
+      "from": "p_troy",
+      "to": "t_synthesis",
+      "weight": 0.88
+    },
+    {
+      "id": "r35",
+      "type": "expresses",
+      "from": "p_robert",
+      "to": "t_quality",
+      "weight": 0.82
+    },
+    {
+      "id": "r40",
+      "type": "should_talk_to",
+      "from": "p_martin",
+      "to": "p_aguinis",
+      "weight": 0.88,
+      "synthesis": "fatigue emerges from saturation"
+    },
+    {
+      "id": "r41",
+      "type": "should_talk_to",
+      "from": "p_lenny",
+      "to": "p_peter",
+      "weight": 0.82,
+      "synthesis": "output expands before quality is defined"
+    },
+    {
+      "id": "r42",
+      "type": "should_talk_to",
+      "from": "p_rob",
+      "to": "p_vel",
+      "weight": 0.85,
+      "synthesis": "filtering is the core barrier"
+    },
+    {
+      "id": "r43",
+      "type": "should_talk_to",
+      "from": "p_jenny",
+      "to": "p_rob",
+      "weight": 0.78,
+      "synthesis": "strategy bridges research gaps"
+    },
+    {
+      "id": "r44",
+      "type": "should_talk_to",
+      "from": "p_sophia",
+      "to": "p_peter",
+      "weight": 0.75,
+      "synthesis": "builders challenge quality definitions"
+    },
+    {
+      "id": "r45",
+      "type": "should_talk_to",
+      "from": "p_uday",
+      "to": "p_paul",
+      "weight": 0.8,
+      "synthesis": "human meaning drives systems"
+    },
+    {
+      "id": "r46",
+      "type": "should_talk_to",
+      "from": "p_troy",
+      "to": "p_vel",
+      "weight": 0.9,
+      "synthesis": "orientation failure under saturation"
+    },
+    {
+      "id": "r47",
+      "type": "should_talk_to",
+      "from": "p_amit",
+      "to": "p_rob",
+      "weight": 0.72,
+      "synthesis": "builders need structured interpretation"
+    },
+    {
+      "id": "r48",
+      "type": "should_talk_to",
+      "from": "p_troy",
+      "to": "p_jenny",
+      "weight": 0.75,
+      "synthesis": "carry requires strategic translation layer"
+    },
+    {
+      "id": "r49",
+      "type": "should_talk_to",
+      "from": "p_peter",
+      "to": "p_robert",
+      "weight": 0.82,
+      "synthesis": "quality definition is a shared structural problem"
+    },
+    {
+      "id": "r50",
+      "type": "tension_with",
+      "from": "p_troy",
+      "to": "p_robert",
+      "weight": 0.8,
+      "synthesis": "decision rights vs meaning flow tension"
+    },
+    {
+      "id": "r51",
+      "type": "tension_with",
+      "from": "p_peter",
+      "to": "p_lenny",
+      "weight": 0.65,
+      "synthesis": "craft standards vs builder velocity"
+    },
+    {
+      "id": "r52",
+      "type": "tension_with",
+      "from": "p_aguinis",
+      "to": "p_vel",
+      "weight": 0.6,
+      "synthesis": "measurement vs orientation as response to saturation"
+    }
+  ],
+  "views": {
+    "default": "fractal",
+    "supported": [
+      "fractal",
+      "purveyor",
+      "theme",
+      "structural",
+      "provenance"
+    ]
+  }
+}
