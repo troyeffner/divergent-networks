@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { productJobs, audienceJobs, wormholes } from "@/components/InterestForm";
+import { productJobs } from "@/components/InterestForm";
 
 interface StoryMoment {
   slug: string;
@@ -72,18 +72,6 @@ const storyMoments: StoryMoment[] = [
 
 export default function StoryPage() {
   const [expandedMoment, setExpandedMoment] = useState<string | null>(null);
-  const [selectedStoryJobs, setSelectedStoryJobs] = useState<Record<string, string[]>>({});
-
-  function toggleStoryJob(slug: string, job: string) {
-    setSelectedStoryJobs((prev) => {
-      const current = prev[slug] || [];
-      if (current.includes(job)) {
-        return { ...prev, [slug]: current.filter((j) => j !== job) };
-      }
-      if (current.length >= 2) return prev;
-      return { ...prev, [slug]: [...current, job] };
-    });
-  }
 
   return (
     <main className="min-h-screen">
@@ -166,7 +154,7 @@ export default function StoryPage() {
                       {moment.connection}
                     </p>
 
-                    {/* Expanded: show visitor jobs + wormholes */}
+                    {/* Expanded: jobs as navigation links */}
                     {isExpanded && productJobs[moment.slug] && (
                       <div className="mt-6 border border-brand-border rounded-lg p-5 bg-brand-bg/50">
                         <h3 className="text-xs font-semibold tracking-widest uppercase text-brand-muted mb-4">
@@ -174,82 +162,22 @@ export default function StoryPage() {
                         </h3>
 
                         <div className="space-y-2">
-                          {productJobs[moment.slug].jobs.map((job) => {
-                            const jobsForSlug = selectedStoryJobs[moment.slug] || [];
-                            const isSelected = jobsForSlug.includes(job);
-                            const isDisabled = !isSelected && jobsForSlug.length >= 2;
-                            return (
-                              <button
-                                key={job}
-                                type="button"
-                                onClick={() => toggleStoryJob(moment.slug, job)}
-                                disabled={isDisabled}
-                                className={`w-full text-left px-4 py-2.5 rounded border text-[0.875rem] transition-colors duration-150 ${
-                                  isSelected
-                                    ? "border-brand-accent bg-brand-accent/10 text-brand-text"
-                                    : isDisabled
-                                    ? "border-brand-border text-brand-muted/50 cursor-not-allowed"
-                                    : "border-brand-border text-brand-text opacity-75 hover:border-brand-accent-dim hover:opacity-100"
-                                }`}
-                              >
-                                {job}
-                              </button>
-                            );
-                          })}
+                          {productJobs[moment.slug].jobs.map((job) => (
+                            <Link
+                              key={job}
+                              href={`/work/${moment.slug}?job=${encodeURIComponent(job)}`}
+                              className="w-full text-left px-4 py-2.5 rounded border border-brand-border text-[0.875rem] text-brand-text opacity-75 hover:border-brand-accent-dim hover:opacity-100 transition-colors duration-150 flex items-center justify-between group block"
+                            >
+                              <span>{job}</span>
+                              <span className="text-xs text-brand-muted group-hover:text-brand-accent transition-colors duration-150">&rarr;</span>
+                            </Link>
+                          ))}
                         </div>
-
-                        {/* Observer jobs: how visitors relate to this work */}
-                        <div className="mt-4 pt-3 border-t border-brand-border">
-                          <h3 className="text-xs font-semibold tracking-widest uppercase text-brand-muted mb-3">
-                            Or are you here to help?
-                          </h3>
-                          <div className="space-y-2">
-                            {Object.entries(audienceJobs)
-                              .filter(([key]) => key !== "consulting")
-                              .map(([key, audience]) => (
-                                <Link
-                                  key={key}
-                                  href={`/connect`}
-                                  className="block px-4 py-2.5 rounded border border-brand-border text-[0.875rem] hover:border-brand-accent-dim transition-colors duration-150"
-                                >
-                                  <span className="text-brand-text opacity-75">{audience.label}</span>
-                                  <span className="block text-xs text-brand-muted mt-0.5">{audience.description}</span>
-                                </Link>
-                              ))}
-                          </div>
-                        </div>
-
-                        {/* Wormholes triggered by selected jobs */}
-                        {(selectedStoryJobs[moment.slug] || [])
-                          .filter((job) => wormholes[job] && wormholes[job].product !== moment.slug)
-                          .map((job) => {
-                            const w = wormholes[job];
-                            return (
-                              <a
-                                key={w.product}
-                                href={`#`}
-                                onClick={(e) => {
-                                  e.preventDefault();
-                                  setExpandedMoment(w.product);
-                                  setSelectedStoryJobs({});
-                                  document.getElementById(`moment-${w.product}`)?.scrollIntoView({ behavior: "smooth", block: "start" });
-                                }}
-                                className="block mt-3 px-4 py-3 rounded border border-brand-accent-dim/40 bg-brand-accent/5 hover:border-brand-accent-dim transition-colors duration-150"
-                              >
-                                <span className="text-xs font-semibold tracking-wider uppercase text-brand-accent">
-                                  {w.prompt}
-                                </span>
-                                <span className="block text-[0.8125rem] text-brand-muted mt-0.5">
-                                  See {w.label} &rarr;
-                                </span>
-                              </a>
-                            );
-                          })}
 
                         <div className="mt-4 pt-3 border-t border-brand-border flex gap-4">
                           <Link
                             href={`/work/${moment.slug}`}
-                            className="text-sm text-brand-accent hover:text-brand-text transition-colors duration-150"
+                            className="text-sm text-brand-muted hover:text-brand-accent transition-colors duration-150"
                           >
                             Full detail page &rarr;
                           </Link>

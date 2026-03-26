@@ -1,7 +1,9 @@
 import { notFound } from "next/navigation";
 import type { Metadata } from "next";
 import Link from "next/link";
+import { Suspense } from "react";
 import { projects } from "@/lib/projects";
+import JobWormholes from "@/components/JobWormholes";
 
 export function generateStaticParams() {
   return Object.keys(projects).map((slug) => ({ slug }));
@@ -157,12 +159,22 @@ export default function WorkPage({ params }: { params: { slug: string } }) {
           )}
         </div>
 
+        <Suspense fallback={null}>
+          <JobWormholes slug={params.slug} />
+        </Suspense>
+
         <div className="mt-12 pt-8 border-t border-brand-border flex gap-6">
           <Link
             href="/"
             className="text-sm text-brand-muted hover:text-brand-accent transition-colors duration-150"
           >
             &larr; All work
+          </Link>
+          <Link
+            href="/story"
+            className="text-sm text-brand-muted hover:text-brand-accent transition-colors duration-150"
+          >
+            &larr; Story
           </Link>
           <Link
             href={`/connect?product=${params.slug}`}
