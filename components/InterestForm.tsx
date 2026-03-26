@@ -5,7 +5,7 @@ import { supabase } from "@/lib/supabase";
 
 type FormState = "idle" | "submitting" | "success" | "error";
 
-const audienceJobs: Record<string, { label: string; description: string; jobs: string[] }> = {
+export const audienceJobs: Record<string, { label: string; description: string; jobs: string[] }> = {
   friend: {
     label: "Friend or supporter",
     description: "You know Troy or found this through someone who does.",

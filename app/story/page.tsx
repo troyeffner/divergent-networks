@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { productJobs, wormholes } from "@/components/InterestForm";
+import { productJobs, audienceJobs, wormholes } from "@/components/InterestForm";
 
 interface StoryMoment {
   slug: string;
@@ -196,6 +196,27 @@ export default function StoryPage() {
                               </button>
                             );
                           })}
+                        </div>
+
+                        {/* Observer jobs: how visitors relate to this work */}
+                        <div className="mt-4 pt-3 border-t border-brand-border">
+                          <h3 className="text-xs font-semibold tracking-widest uppercase text-brand-muted mb-3">
+                            Or are you here to help?
+                          </h3>
+                          <div className="space-y-2">
+                            {Object.entries(audienceJobs)
+                              .filter(([key]) => key !== "consulting")
+                              .map(([key, audience]) => (
+                                <Link
+                                  key={key}
+                                  href={`/connect`}
+                                  className="block px-4 py-2.5 rounded border border-brand-border text-[0.875rem] hover:border-brand-accent-dim transition-colors duration-150"
+                                >
+                                  <span className="text-brand-text opacity-75">{audience.label}</span>
+                                  <span className="block text-xs text-brand-muted mt-0.5">{audience.description}</span>
+                                </Link>
+                              ))}
+                          </div>
                         </div>
 
                         {/* Wormholes triggered by selected jobs */}
