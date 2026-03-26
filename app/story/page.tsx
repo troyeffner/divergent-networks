@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { productJobs } from "@/components/InterestForm";
+import { productJobs, audienceJobs } from "@/components/InterestForm";
 
 interface StoryMoment {
   slug: string;
@@ -72,6 +72,7 @@ const storyMoments: StoryMoment[] = [
 
 export default function StoryPage() {
   const [expandedMoment, setExpandedMoment] = useState<string | null>(null);
+  const [selectedAudience, setSelectedAudience] = useState<string | null>(null);
 
   return (
     <main className="min-h-screen">
@@ -98,8 +99,62 @@ export default function StoryPage() {
 
         <div className="h-px bg-brand-border mb-8" />
 
+        {/* Observer jobs: who are you? */}
+        <div className="mb-12">
+          <h2 className="text-xs font-semibold tracking-widest uppercase text-brand-muted mb-4">
+            Who are you in relation to this work?
+          </h2>
+          <div className="space-y-2">
+            {Object.entries(audienceJobs).map(([key, audience]) => {
+              const isSelected = selectedAudience === key;
+              return (
+                <button
+                  key={key}
+                  type="button"
+                  onClick={() => setSelectedAudience(isSelected ? null : key)}
+                  className={`w-full text-left px-4 py-3 rounded border transition-colors duration-150 ${
+                    isSelected
+                      ? "border-brand-accent bg-brand-accent/10"
+                      : "border-brand-border hover:border-brand-accent-dim"
+                  }`}
+                >
+                  <span className={`text-[0.9375rem] ${isSelected ? "text-brand-text" : "text-brand-text opacity-75"}`}>
+                    {audience.label}
+                  </span>
+                  <span className="block text-xs text-brand-muted mt-0.5">
+                    {audience.description}
+                  </span>
+                </button>
+              );
+            })}
+          </div>
+
+          {/* Show jobs for selected audience */}
+          {selectedAudience && audienceJobs[selectedAudience] && (
+            <div className="mt-4 border border-brand-border rounded-lg p-5 bg-brand-bg/50">
+              <h3 className="text-xs font-semibold tracking-widest uppercase text-brand-muted mb-3">
+                What are you trying to do?
+              </h3>
+              <div className="space-y-2">
+                {audienceJobs[selectedAudience].jobs.map((job) => (
+                  <Link
+                    key={job}
+                    href={`/connect?audience=${selectedAudience}&job=${encodeURIComponent(job)}`}
+                    className="w-full text-left px-4 py-2.5 rounded border border-brand-border text-[0.875rem] text-brand-text opacity-75 hover:border-brand-accent-dim hover:opacity-100 transition-colors duration-150 flex items-center justify-between group block"
+                  >
+                    <span>{job}</span>
+                    <span className="text-xs text-brand-muted group-hover:text-brand-accent transition-colors duration-150">&rarr;</span>
+                  </Link>
+                ))}
+              </div>
+            </div>
+          )}
+        </div>
+
+        <div className="h-px bg-brand-border mb-8" />
+
         <p className="text-xs text-brand-muted mb-8">
-          Each moment below expands. Click to see the jobs people bring to each product.
+          Or trace the path. Each moment below expands to show the jobs people bring to each product.
         </p>
 
         <div className="space-y-0">
@@ -172,6 +227,28 @@ export default function StoryPage() {
                               <span className="text-xs text-brand-muted group-hover:text-brand-accent transition-colors duration-150">&rarr;</span>
                             </Link>
                           ))}
+                        </div>
+
+                        {/* Observer audience jobs */}
+                        <div className="mt-5 pt-4 border-t border-brand-border">
+                          <h3 className="text-xs font-semibold tracking-widest uppercase text-brand-muted mb-3">
+                            Or are you here as...
+                          </h3>
+                          <div className="space-y-2">
+                            {Object.entries(audienceJobs).map(([key, audience]) => (
+                              <Link
+                                key={key}
+                                href={`/connect?product=${moment.slug}&audience=${key}`}
+                                className="w-full text-left px-4 py-2.5 rounded border border-brand-border text-[0.875rem] text-brand-text opacity-75 hover:border-brand-accent-dim hover:opacity-100 transition-colors duration-150 flex items-center justify-between group block"
+                              >
+                                <div>
+                                  <span>{audience.label}</span>
+                                  <span className="block text-xs text-brand-muted mt-0.5">{audience.description}</span>
+                                </div>
+                                <span className="text-xs text-brand-muted group-hover:text-brand-accent transition-colors duration-150">&rarr;</span>
+                              </Link>
+                            ))}
+                          </div>
                         </div>
 
                         <div className="mt-4 pt-3 border-t border-brand-border flex gap-4">
