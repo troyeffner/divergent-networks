@@ -108,7 +108,11 @@ export default function StoryPage() {
           At Zillow, I watched the business resist putting jobs-to-be-done on the surface of the product, even though everyone agreed they were the truth. When we finally listed the jobs so the person could orient themselves, it was a clear winner. The company just was not sure. That tension between knowing what is real and resisting the simplicity of looking at it runs through everything here. These products look at the water.
         </p>
 
-        <div className="h-px bg-brand-border mb-12" />
+        <div className="h-px bg-brand-border mb-8" />
+
+        <p className="text-xs text-brand-muted mb-8">
+          Each moment below expands. Click to see the jobs people bring to each product.
+        </p>
 
         <div className="space-y-0">
           {storyMoments.map((moment, i) => {
@@ -123,13 +127,17 @@ export default function StoryPage() {
 
                 <div className="flex gap-5 pb-12">
                   {/* Timeline dot */}
-                  <div className="mt-[6px] shrink-0">
+                  <button
+                    onClick={() => setExpandedMoment(isExpanded ? null : moment.slug)}
+                    className="mt-[6px] shrink-0 cursor-pointer"
+                    aria-label={isExpanded ? "Collapse" : "Expand"}
+                  >
                     <div className={`w-[23px] h-[23px] rounded-full border-2 ${
                       isExpanded
                         ? "border-brand-accent bg-brand-accent/20"
-                        : "border-brand-border bg-brand-bg"
+                        : "border-brand-border bg-brand-bg hover:border-brand-accent-dim"
                     } transition-colors duration-200`} />
-                  </div>
+                  </button>
 
                   {/* Content */}
                   <div className="flex-1 min-w-0">
@@ -139,9 +147,16 @@ export default function StoryPage() {
                       }}
                       className="text-left w-full group"
                     >
-                      <h2 className="text-lg font-semibold text-brand-text group-hover:text-brand-accent transition-colors duration-150 mb-2">
-                        {moment.heading}
-                      </h2>
+                      <div className="flex items-start justify-between gap-3">
+                        <h2 className="text-lg font-semibold text-brand-text group-hover:text-brand-accent transition-colors duration-150 mb-2">
+                          {moment.heading}
+                        </h2>
+                        <span className={`mt-1.5 shrink-0 text-xs text-brand-muted transition-transform duration-200 ${
+                          isExpanded ? "rotate-90" : ""
+                        }`}>
+                          &#9654;
+                        </span>
+                      </div>
                       <p className="text-[0.9375rem] leading-relaxed text-brand-text opacity-65">
                         {moment.narrative}
                       </p>
