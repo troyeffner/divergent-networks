@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { projects } from "@/lib/projects";
+import { productJobs, wormholes } from "@/components/InterestForm";
 
 interface StoryMoment {
   slug: string;
@@ -72,7 +72,18 @@ const storyMoments: StoryMoment[] = [
 
 export default function StoryPage() {
   const [expandedMoment, setExpandedMoment] = useState<string | null>(null);
-  const [expandedFramework, setExpandedFramework] = useState<string | null>(null);
+  const [selectedStoryJobs, setSelectedStoryJobs] = useState<Record<string, string[]>>({});
+
+  function toggleStoryJob(slug: string, job: string) {
+    setSelectedStoryJobs((prev) => {
+      const current = prev[slug] || [];
+      if (current.includes(job)) {
+        return { ...prev, [slug]: current.filter((j) => j !== job) };
+      }
+      if (current.length >= 2) return prev;
+      return { ...prev, [slug]: [...current, job] };
+    });
+  }
 
   return (
     <main className="min-h-screen">
@@ -101,11 +112,10 @@ export default function StoryPage() {
 
         <div className="space-y-0">
           {storyMoments.map((moment, i) => {
-            const project = projects[moment.slug];
             const isExpanded = expandedMoment === moment.slug;
 
             return (
-              <div key={moment.slug} className="relative">
+              <div key={moment.slug} id={`moment-${moment.slug}`} className="relative">
                 {/* Vertical connector line */}
                 {i < storyMoments.length - 1 && (
                   <div className="absolute left-[11px] top-[28px] bottom-0 w-px bg-brand-border" />
@@ -126,7 +136,6 @@ export default function StoryPage() {
                     <button
                       onClick={() => {
                         setExpandedMoment(isExpanded ? null : moment.slug);
-                        setExpandedFramework(null);
                       }}
                       className="text-left w-full group"
                     >
@@ -142,89 +151,77 @@ export default function StoryPage() {
                       {moment.connection}
                     </p>
 
-                    {/* Expanded: show product frameworks */}
-                    {isExpanded && project && (
+                    {/* Expanded: show visitor jobs + wormholes */}
+                    {isExpanded && productJobs[moment.slug] && (
                       <div className="mt-6 border border-brand-border rounded-lg p-5 bg-brand-bg/50">
-                        <div className="flex items-center justify-between mb-4">
-                          <h3 className="text-sm font-semibold text-brand-text">
-                            {project.name}
-                          </h3>
-                          {project.stage && (
-                            <span className="text-xs font-semibold tracking-wider uppercase px-2 py-0.5 rounded border border-brand-border text-brand-muted">
-                              {project.stage}
-                            </span>
-                          )}
-                        </div>
+                        <h3 className="text-xs font-semibold tracking-widest uppercase text-brand-muted mb-4">
+                          Is this you?
+                        </h3>
 
-                        {/* Framework accordion */}
-                        <div className="space-y-1">
-                          {project.frameworks.map((fw) => {
-                            const fwKey = `${moment.slug}-${fw.name}`;
-                            const fwExpanded = expandedFramework === fwKey;
-
+                        <div className="space-y-2">
+                          {productJobs[moment.slug].jobs.map((job) => {
+                            const jobsForSlug = selectedStoryJobs[moment.slug] || [];
+                            const isSelected = jobsForSlug.includes(job);
+                            const isDisabled = !isSelected && jobsForSlug.length >= 2;
                             return (
-                              <div key={fwKey}>
-                                <button
-                                  onClick={() =>
-                                    setExpandedFramework(fwExpanded ? null : fwKey)
-                                  }
-                                  className="w-full text-left py-2 flex items-center justify-between group"
-                                >
-                                  <span className={`text-sm ${
-                                    fw.pending
-                                      ? "text-brand-muted"
-                                      : "text-brand-text opacity-80 group-hover:opacity-100"
-                                  } transition-opacity duration-150`}>
-                                    {fw.name}
-                                    {fw.pending && (
-                                      <span className="text-xs text-brand-muted opacity-60 ml-2">
-                                        pending
-                                      </span>
-                                    )}
-                                  </span>
-                                  <span className={`text-brand-muted text-xs transition-transform duration-200 ${
-                                    fwExpanded ? "rotate-90" : ""
-                                  }`}>
-                                    &#9654;
-                                  </span>
-                                </button>
-
-                                {fwExpanded && (
-                                  <ul className="pl-4 pb-3 space-y-2">
-                                    {fw.samples.map((s, j) => (
-                                      <li key={j} className="flex gap-3 items-start">
-                                        <span className={`mt-1 shrink-0 ${
-                                          fw.pending
-                                            ? "text-brand-muted opacity-50"
-                                            : "text-brand-accent-dim"
-                                        }`}>
-                                          &bull;
-                                        </span>
-                                        <p className={`text-[0.875rem] leading-relaxed text-brand-text ${
-                                          fw.pending ? "opacity-50 italic" : "opacity-75"
-                                        }`}>
-                                          {s}
-                                        </p>
-                                      </li>
-                                    ))}
-                                    {!fw.pending && (
-                                      <p className="text-xs text-brand-muted opacity-50 ml-6">
-                                        Sample from full framework
-                                      </p>
-                                    )}
-                                  </ul>
-                                )}
-                              </div>
+                              <button
+                                key={job}
+                                type="button"
+                                onClick={() => toggleStoryJob(moment.slug, job)}
+                                disabled={isDisabled}
+                                className={`w-full text-left px-4 py-2.5 rounded border text-[0.875rem] transition-colors duration-150 ${
+                                  isSelected
+                                    ? "border-brand-accent bg-brand-accent/10 text-brand-text"
+                                    : isDisabled
+                                    ? "border-brand-border text-brand-muted/50 cursor-not-allowed"
+                                    : "border-brand-border text-brand-text opacity-75 hover:border-brand-accent-dim hover:opacity-100"
+                                }`}
+                              >
+                                {job}
+                              </button>
                             );
                           })}
                         </div>
 
-                        <div className="mt-4 pt-3 border-t border-brand-border">
+                        {/* Wormholes triggered by selected jobs */}
+                        {(selectedStoryJobs[moment.slug] || [])
+                          .filter((job) => wormholes[job] && wormholes[job].product !== moment.slug)
+                          .map((job) => {
+                            const w = wormholes[job];
+                            return (
+                              <a
+                                key={w.product}
+                                href={`#`}
+                                onClick={(e) => {
+                                  e.preventDefault();
+                                  setExpandedMoment(w.product);
+                                  setSelectedStoryJobs({});
+                                  document.getElementById(`moment-${w.product}`)?.scrollIntoView({ behavior: "smooth", block: "start" });
+                                }}
+                                className="block mt-3 px-4 py-3 rounded border border-brand-accent-dim/40 bg-brand-accent/5 hover:border-brand-accent-dim transition-colors duration-150"
+                              >
+                                <span className="text-xs font-semibold tracking-wider uppercase text-brand-accent">
+                                  {w.prompt}
+                                </span>
+                                <span className="block text-[0.8125rem] text-brand-muted mt-0.5">
+                                  See {w.label} &rarr;
+                                </span>
+                              </a>
+                            );
+                          })}
+
+                        <div className="mt-4 pt-3 border-t border-brand-border flex gap-4">
                           <Link
                             href={`/work/${moment.slug}`}
                             className="text-sm text-brand-accent hover:text-brand-text transition-colors duration-150"
                           >
                             Full detail page &rarr;
+                          </Link>
+                          <Link
+                            href={`/connect?product=${moment.slug}`}
+                            className="text-sm font-semibold text-brand-accent hover:text-brand-text transition-colors duration-150"
+                          >
+                            I want in
                           </Link>
                         </div>
                       </div>

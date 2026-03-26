@@ -60,7 +60,7 @@ const audienceJobs: Record<string, { label: string; description: string; jobs: s
   },
 };
 
-const productJobs: Record<string, { label: string; jobs: string[] }> = {
+export const productJobs: Record<string, { label: string; jobs: string[] }> = {
   homeground: {
     label: "Home Ground",
     jobs: [
@@ -117,7 +117,7 @@ const productJobs: Record<string, { label: string; jobs: string[] }> = {
 };
 
 // Wormholes: when a job is selected, it may bridge to another product
-const wormholes: Record<string, { product: string; label: string; prompt: string }> = {
+export const wormholes: Record<string, { product: string; label: string; prompt: string }> = {
   // homeground wormholes
   "Compare neighborhoods by how they support my daily life":
     { product: "commons", label: "The Commons", prompt: "The neighborhood knowledge is already there" },
