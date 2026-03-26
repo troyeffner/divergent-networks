@@ -1,177 +1,153 @@
 import Link from "next/link";
 
-const liveProducts = [
+const branches = [
   {
-    slug: "homeground",
-    name: "Home Ground",
+    name: "Research Infrastructure",
     description:
-      "A personal decision toolkit for home buyers — built around three questions nobody else separates: what can I afford, what can I sustain, and what supports the life I want?",
-    liveUrl: "https://livability-alpha.vercel.app",
-    hasDetailPage: true,
+      "Building the systems that make understanding repeatable. Interview protocols, synthesis patterns, stakeholder narrative frameworks, evidence architectures. The infrastructure survives after the project ends.",
   },
   {
-    slug: "smallbiz",
-    name: "Small Biz Operator",
+    name: "Applied Research",
     description:
-      "Workflow tools designed around how small business operators actually make daily decisions — not how accounting software thinks they do.",
-    liveUrl: "https://smallbiz-peach.vercel.app",
-    hasDetailPage: true,
-  },
-  {
-    slug: "commons",
-    name: "The Commons",
-    description:
-      "Hyperlocal community information — discovered, curated, and governed fairly. Starting with photo-native community boards.",
-    liveUrl: "https://uticacommunityboard.vercel.app",
-    hasDetailPage: true,
+      "Entering the field where understanding meets the person. Rapid qualitative methods, stakeholder interviews, decision-theater facilitation, evidence-based go-to-market.",
   },
 ];
 
-const conceptProducts = [
-  {
-    slug: "ndd",
-    name: "Narrative Driven Design",
-    description:
-      "Research infrastructure that accumulates intelligence and coordinates the workforce — the backbone of every Divergent Networks product.",
-  },
-  {
-    slug: "tyfbaf",
-    name: "tyfbaf",
-    description:
-      "Free home swaps between friends — you travel, they stay at yours, and vice versa. Trust circles, not marketplaces.",
-  },
-];
-
-const seedProducts = [
-  {
-    name: "Color Coordination",
-    description:
-      "An opinionated tool for choosing outfits that actually coordinate — built around color theory and what you already own, not another app that guesses.",
-  },
-];
-
-const clientWork = [
-  {
-    label: "SaaS / Research Practice",
-    description:
-      "Rebuilt a mid-size SaaS company's research practice from the ground up. Reduced time-to-insight from six weeks to five days.",
-  },
-  {
-    label: "Fintech / Product Strategy",
-    description:
-      "Designed a JTBD framework for a fintech product team. Became the decision-making foundation for three consecutive product cycles.",
-  },
-  {
-    label: "Healthcare / Go-to-Market",
-    description:
-      "Led concept validation for an early-stage healthcare platform. Identified the right actor in two sessions, reshaping the entire go-to-market approach.",
-  },
-];
+const products = {
+  live: [
+    {
+      slug: "homeground",
+      name: "Home Ground",
+      tagline: "Personal decision toolkit for home buyers",
+      url: "https://livability-alpha.vercel.app",
+    },
+    {
+      slug: "smallbiz",
+      name: "Small Biz Operator",
+      tagline: "Workflow tools for how operators actually make daily decisions",
+      url: "https://smallbiz-peach.vercel.app",
+    },
+    {
+      slug: "commons",
+      name: "The Commons",
+      tagline:
+        "Hyperlocal community information discovered, curated, and governed fairly",
+      url: "https://uticacommunityboard.vercel.app",
+    },
+  ],
+  concept: [
+    {
+      slug: "tyfbaf",
+      name: "tyfbaf",
+      tagline: "Trust-based home swaps between friends",
+    },
+  ],
+  seed: [
+    {
+      name: "SatButtons",
+      tagline: "Opinionated outfit coordination tool",
+    },
+  ],
+};
 
 export default function Work() {
   return (
-    <section className="mb-16 md:mb-20">
+    <section className="mb-16">
       <div className="h-px bg-brand-border mb-10" />
-
-      {/* Product Portfolio */}
       <h2 className="text-xs font-semibold tracking-widest uppercase text-brand-muted mb-8">
-        Product Portfolio
+        Work
       </h2>
 
-      {/* Live */}
-      <p className="text-xs font-semibold tracking-wider uppercase text-brand-accent mb-4">
-        Live
-      </p>
-      <div className="space-y-3 mb-10">
-        {liveProducts.map((p) => (
-          <div key={p.slug} className="border border-brand-border rounded-lg p-5">
-            <div className="flex items-baseline justify-between gap-3 mb-1">
-              {p.hasDetailPage ? (
+      <div className="space-y-6 mb-10">
+        {branches.map((branch) => (
+          <div key={branch.name}>
+            <h3 className="text-base font-semibold text-brand-text mb-2">
+              {branch.name}
+            </h3>
+            <p className="text-[0.9375rem] leading-relaxed text-brand-text opacity-75">
+              {branch.description}
+            </p>
+          </div>
+        ))}
+      </div>
+
+      <h3 className="text-xs font-semibold tracking-widest uppercase text-brand-muted mb-4">
+        Products
+      </h3>
+
+      <div className="space-y-4 mb-6">
+        {products.live.map((p) => (
+          <div
+            key={p.slug}
+            className="border border-brand-border rounded-lg p-5"
+          >
+            <div className="flex items-start justify-between gap-4">
+              <div>
                 <Link
                   href={`/work/${p.slug}`}
                   className="text-base font-semibold text-brand-text hover:text-brand-accent transition-colors duration-150"
                 >
                   {p.name}
                 </Link>
-              ) : (
-                <h3 className="text-base font-semibold text-brand-text">{p.name}</h3>
-              )}
-              <a
-                href={p.liveUrl}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="text-xs font-medium text-brand-accent hover:text-brand-text transition-colors duration-150 shrink-0"
-              >
-                View live ↗
-              </a>
-            </div>
-            {p.hasDetailPage ? (
-              <Link href={`/work/${p.slug}`} className="block">
-                <p className="text-[0.9375rem] leading-relaxed text-brand-text opacity-75">
-                  {p.description}
+                <p className="text-[0.9375rem] leading-relaxed text-brand-text opacity-75 mt-1">
+                  {p.tagline}
                 </p>
-              </Link>
-            ) : (
-              <p className="text-[0.9375rem] leading-relaxed text-brand-text opacity-75">
-                {p.description}
-              </p>
-            )}
+              </div>
+              <div className="flex items-center gap-3 shrink-0">
+                <span className="text-xs text-brand-accent font-medium">
+                  Live
+                </span>
+                <a
+                  href={p.url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-sm font-medium text-brand-accent border-b border-brand-accent-dim pb-px transition-colors duration-150 hover:text-brand-text hover:border-brand-muted"
+                >
+                  Visit
+                </a>
+              </div>
+            </div>
           </div>
         ))}
       </div>
 
-      {/* Concept */}
-      <p className="text-xs font-semibold tracking-wider uppercase text-brand-muted mb-4">
-        Concept
-      </p>
-      <div className="space-y-3 mb-10">
-        {conceptProducts.map((p) => (
-          <Link
+      <div className="space-y-4 mb-6">
+        {products.concept.map((p) => (
+          <div
             key={p.slug}
-            href={`/work/${p.slug}`}
-            className="group block border border-brand-border rounded-lg p-5 transition-colors duration-150 hover:border-brand-accent-dim"
+            className="border border-brand-border rounded-lg p-5 opacity-80"
           >
-            <h3 className="text-base font-semibold text-brand-text mb-1 group-hover:text-brand-accent transition-colors duration-150">
+            <Link
+              href={`/work/${p.slug}`}
+              className="text-base font-semibold text-brand-text hover:text-brand-accent transition-colors duration-150"
+            >
               {p.name}
-            </h3>
-            <p className="text-[0.9375rem] leading-relaxed text-brand-text opacity-75">
-              {p.description}
+            </Link>
+            <p className="text-[0.9375rem] leading-relaxed text-brand-text opacity-75 mt-1">
+              {p.tagline}
             </p>
-          </Link>
+            <span className="text-xs text-brand-muted mt-2 inline-block">
+              Concept
+            </span>
+          </div>
         ))}
       </div>
 
-      {/* Seeds */}
-      <p className="text-xs font-semibold tracking-wider uppercase text-brand-muted mb-4">
-        Seeds
-      </p>
-      <div className="space-y-3 mb-14">
-        {seedProducts.map((p) => (
+      <div className="space-y-4">
+        {products.seed.map((p) => (
           <div
             key={p.name}
-            className="border border-brand-border border-dashed rounded-lg p-5 opacity-60"
+            className="border border-dashed border-brand-border rounded-lg p-5 opacity-60"
           >
-            <h3 className="text-base font-semibold text-brand-text mb-1">{p.name}</h3>
-            <p className="text-[0.9375rem] leading-relaxed text-brand-text opacity-75">
-              {p.description}
+            <h4 className="text-base font-semibold text-brand-text">
+              {p.name}
+            </h4>
+            <p className="text-[0.9375rem] leading-relaxed text-brand-text opacity-75 mt-1">
+              {p.tagline}
             </p>
-          </div>
-        ))}
-      </div>
-
-      {/* Client Work */}
-      <h2 className="text-xs font-semibold tracking-widest uppercase text-brand-muted mb-8">
-        Client Work
-      </h2>
-      <div className="space-y-6">
-        {clientWork.map((item) => (
-          <div key={item.label}>
-            <p className="text-xs font-semibold tracking-wider uppercase text-brand-accent mb-2">
-              {item.label}
-            </p>
-            <p className="text-[0.9375rem] leading-relaxed text-brand-text opacity-75">
-              {item.description}
-            </p>
+            <span className="text-xs text-brand-muted mt-2 inline-block">
+              Seed
+            </span>
           </div>
         ))}
       </div>

@@ -1,22 +1,23 @@
 export default function Hero() {
   return (
-    <section className="mb-16 md:mb-20">
-      <p className="text-xs font-semibold tracking-widest uppercase text-brand-muted mb-8">
-        Divergent Networks
-      </p>
+    <section className="mb-16">
       <div className="border-l-2 border-brand-accent-dim pl-6">
-        <p className="text-xs font-semibold tracking-widest uppercase text-brand-accent mb-3">
-          Principal Research Technologist
+        <p className="text-lg md:text-xl leading-relaxed text-brand-text opacity-90 mb-6">
+          Understanding lives where the person meets the problem.
         </p>
-        <h1 className="text-4xl md:text-5xl font-bold leading-tight tracking-tight text-brand-text">
-          Troy Effner
-        </h1>
+        <p className="text-[0.9375rem] leading-relaxed text-brand-text opacity-70 mb-8">
+          The work is designed to hold that meeting. Start where the person is.
+          Follow the signal to the real constraint. Return the learning so the
+          system reorganizes. Watch for what becomes possible next.
+        </p>
+        <div className="flex items-center gap-3">
+          <h1 className="text-sm font-semibold tracking-wide text-brand-muted">
+            Troy Effner
+          </h1>
+          <span className="text-brand-border">|</span>
+          <p className="text-sm text-brand-muted">Divergent Networks</p>
+        </div>
       </div>
-      <p className="mt-8 text-lg leading-relaxed text-brand-text opacity-85 max-w-[560px]">
-        I design research systems that pull users directly into the conversation
-        — as actors with real jobs and decisions, not data points to be
-        summarized. Users are stakeholders. The work treats them that way.
-      </p>
     </section>
   );
 }

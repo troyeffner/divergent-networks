@@ -1,344 +1,584 @@
-import Link from "next/link";
-import Image from "next/image";
 import { notFound } from "next/navigation";
 import type { Metadata } from "next";
+import Link from "next/link";
 
-const projects: Record<
-  string,
-  {
-    name: string;
-    tagline: string;
-    opportunity: string;
-    approach: string;
-    outcomes: string[];
-    stage: string[];
-    future: string[];
-    screenshotDesktop?: string;
-    screenshotMobile?: string;
-  }
-> = {
+interface Framework {
+  name: string;
+  samples: string[];
+  pending?: boolean;
+}
+
+interface Project {
+  name: string;
+  tagline: string;
+  stage?: "live" | "concept" | "seed";
+  heroImage?: string;
+  opportunity: string;
+  approach: string;
+  frameworks: Framework[];
+  whatsNext: string;
+  biggerVision?: string;
+}
+
+const projects: Record<string, Project> = {
   homeground: {
-    name: "Home Ground",
-    tagline:
-      "A personal decision toolkit for the biggest purchase of your life.",
+    name: "Home Ground: Home Purchase",
+    tagline: "Personal decision toolkit for home buyers",
+    heroImage: "/images/hero-homeground.png",
     opportunity:
-      "Buying a home is one of the most consequential financial decisions a person makes — and most people navigate it with scattered tools, unclear trade-offs, and almost no reliable signal about what they can actually sustain. Mortgage calculators answer \"what can I qualify for?\" Real estate platforms answer \"what's available?\" Nobody answers the harder questions: can I sustain this month to month, and will this home support the life I want to live? The tools that exist serve the transaction. Nothing serves the decision.",
+      "Three questions nobody else separates: what can I afford, what can I sustain, and what supports the life I want? Home buying tools treat the transaction as the problem. The real problem is the decision.",
     approach:
-      "Home Ground is built JTBD-first around three distinct questions that buyers conflate but shouldn't: What can I afford? What can I sustain? What supports the life I want? Each question gets its own card — a focused assessment that isolates one dimension of the decision. The Purchase Roof calculation establishes a ceiling based on real numbers, not lender maximums. Decision Rehearsal maps pressure scenarios — what happens to your monthly picture if rates shift, if income changes, if life costs adjust. Everything runs locally. No backend, no data collection. The tool serves the buyer, not the platform.",
-    outcomes: [
-      "Buyers see the full financial picture — not just qualification, but sustainability and livability as separate, visible dimensions",
-      "Trade-offs between income, cash reserves, debt load, and lifestyle become clear before a purchase decision, not after",
-      "Decision Rehearsal reveals how stable a purchase is under pressure — rate changes, income shifts, cost adjustments",
+      "We traced the live experience of how people actually navigate affordability, sustainability, and livability. The real constraints surfaced: financial capacity, ongoing cost burden, and life fit are three different questions with three different data shapes. The tool holds all three without collapsing them.",
+    frameworks: [
+      {
+        name: "Jobs to Be Done",
+        samples: [
+          "Buyer: \"Help me see whether this place supports the life I actually want, not just whether I can sign the papers.\"",
+          "Household: \"Help us make this decision together without one person holding all the information.\"",
+          "First-time buyer: \"Show me what I am actually committing to, not just what the monthly payment looks like.\"",
+        ],
+      },
+      {
+        name: "Desired Outcomes",
+        samples: [
+          "Reduce confusion between affordability, sustainability, and livability when comparing homes",
+          "Increase confidence in purchase decisions by surfacing life-fit data alongside financial data",
+          "Minimize time spent reconciling information across separate budgeting, listing, and lifestyle tools",
+        ],
+      },
+      {
+        name: "Opportunity Solution Tree",
+        samples: [
+          "Top opportunity: buyers collapse three distinct questions (afford, sustain, want) into one",
+          "Existing solutions fail: affordability calculators ignore sustainability, listing tools ignore life fit, no tool holds all three",
+          "Solution path: separate assessments for each question, then a synthesis view that holds all three without forcing a single score",
+        ],
+      },
+      {
+        name: "OOUX Object Mapping",
+        samples: [
+          "Home, Neighborhood, Budget, Lifestyle Profile, Decision Snapshot as distinct objects with their own data shapes",
+          "Each object has its own attributes, relationships, and calls to action rather than living as tabs in a listing tool",
+          "Decision Snapshot captures the state of all three assessments at a point in time for household coordination",
+        ],
+      },
+      {
+        name: "Design Principles",
+        samples: [
+          "When affordability and livability conflict, show both clearly rather than blending them into a single recommendation",
+          "The person makes the tradeoff, not the tool",
+          "Financial projections always show sustained cost, not just purchase price",
+        ],
+      },
     ],
-    stage: [
-      "The research found that home buyers consistently conflate three distinct questions — affordability, sustainability, and livability — because every existing tool merges them into a single number. Separating them changes the decision.",
-      "The three-card model is live as a working prototype: income qualification, upfront cash planning, and monthly sustainability each get their own assessment.",
-      "Purchase Roof and Decision Rehearsal are actively testing with real buyer scenarios — first-time buyers, relocators, and people re-evaluating what \"affordable\" actually means for them.",
-    ],
-    future: [
-      "A Liquidity Framework — mapping your full cash and asset position before, during, and after purchase to answer \"what does this do to my financial flexibility?\"",
-      "Property-level comparison — extending the three-card model from personal assessment to side-by-side property evaluation",
-      "Life-stage adaptation — testing whether the framework serves renters evaluating whether to buy, not just active buyers",
-    ],
-    screenshotDesktop: "/screenshots/homeground-desktop.png",
-    screenshotMobile: "/screenshots/homeground-mobile.png",
+    whatsNext:
+      "Integrating local data sources for livability scoring and building shareable decision snapshots so households can coordinate on the purchase decision together.",
   },
   smallbiz: {
-    name: "Small Biz Operator",
+    name: "Small Biz Operator: Workflow Bottleneck Tools",
     tagline:
-      "Helping small businesses figure out what's actually broken — then build the skills to fix it.",
+      "Identifying where small business workflows break down and applying service design fixes in the operator's own language",
+    heroImage: "/images/hero-smallbiz.png",
     opportunity:
-      "The real dysfunction in small businesses isn't a technology problem — it's a people problem. Teams of 50 to 500 are large enough that communication breaks down, roles blur, and processes fracture, but too small to have an operations team diagnosing it. Leaders know something isn't working. They just can't name it precisely enough to act on it. Most business tools assume you already know the problem. Nobody helps you figure out what it actually is.",
+      "Small business operators hit the same bottlenecks repeatedly: handoffs that drop information, steps that depend on one person's memory, decisions that stall because the right data is in the wrong place. These are service design problems, but no one has translated service design into language a small business operator would recognize or tools they would actually use.",
     approach:
-      "SmallBiz starts with diagnosis. A self-service tool walks leaders through four steps: discover what challenge areas are active, prioritize them on a pressure matrix, map where they compound, and generate a clear picture of what to address first. From there, the path moves to service — hands-on workshops that teach teams the communication and collaboration skills that make organizations actually work. The exercises are designed around real business friction, not abstract frameworks. Service design methodology, translated into the language of a 200-person company.",
-    outcomes: [
-      "Leaders can name their actual challenges instead of circling vague dysfunction",
-      "Teams build practiced collaboration skills through structured exercises, not slide decks",
-      "The diagnostic reveals where challenges compound — unclear roles plus handoff gaps equals work falling through cracks",
+      "We mapped how operators actually move through their days to find where work stalls, backs up, or falls through. The patterns are consistent: bottlenecks cluster around handoffs, information gaps, and decisions that require context the operator has to reconstruct from memory. The tools apply service design concepts (journey mapping, touchpoint analysis, bottleneck identification) but use the operator's own vocabulary instead of consulting language.",
+    frameworks: [
+      {
+        name: "Jobs to Be Done",
+        samples: [
+          "Operator: \"Show me where my day keeps getting stuck so I can fix the process, not just push harder.\"",
+          "Team lead: \"Help us see which handoffs are dropping information before it becomes a customer problem.\"",
+          "Owner: \"Tell me which part of my workflow is costing me the most time and money without me realizing it.\"",
+        ],
+      },
+      {
+        name: "Desired Outcomes",
+        samples: [
+          "Reduce time lost to recurring workflow bottlenecks by making them visible before they cause failures",
+          "Increase handoff reliability between team members by surfacing where information gets lost",
+          "Minimize the gap between identifying a process problem and implementing a fix the team can sustain",
+        ],
+      },
+      {
+        name: "Opportunity Solution Tree",
+        samples: [
+          "Top opportunity: operators experience the same bottlenecks daily but lack the framing to diagnose them as process problems",
+          "Existing solutions fail: service design consultants speak a language operators do not use, project management tools track tasks but not flow, accounting tools see money but not workflow",
+          "Solution path: lightweight bottleneck mapping in the operator's vocabulary, handoff tracking that flags drops before they reach the customer, fix templates that match how small teams actually change their processes",
+        ],
+      },
+      {
+        name: "OOUX Object Mapping",
+        samples: [
+          "Workflow, Step, Handoff, Bottleneck, Fix as core objects organized around how work actually flows",
+          "Bottleneck captures where work stalls, who it affects, and what information is missing or stuck",
+          "Fix is a lightweight change proposal tied to a specific Bottleneck, with before/after states the team can evaluate",
+        ],
+      },
+      {
+        name: "Design Principles",
+        samples: [
+          "Use the operator's language for everything; translate service design concepts behind the scenes",
+          "Make bottlenecks visible before they cause failures, not after",
+          "Every fix must be something a small team can implement this week, not a six-month transformation",
+        ],
+      },
     ],
-    stage: [
-      "The research identified 10 distinct challenge areas that recur across small businesses — from alignment gaps to unclear roles to scaling pain. Each grounded in observable symptoms, not consulting jargon.",
-      "The self-service diagnostic (\"Where to Start\") is live — four-step flow from discovery through prioritization to a compounding pattern map.",
-      "In Practice workshops are actively delivering: communication and interpersonal skills training designed for teams who learn by doing, not by reading.",
-    ],
-    future: [
-      "An Entrepreneur Story Alignment Sprint — helping founding teams of 2\u201312 clarify direction through narrative-driven coaching over three sessions",
-      "Module promotion: when a service-led workshop pattern stabilizes, it becomes a self-service tool — the diagnostic path grows from practice evidence, not product roadmap assumptions",
-      "Challenge taxonomy expansion — testing whether the 10 challenge areas map cleanly to businesses outside the 50\u2013500 range",
-    ],
-    screenshotDesktop: "/screenshots/smallbiz-desktop.png",
-    screenshotMobile: "/screenshots/smallbiz-mobile.png",
-  },
-  tyfbaf: {
-    name: "tyfbaf",
-    tagline: "Free home swaps between friends — you travel, they stay. They travel, you stay.",
-    opportunity:
-      "Friends already swap homes. Someone's heading out of town, a friend needs a place to stay — it happens naturally. But the coordination is scattered across texts, group chats, and awkward asks. Marketplace platforms like Airbnb solved discovery for strangers, but they introduced money, reviews, and friction into something that used to be simple: a friend offering their place. There's no tool built around how friends actually share — free, trust-based, and mutual.",
-    approach:
-      "tyfbaf makes home swaps between friends easy. You're traveling? Mark your place available to your trust circles — small groups like your NYC friends, college crew, or work travel circle. Friends in those circles see your availability and can request a stay. You approve or decline. When they travel, the swap goes the other way. No money changes hands. No marketplace. Second-degree connections require explicit permission — your friend can introduce their friend to the circle, but only if you grant it. Blocks work at the user level, so you always control who sees your home.",
-    outcomes: [
-      "Friends swap homes freely — you travel, they stay at yours, and vice versa",
-      "Trust circles keep it between people you actually know, not strangers on a platform",
-      "Second-degree introductions expand your options without breaking trust boundaries",
-      "No money, no reviews, no marketplace friction — just friends coordinating stays",
-    ],
-    stage: [
-      "The research identified four distinct actors: the Frequent Travel Host who has an empty home regularly, the Trusted Guest looking for stays through real relationships, the Bridge Friend who connects people across circles, and the Boundary-First Member who needs user-level blocks within shared groups.",
-      "Concept formation and test plan design are in progress — validating whether trust circles make free home swaps between friends easier and more comfortable than marketplace alternatives, with explicit success and failure thresholds before any production build.",
-      "The core hypothesis is under test: if friends can see each other's travel windows and swap homes through trust-scoped circles, they'll do it more often and with more comfort than any platform built for strangers.",
-    ],
-    future: [
-      "A concept test with 10 participants across all four personas — measuring trust comfort, circle comprehension, and willingness to swap for a real 3–14 day travel window",
-      "Metaphor validation — testing whether the multi-circle model (NYC, College, Work) reduces swap anxiety or increases management burden compared to a single friend list",
-      "If demand signal is validated: a test-ready prototype with circle management, availability publishing, swap request/approval flow, and notification-only coordination",
-    ],
+    whatsNext:
+      "Building the bottleneck mapping tool and testing it with local businesses to see which workflow patterns surface most consistently and which fix templates operators actually adopt.",
   },
   commons: {
-    name: "The Commons",
+    name: "Common Ground: The Commons (Community Board)",
+    heroImage: "/images/hero-commons.png",
     tagline:
-      "Making hyperlocal community information discoverable, curated, and fair.",
+      "Hyperlocal community information discovered, curated, and governed fairly",
     opportunity:
-      "Physical community boards — in cafes, community centers, transit stations — remain the most hyperlocal source of what's happening in a neighborhood. But they're fragmented, ephemeral, and undiscoverable. Most people never see them. Existing tools like Nextdoor and Eventbrite operate at city scale and miss the micro-community level where real gatherings happen. For community organizers, the effort of putting up posters reaches almost nobody. For residents, it's invisible serendipity — events you'd attend if you knew they existed. The information exists. Nobody's made it findable.",
+      "Community information is scattered, broadcast-oriented, and governed by platforms that do not live in the community. The people who know what is happening locally have no native surface to share it.",
     approach:
-      "The Commons starts with photos, not forms. Contributors photograph real community boards and pin items directly on the image — creating a spatial anchor grounded in real-world context. Community builders curate, tag, and publish these items into a searchable public feed filtered by neighborhood. The product is designed JTBD-first: three actor types (viewers, submitters, builders), six primary jobs, and every interaction mapped to explicit desired outcomes. Active hypotheses guide product decisions — including a fairness filter model and a venue discovery framework — each with testable metrics and fail conditions.",
-    outcomes: [
-      "Residents discover relevant hyperlocal events they would otherwise miss",
-      "Community organizers reach beyond the physical board's foot traffic",
-      "Metadata integrity means times, locations, and details are accurate and consistent",
-      "Fairness governance ensures ranking reflects community values, not algorithms",
+      "We built a photo-native community board where local information is discovered, not broadcast. The design grows from what happens when multiple people in a community each hold partial knowledge and need a shared surface to make the whole visible.",
+    frameworks: [
+      {
+        name: "Jobs to Be Done",
+        samples: [
+          "Resident: \"Help me find out what is happening on my block this week.\"",
+          "Contributor: \"Give me a way to share what I know without broadcasting to the whole internet.\"",
+          "Neighborhood organizer: \"Show me what my community already knows so I can build on it, not duplicate it.\"",
+        ],
+      },
+      {
+        name: "Desired Outcomes",
+        samples: [
+          "Increase visibility of hyperlocal information for residents within their immediate geography",
+          "Reduce barriers to contributing community knowledge without requiring audience building",
+          "Improve fairness of content moderation through structural governance rather than gatekeeping",
+        ],
+      },
+      {
+        name: "Opportunity Solution Tree",
+        samples: [
+          "Top opportunity: community knowledge is fragmented across platforms that optimize for reach, not relevance",
+          "Existing solutions fail: Facebook groups bury local posts in algorithmic feeds, Nextdoor treats neighborhoods as ad markets, bulletin boards do not scale",
+          "Solution path: photo-native posts tied to geography, moderation through structure, discovery based on proximity",
+        ],
+      },
+      {
+        name: "OOUX Object Mapping",
+        samples: [
+          "Post, Place, Contributor, Community, Moderation Event as core objects tied to geography and people",
+          "Information is tied to a Place rather than a feed, so discovery is spatial rather than algorithmic",
+          "Moderation Event is a first-class object with its own lifecycle, not a hidden admin action",
+        ],
+      },
+      {
+        name: "Design Principles",
+        samples: [
+          "When reach and relevance conflict, choose relevance",
+          "Information that matters to 50 neighbors is more valuable here than information that reaches 5,000 strangers",
+          "Moderation scales through structure, not through requiring people to prove who they are",
+        ],
+      },
     ],
-    stage: [
-      "The research found that community information exists in a discovery gap: physical boards are hyperlocal but invisible at scale, while digital platforms are discoverable but miss the micro-community level. The opportunity sits in the gap between the two.",
-      "The Community Board feature is live — photo-native submissions, pin-based curation, six routes active (discover, submit, browse, view, draft, curate). Supabase backend with poster uploads working.",
-      "A strict release gate is enforcing quality before public launch: schema parity, vocabulary lock, and CTA canonical mapping must pass. Hypothesis testing follows immediately.",
-    ],
-    future: [
-      "A Fairness Framework — testing whether algorithmic ranking can reflect community values instead of engagement metrics, with explicit fail conditions",
-      "Venue Discovery — extending from event listings to a persistent neighborhood venue graph that grows from curated board data",
-      "Photo-native evidence beyond community boards — testing whether the pin-and-curate model works for other hyperlocal information surfaces",
-    ],
-    screenshotDesktop: "/screenshots/commons-desktop.png",
-    screenshotMobile: "/screenshots/commons-mobile.png",
+    whatsNext:
+      "Expanding community governance tools and building federation so multiple neighborhoods can run independent boards that connect when relevant.",
   },
-  ndd: {
-    name: "Narrative Driven Design",
-    tagline: "The intelligence layer that makes research compound.",
+  tyfbaf: {
+    name: "tyfbaf: Friend-to-Friend Home Swaps",
+    tagline: "Trust-based home swaps between friends",
+    heroImage: "/images/hero-tyfbaf.png",
     opportunity:
-      "Research doesn't compound in most organizations. Every project starts from scratch. Insights get written in decks that get filed away. The frameworks from one study never inform the next. Worse, the workforce doing the research — the people running studies, synthesizing evidence, making calls — operates without structured coordination. The knowledge scatters. The people scatter. The opportunity: build research infrastructure that accumulates intelligence and coordinates the workforce over time — where each study makes the next one faster, deeper, and more connected to what actually happened before.",
+      "Home swaps exist, but they are built on stranger-trust models with insurance, deposits, and platform guarantees. Between friends, the trust already exists. The tool should honor that trust, not replace it.",
     approach:
-      "NDD is a structured system for storing, linking, and acting on research — assumptions, hypotheses, experiments, evidence, and reconciled insights. But it's more than a knowledge store. The Workflow Builder layer adds workforce coordination: threads that organize research arcs, fractional chunks that distribute work across specialists, practitioner profiles that match capability to task, and routing intelligence that moves work to the right person at the right time. Every Divergent Networks product starts as an NDD instance — a structured set of assumptions and hypotheses about a specific actor population, with the workforce methodology to investigate them.",
-    outcomes: [
-      "Research intelligence compounds — each study builds on the last instead of starting from scratch",
-      "Hypotheses are explicitly tracked from assumption through evidence to reconciled insight",
-      "The Workflow Builder coordinates who does what — matching research tasks to specialist capability",
-      "The methodology is transferable — NDD instances can be spun up for any research domain",
+      "Designing for the relational fabric that already exists between friends. The product does not create trust. It provides a surface for trust that is already there to operate through.",
+    frameworks: [
+      {
+        name: "Jobs to Be Done",
+        samples: [
+          "Friend: \"I want to travel and my friend wants to travel. We trust each other. Just help us coordinate the logistics.\"",
+          "Host: \"Let me share the things my guest needs to know without it feeling like a rental agreement.\"",
+          "Pair: \"Help us find dates that work without a dozen back-and-forth messages.\"",
+        ],
+      },
+      {
+        name: "Desired Outcomes",
+        samples: [
+          "Reduce logistical friction in home swaps between people who already trust each other",
+          "Eliminate stranger-trust patterns (reviews, deposits, insurance) from friend-to-friend exchanges",
+          "Increase swap completion rate by simplifying calendar matching and lightweight agreements",
+        ],
+      },
+      {
+        name: "Opportunity Solution Tree",
+        samples: [
+          "Top opportunity: friends who want to swap homes have no tool that starts from trust",
+          "Existing solutions fail: Airbnb assumes strangers, home swap platforms add insurance, group chats lose logistics in conversation",
+          "Solution path: calendar matching without deposit flows, agreements that feel like a handshake, coordination that stays out of the relationship",
+        ],
+      },
+      {
+        name: "OOUX Object Mapping",
+        samples: [
+          "Swap, Home, Friend, Calendar, Agreement as core objects that assume trust is already present",
+          "No Review, Deposit, or Insurance objects exist in the system by design",
+          "Agreement is lightweight and informational, not contractual",
+        ],
+      },
+      {
+        name: "Design Principles",
+        samples: [
+          "When the platform could add a trust mechanism (reviews, deposits, verification), do not add it",
+          "The relationship carries the trust; the tool carries the coordination",
+          "Every interaction should feel lighter than a text thread, never heavier than a contract",
+        ],
+      },
     ],
-    stage: [
-      "The core research schema is complete — assumptions, hypotheses, experiments, evidence, and reconciled insights form a linked graph that every Divergent Networks product builds on.",
-      "The Workflow Builder is in active development: thread management, fractional work routing, and practitioner coordination are being tested against real project workflows.",
-      "Every product in the portfolio has a traceable research lineage back to its NDD instance — Home Ground, Small Biz Operator, The Commons, and tyfbaf all run on NDD.",
+    whatsNext:
+      "Building the core swap coordination interface with calendar matching and a lightweight agreement structure that friends can use without feeling like they are signing a contract.",
+    biggerVision:
+      "Home swaps are the starting point, but the larger vision is a coordination layer for any resource sharing that runs on existing trust. Cars, tools, studio space, vacation gear. Anywhere that friends already lend to each other informally, the friction is not trust but logistics. The same design principles apply: do not add platform trust mechanisms to relationships that already carry trust. Build coordination tools that make the logistics invisible so the relationship stays in the foreground.",
+  },
+  satbuttons: {
+    name: "SatButtons: Physical Feedback Buttons",
+    tagline:
+      "Physical buttons placed in real locations to capture in-context feedback at the moment it happens",
+    stage: "seed",
+    heroImage: "/images/hero-satbuttons.webp",
+    opportunity:
+      "Most feedback collection happens after the experience: surveys, follow-up emails, review prompts. By that point, recall bias has already distorted the response. The most honest feedback comes at the moment of the experience, in the environment where it happened, with the lowest possible friction. Physical buttons in physical spaces solve this. The respondent presses a button. That is the entire interaction.",
+    approach:
+      "Building on the principles of Experience Sampling Method (ESM): capture responses in context, at the moment they occur, rather than asking people to reconstruct their experience later. SatButtons makes ESM physical. Custom-labeled buttons are placed in real environments. Each press is timestamped, counted, and available in real time. No app download. No login. No survey fatigue.",
+    frameworks: [
+      {
+        name: "Jobs to Be Done",
+        samples: [
+          "Business owner: \"Tell me how my customers feel about the experience right now, not two weeks later in a review.\"",
+          "Field researcher: \"Give me a way to collect in-context responses without interrupting the experience.\"",
+          "Product team: \"Help me run real-time satisfaction sampling in a live environment so I can see patterns as they form.\"",
+        ],
+      },
+      {
+        name: "Desired Outcomes",
+        samples: [
+          "Reduce respondent effort to a single physical press at the moment of experience",
+          "Increase feedback volume by eliminating app downloads, logins, and survey fatigue",
+          "Improve signal accuracy by capturing responses in context rather than through post-hoc recall",
+        ],
+      },
+      {
+        name: "Opportunity Solution Tree",
+        samples: [
+          "Top opportunity: feedback happens after the experience, distorted by recall bias and low response rates",
+          "Existing solutions fail: surveys require effort, review platforms collect feedback days later, NPS asks the wrong question at the wrong time",
+          "Solution path: physical one-press buttons at the point of experience, timestamped streams in real time, custom label sets per context",
+        ],
+      },
+      {
+        name: "OOUX Object Mapping",
+        samples: [
+          "Button, Label Set, Location, Session, Response Stream as core objects",
+          "A Session is a time-bounded collection period; a Response Stream is the real-time count across all buttons at a location",
+          "Label Set is configurable per deployment, allowing custom satisfaction scales beyond the standard happy/sad",
+        ],
+      },
+      {
+        name: "Design Principles",
+        samples: [
+          "The respondent's effort must be one press. Nothing more. No screen, no prompt, no follow-up",
+          "The button is the entire interface; complexity lives in the dashboard",
+          "Every deployment must work without requiring the respondent to install, register, or identify themselves",
+        ],
+      },
     ],
-    future: [
-      "Cross-project pattern extraction — testing whether NDD can surface research patterns that recur across unrelated domains",
-      "Self-hosted deployment — packaging NDD as infrastructure any research team can run, not just Divergent Networks",
-      "Workforce intelligence — the routing layer learns from assignment patterns, building a capability graph that improves work distribution over time",
+    whatsNext:
+      "Prototyping the physical button hardware and the real-time counting dashboard. First deployment target: a local business willing to run a two-week satisfaction pilot at the point of service.",
+    biggerVision:
+      "SatButtons starts with physical feedback buttons, but the larger vision is a general-purpose in-context response capture system. Any environment where people have an experience and you want to know how they felt about it in real time. Retail, healthcare waiting rooms, event venues, public transit, co-working spaces. The physical button is the first surface. Digital surfaces (QR-triggered single-tap responses, NFC tap points) follow. The underlying system is the same: capture the response at the moment of the experience, with the lowest possible friction, and make the data available immediately. This connects directly to Organic Design: every SatButtons deployment generates structured behavioral data that feeds back into product and service decisions.",
+  },
+  "color-coordinator": {
+    name: "Fashion Color Coordinator",
+    tagline:
+      "A tool for building and exploring personal color palettes grounded in what you actually wear",
+    stage: "seed",
+    heroImage: "/images/hero-color-coordinator.png",
+    opportunity:
+      "Color coordination tools exist for digital design but not for personal style. People who care about how colors work together in their wardrobe have no tool that starts from what they already own rather than abstract color theory.",
+    approach:
+      "Starting from how people actually think about color in their closets. Not color wheels and complementary pairs. Real decisions: does this jacket work with these pants? Can I build a week of outfits from these six pieces?",
+    frameworks: [
+      {
+        name: "Jobs to Be Done",
+        pending: true,
+        samples: [
+          "Not yet traced",
+          "Early signal: people want confidence that what they are wearing coordinates",
+          "They want a tool that starts from what they own, not a lesson in color theory",
+        ],
+      },
+      {
+        name: "Desired Outcomes",
+        pending: true,
+        samples: [
+          "Increase confidence in daily outfit color coordination without requiring theory knowledge",
+          "Reduce decision time when getting dressed by surfacing combinations from existing wardrobe",
+          "Minimize wardrobe purchases that do not coordinate with what is already owned",
+        ],
+      },
+      {
+        name: "Opportunity Solution Tree",
+        pending: true,
+        samples: [
+          "Not yet traced",
+          "Needs research into how people currently make color coordination decisions when getting dressed",
+          "Needs mapping of where those decisions break down and what tools people improvise",
+        ],
+      },
+      {
+        name: "OOUX Object Mapping",
+        samples: [
+          "Garment, Color Profile, Outfit, Palette, Wardrobe as core objects",
+          "The garment is the atomic unit, not the color swatch; colors live on real objects in your closet",
+          "Palette emerges from what you own rather than being imposed from abstract color theory",
+        ],
+      },
+      {
+        name: "Design Principles",
+        pending: true,
+        samples: [
+          "Not yet traced",
+          "Early instinct: the tool should feel like a mirror, not a teacher",
+          "Show what works rather than explain why",
+        ],
+      },
     ],
+    whatsNext:
+      "Conducting initial research interviews with people who actively think about color coordination in their personal style to trace how they currently make these decisions.",
+    biggerVision:
+      "The Fashion Color Coordinator starts with clothing, but the larger vision is a personal color intelligence tool. Understanding how colors interact on real objects you own, in real lighting conditions, across different contexts. The same principles extend to interior design, event planning, and personal branding. The core insight is the same: color decisions happen on real objects in real spaces, not on color wheels or in abstract theory. The tool should meet people where those decisions actually occur.",
+  },
+  "linkedin-research-surface": {
+    name: "LinkedIn Research Surface",
+    tagline:
+      "A layer that turns LinkedIn activity into structured research signal rather than broadcast content",
+    stage: "seed",
+    heroImage: "/images/hero-linkedin-research.png",
+    opportunity:
+      "LinkedIn activity generates constant signal about how professionals think, what they struggle with, and how industries are shifting. But the platform treats everything as broadcast content. There is no way to use your own LinkedIn presence as a research instrument.",
+    approach:
+      "Exploring how LinkedIn activity (posts, comments, reactions, connection patterns) can be structured as research data rather than social content. The signal is already there. The surface to read it is missing.",
+    frameworks: [
+      {
+        name: "Jobs to Be Done",
+        samples: [
+          "Researcher: \"Help me see what my LinkedIn network is actually telling me about how this industry thinks.\"",
+          "Strategist: \"Surface the patterns in my connections' activity without manually reading every post.\"",
+          "Product lead: \"Show me what professionals in this space are struggling with, structured as research data.\"",
+        ],
+      },
+      {
+        name: "Desired Outcomes",
+        pending: true,
+        samples: [
+          "Reduce time spent manually extracting research signal from LinkedIn activity",
+          "Increase the proportion of professional network data structured as usable research input",
+          "Improve topic-level trend detection across connection clusters without algorithmic manipulation",
+        ],
+      },
+      {
+        name: "Opportunity Solution Tree",
+        pending: true,
+        samples: [
+          "Not yet traced",
+          "Needs research into how researchers and strategists currently extract signal from LinkedIn activity",
+          "Needs mapping of where manual methods break down and what signal types carry genuine research value",
+        ],
+      },
+      {
+        name: "OOUX Object Mapping",
+        samples: [
+          "Post, Reaction, Comment Thread, Connection Signal, Research Pattern as core objects",
+          "Each LinkedIn interaction becomes a data point in a research stream, not just social engagement",
+          "Research Pattern aggregates signals across interactions to surface trends that individual posts cannot show",
+        ],
+      },
+      {
+        name: "Design Principles",
+        pending: true,
+        samples: [
+          "The tool reads the platform, never posts to it; observation surface only",
+          "No automation of social behavior; research extraction must not alter the data source",
+          "Signal quality over volume; one traced pattern is worth more than a thousand scraped data points",
+        ],
+      },
+    ],
+    whatsNext:
+      "Mapping the data structures available through LinkedIn activity and identifying which signal types carry genuine research value versus social noise.",
+    biggerVision:
+      "LinkedIn is the first surface, but the larger vision is a general-purpose research input layer that works across any platform where professional behavior generates signal. The same structural approach applies to industry forums, open source communities, conference activity, and publication patterns. Each surface produces a different kind of research data, but the method is the same: treat activity as structured input rather than social content, and feed it into product and strategy decisions through the Organic Design cycle. The end state is a tool that turns any public professional surface into a research instrument.",
   },
 };
 
-export async function generateStaticParams() {
+export function generateStaticParams() {
   return Object.keys(projects).map((slug) => ({ slug }));
 }
 
-export async function generateMetadata({
+export function generateMetadata({
   params,
 }: {
-  params: Promise<{ slug: string }>;
-}): Promise<Metadata> {
-  const { slug } = await params;
-  const project = projects[slug];
+  params: { slug: string };
+}): Metadata {
+  const project = projects[params.slug];
   if (!project) return {};
+
   return {
     title: `${project.name} — Divergent Networks`,
     description: project.tagline,
   };
 }
 
-export default async function ProjectPage({
-  params,
-}: {
-  params: Promise<{ slug: string }>;
-}) {
-  const { slug } = await params;
-  const project = projects[slug];
+export default function WorkPage({ params }: { params: { slug: string } }) {
+  const project = projects[params.slug];
   if (!project) notFound();
 
   return (
     <main className="min-h-screen">
       <div className="max-w-[720px] mx-auto px-6 py-16 md:py-24">
-        {/* Back */}
         <Link
           href="/"
-          className="inline-flex items-center gap-1.5 text-xs font-medium text-brand-muted hover:text-brand-text transition-colors duration-150 mb-12"
+          className="text-sm text-brand-muted hover:text-brand-accent transition-colors duration-150 mb-8 inline-block"
         >
-          <span>←</span>
-          <span>Divergent Networks</span>
+          &larr; Back
         </Link>
 
-        {/* Header */}
-        <section className="mb-14">
-          <h1 className="text-4xl md:text-5xl font-bold leading-tight tracking-tight text-brand-text mb-4">
+        <div className="flex items-center gap-3 mb-2">
+          <h1 className="text-2xl md:text-3xl font-bold text-brand-text">
             {project.name}
           </h1>
-          <p className="text-lg leading-relaxed text-brand-text opacity-85">
-            {project.tagline}
-          </p>
-        </section>
+          {project.stage && (
+            <span className="text-xs font-semibold tracking-wider uppercase px-2 py-1 rounded border border-brand-border text-brand-muted">
+              {project.stage}
+            </span>
+          )}
+        </div>
+        <p className="text-[0.9375rem] leading-relaxed text-brand-text opacity-75 mb-6">
+          {project.tagline}
+        </p>
 
-        {/* Screenshots */}
-        {(project.screenshotDesktop || project.screenshotMobile) && (
-          <section className="mb-12">
-            <div className="flex gap-4 items-start">
-              {project.screenshotDesktop && (
-                <div className="flex-1 min-w-0">
-                  <div className="rounded-lg overflow-hidden border border-brand-border">
-                    <Image
-                      src={project.screenshotDesktop}
-                      alt={`${project.name} — desktop`}
-                      width={1280}
-                      height={900}
-                      className="w-full h-auto object-cover object-top"
-                      unoptimized
-                    />
-                  </div>
-                  <p className="text-[0.6875rem] text-brand-muted mt-2 text-center">
-                    Desktop
-                  </p>
-                </div>
-              )}
-              {project.screenshotMobile && (
-                <div className="w-[120px] md:w-[160px] shrink-0">
-                  <div className="rounded-lg overflow-hidden border border-brand-border">
-                    <Image
-                      src={project.screenshotMobile}
-                      alt={`${project.name} — mobile`}
-                      width={390}
-                      height={844}
-                      className="w-full h-auto"
-                      unoptimized
-                    />
-                  </div>
-                  <p className="text-[0.6875rem] text-brand-muted mt-2 text-center">
-                    Mobile
-                  </p>
-                </div>
-              )}
-            </div>
-          </section>
+        {project.heroImage && (
+          <div className="rounded-lg overflow-hidden border border-brand-border mb-6">
+            <img
+              src={project.heroImage}
+              alt={project.name}
+              className="w-full h-auto object-cover"
+            />
+          </div>
         )}
 
-        {/* Opportunity */}
-        <section className="mb-12">
-          <div className="h-px bg-brand-border mb-8" />
-          <h2 className="text-xs font-semibold tracking-widest uppercase text-brand-muted mb-4">
-            The Opportunity
-          </h2>
-          <p className="text-[0.9375rem] leading-relaxed text-brand-text opacity-75">
-            {project.opportunity}
-          </p>
-        </section>
+        <Link
+          href={`/connect?product=${params.slug}`}
+          className="inline-block text-sm font-semibold text-brand-accent border-b border-brand-accent-dim pb-px transition-colors duration-150 hover:text-brand-text hover:border-brand-muted mb-8"
+        >
+          I want in
+        </Link>
 
-        {/* Approach */}
-        <section className="mb-12">
-          <div className="h-px bg-brand-border mb-8" />
-          <h2 className="text-xs font-semibold tracking-widest uppercase text-brand-muted mb-4">
-            The Approach
-          </h2>
-          <p className="text-[0.9375rem] leading-relaxed text-brand-text opacity-75">
-            {project.approach}
-          </p>
-        </section>
-
-        {/* Desired Outcomes */}
-        <section className="mb-12">
-          <div className="h-px bg-brand-border mb-8" />
-          <h2 className="text-xs font-semibold tracking-widest uppercase text-brand-muted mb-4">
-            Desired Outcomes
-          </h2>
-          <ul className="space-y-3">
-            {project.outcomes.map((outcome, i) => (
-              <li key={i} className="flex gap-3 items-start">
-                <span className="text-brand-accent-dim mt-1 shrink-0">—</span>
-                <p className="text-[0.9375rem] leading-relaxed text-brand-text opacity-75">
-                  {outcome}
-                </p>
-              </li>
-            ))}
-          </ul>
-        </section>
-
-        {/* Where This Is Now */}
-        <section className="mb-12">
-          <div className="h-px bg-brand-border mb-8" />
-          <h2 className="text-xs font-semibold tracking-widest uppercase text-brand-muted mb-4">
-            Where This Is Now
-          </h2>
-          <ul className="space-y-3">
-            {project.stage.map((narrative, i) => (
-              <li key={i} className="flex gap-3 items-start">
-                <span className="text-brand-accent-dim mt-1 shrink-0">—</span>
-                <p className="text-[0.9375rem] leading-relaxed text-brand-text opacity-75">
-                  {narrative}
-                </p>
-              </li>
-            ))}
-          </ul>
-        </section>
-
-        {/* Where Is This Going */}
-        {project.future.length > 0 && (
-          <section className="mb-16">
-            <div className="h-px bg-brand-border mb-8" />
+        <div className="space-y-8">
+          <div>
+            <div className="h-px bg-brand-border mb-6" />
             <h2 className="text-xs font-semibold tracking-widest uppercase text-brand-muted mb-4">
-              Where Is This Going
+              Opportunity
             </h2>
-            <ul className="space-y-3">
-              {project.future.map((narrative, i) => (
-                <li key={i} className="flex gap-3 items-start">
-                  <span className="text-brand-muted mt-1 shrink-0">—</span>
-                  <p className="text-[0.9375rem] leading-relaxed text-brand-text opacity-60 italic">
-                    {narrative}
-                  </p>
-                </li>
+            <p className="text-[0.9375rem] leading-relaxed text-brand-text opacity-85">
+              {project.opportunity}
+            </p>
+          </div>
+
+          <div>
+            <div className="h-px bg-brand-border mb-6" />
+            <h2 className="text-xs font-semibold tracking-widest uppercase text-brand-muted mb-4">
+              Approach
+            </h2>
+            <p className="text-[0.9375rem] leading-relaxed text-brand-text opacity-85">
+              {project.approach}
+            </p>
+          </div>
+
+          <div>
+            <div className="h-px bg-brand-border mb-6" />
+            <h2 className="text-xs font-semibold tracking-widest uppercase text-brand-muted mb-4">
+              How we built it
+            </h2>
+            {project.stage === "seed" && (
+              <p className="text-[0.9375rem] leading-relaxed text-brand-text opacity-65 mb-5">
+                Each framework is traced through the Organic Design cycle. Filled
+                frameworks have been through at least one pass. Pending frameworks
+                are next.
+              </p>
+            )}
+            <div className="space-y-6">
+              {project.frameworks.map((fw, i) => (
+                <div key={i}>
+                  <div className="flex items-center gap-2 mb-3">
+                    <h3 className={`text-sm font-semibold ${fw.pending ? "text-brand-muted" : "text-brand-text"}`}>
+                      {fw.name}
+                    </h3>
+                    {fw.pending && (
+                      <span className="text-xs text-brand-muted opacity-60">
+                        pending
+                      </span>
+                    )}
+                  </div>
+                  <ul className="space-y-2">
+                    {fw.samples.map((s, j) => (
+                      <li key={j} className="flex gap-3 items-start">
+                        <span className={`mt-1 shrink-0 ${fw.pending ? "text-brand-muted opacity-50" : "text-brand-accent-dim"}`}>
+                          &bull;
+                        </span>
+                        <p className={`text-[0.9375rem] leading-relaxed text-brand-text ${fw.pending ? "opacity-50 italic" : "opacity-75"}`}>
+                          {s}
+                        </p>
+                      </li>
+                    ))}
+                  </ul>
+                  {!fw.pending && (
+                    <p className="text-xs text-brand-muted opacity-50 mt-2 ml-6">
+                      Sample from full framework
+                    </p>
+                  )}
+                </div>
               ))}
-            </ul>
-          </section>
-        )}
+            </div>
+          </div>
 
-        {/* CTA */}
-        <section className="mb-16">
-          <div className="h-px bg-brand-border mb-8" />
-          <h2 className="text-xs font-semibold tracking-widest uppercase text-brand-muted mb-4">
-            Interested?
-          </h2>
-          <p className="text-[0.9375rem] leading-relaxed text-brand-text opacity-75 mb-5">
-            If this work connects with what you're building or thinking about,
-            reach out.
-          </p>
-          <a
-            href="mailto:troy@divergent-networks.com"
-            className="inline-block text-sm font-medium text-brand-accent border-b border-brand-accent-dim pb-px transition-colors duration-150 hover:text-brand-text hover:border-brand-muted"
+          <div>
+            <div className="h-px bg-brand-border mb-6" />
+            <h2 className="text-xs font-semibold tracking-widest uppercase text-brand-muted mb-4">
+              What comes next
+            </h2>
+            <p className="text-[0.9375rem] leading-relaxed text-brand-text opacity-85">
+              {project.whatsNext}
+            </p>
+          </div>
+
+          {project.biggerVision && (
+            <div>
+              <div className="h-px bg-brand-border mb-6" />
+              <h2 className="text-xs font-semibold tracking-widest uppercase text-brand-muted mb-4">
+                Bigger vision
+              </h2>
+              <p className="text-[0.9375rem] leading-relaxed text-brand-text opacity-85">
+                {project.biggerVision}
+              </p>
+            </div>
+          )}
+        </div>
+
+        <div className="mt-12 pt-8 border-t border-brand-border">
+          <Link
+            href="/"
+            className="text-sm text-brand-muted hover:text-brand-accent transition-colors duration-150"
           >
-            troy@divergent-networks.com
-          </a>
-        </section>
-
-        {/* Footer */}
-        <footer className="pt-8 border-t border-brand-border">
-          <p className="text-xs text-brand-muted opacity-50">
-            © 2026 Divergent Networks
-          </p>
-        </footer>
+            &larr; All work
+          </Link>
+        </div>
       </div>
     </main>
   );

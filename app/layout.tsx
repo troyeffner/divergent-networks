@@ -1,28 +1,28 @@
 import type { Metadata } from "next";
+import { Analytics } from "@vercel/analytics/react";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "Troy Effner — Principal Research Technologist",
+  title:
+    "Divergent Networks — Understanding lives where the person meets the problem",
   description:
-    "I design and operate custom research systems — combining deep qualitative methodology with platform thinking to make the craft of understanding people fast, repeatable, and real.",
+    "Organic Design applied to research, product design, and stakeholder decision-making. We build systems that hold the meeting between person and problem.",
   metadataBase: new URL("https://divergent-networks.com"),
-  alternates: {
-    canonical: "/",
-  },
   openGraph: {
-    title: "Troy Effner — Principal Research Technologist",
+    title:
+      "Divergent Networks — Understanding lives where the person meets the problem",
     description:
-      "Boutique research and strategy practice. Divergent Networks.",
-    url: "https://divergent-networks.com",
+      "Organic Design applied to research, product design, and stakeholder decision-making.",
+    url: "/",
     siteName: "Divergent Networks",
     type: "website",
     locale: "en_US",
   },
   twitter: {
     card: "summary",
-    title: "Troy Effner — Principal Research Technologist",
+    title: "Divergent Networks",
     description:
-      "Boutique research and strategy practice. Divergent Networks.",
+      "Organic Design applied to research, product design, and stakeholder decision-making.",
   },
   robots: {
     index: true,
@@ -42,6 +42,7 @@ export default function RootLayout({
     <html lang="en">
       <body className="bg-brand-bg text-brand-text font-sans antialiased">
         {children}
+        <Analytics />
       </body>
     </html>
   );
