@@ -38,7 +38,7 @@ const storyMoments: StoryMoment[] = [
   },
   {
     slug: "commons",
-    heading: "Piloted a community offering.",
+    heading: "Piloted a photo-native community offering.",
     narrative:
       "The community information existed, but it was scattered across platforms that did not live in the community. The people who knew what was happening had no native surface to share it. Facebook groups bury local posts in algorithmic feeds. Nextdoor treats neighborhoods as ad markets. The real knowledge was in people's heads with no place to put it.",
     connection:
