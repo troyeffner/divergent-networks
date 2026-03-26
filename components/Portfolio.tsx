@@ -44,6 +44,13 @@ const categories: WorkCategory[] = [
         url: "https://uticacommunityboard.vercel.app",
         hasDetail: true,
       },
+      {
+        slug: "story-lab",
+        name: "Story Lab: Storytelling Workshops and Gatherings",
+        tagline:
+          "A 90-minute workshop teaching people to write a 5-minute story from their own lived experience. Grew from Pride Tales queer storytelling events. Improv hangouts and shared home space extend the practice into ongoing community.",
+        hasDetail: true,
+      },
     ],
   },
   {
@@ -55,8 +62,8 @@ const categories: WorkCategory[] = [
         slug: "one-second-local",
         name: "One Second Local: Temporal Reflection Tool",
         tagline:
-          "A tool that helps people discover patterns in their own lives by capturing brief moments and surfacing them over time. Currently in the research phase: mapping how people relate to their own past experiences.",
-        hasDetail: false,
+          "A self-reflection app that compresses photos and video into one-second moments and compiles them into a continuous film over time. Nine frameworks traced. The most fully developed case study in the portfolio.",
+        hasDetail: true,
       },
     ],
   },
