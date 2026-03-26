@@ -35,6 +35,21 @@ export default function Home() {
           </div>
         </section>
 
+        {/* Story entry */}
+        <section className="mb-16">
+          <Link
+            href="/story"
+            className="block border border-brand-border rounded-lg p-6 hover:border-brand-accent-dim transition-colors duration-200 group"
+          >
+            <h2 className="text-sm font-semibold text-brand-accent group-hover:text-brand-text transition-colors duration-150 mb-2">
+              This is water
+            </h2>
+            <p className="text-[0.9375rem] leading-relaxed text-brand-text opacity-65">
+              Every product in this portfolio started by noticing something that was already there. A self-guided path through the story, the products, and the frameworks underneath. Find yourself in the work.
+            </p>
+          </Link>
+        </section>
+
         <Method />
         <Portfolio />
 

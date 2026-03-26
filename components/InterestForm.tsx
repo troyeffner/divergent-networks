@@ -116,6 +116,40 @@ const productJobs: Record<string, { label: string; jobs: string[] }> = {
   },
 };
 
+// Wormholes: when a job is selected, it may bridge to another product
+const wormholes: Record<string, { product: string; label: string; prompt: string }> = {
+  // homeground wormholes
+  "Compare neighborhoods by how they support my daily life":
+    { product: "commons", label: "The Commons", prompt: "The neighborhood knowledge is already there" },
+  "Coordinate a housing decision with my household":
+    { product: "tyfbaf", label: "tyfbaf", prompt: "If you already have a place, friends may want to visit" },
+  // story-lab wormholes
+  "Bring Story Lab to my community or organization":
+    { product: "commons", label: "The Commons", prompt: "Community surfaces hold what you build" },
+  "Take the Story Craft workshop to shape my own story":
+    { product: "one-second-local", label: "One Second Local", prompt: "Your daily photos are another way to see your own story" },
+  // smallbiz wormholes
+  "See my business health in language I actually use":
+    { product: "commons", label: "The Commons", prompt: "Your customers are already talking about you locally" },
+  // commons wormholes
+  "Connect with people nearby who know what I need to know":
+    { product: "story-lab", label: "Story Lab", prompt: "The stories your neighbors carry are the real signal" },
+  "Find out what is actually happening in my neighborhood":
+    { product: "homeground", label: "Home Ground", prompt: "That question started with a move" },
+  // one-second-local wormholes
+  "See the pattern in my own experience across months":
+    { product: "story-lab", label: "Story Lab", prompt: "The pattern in your photos may hold a story worth telling" },
+  // tyfbaf wormholes
+  "Find friends in my network who are open to home swaps":
+    { product: "linkedin-research-surface", label: "LinkedIn Research Surface", prompt: "Your network is already signaling who is open" },
+  // linkedin wormholes
+  // audience job wormholes
+  "I want to attend a storytelling event or improv hangout":
+    { product: "story-lab", label: "Story Lab", prompt: "The stories are already there" },
+  "I want to pilot one of these products in my community":
+    { product: "commons", label: "The Commons", prompt: "Start where the community knowledge already lives" },
+};
+
 interface InterestFormProps {
   product?: string | null;
 }
@@ -135,6 +169,13 @@ export default function InterestForm({ product }: InterestFormProps) {
     : selectedAudience
     ? audienceJobs[selectedAudience].jobs
     : null;
+
+  // Find wormholes for currently selected jobs
+  const activeWormholes = selectedJobs
+    .filter((job) => wormholes[job])
+    .map((job) => ({ job, ...wormholes[job] }))
+    // Don't show wormhole back to current product
+    .filter((w) => w.product !== product);
 
   function toggleJob(job: string) {
     setSelectedJobs((prev) => {
@@ -288,6 +329,26 @@ export default function InterestForm({ product }: InterestFormProps) {
               {selectedJobs.length} of 3 selected
             </p>
           )}
+        </div>
+      )}
+
+      {/* Wormholes: contextual bridges to other products */}
+      {activeWormholes.length > 0 && (
+        <div className="space-y-2">
+          {activeWormholes.map((w) => (
+            <a
+              key={w.product}
+              href={`/connect?product=${w.product}`}
+              className="block px-4 py-3 rounded border border-brand-accent-dim/40 bg-brand-accent/5 hover:border-brand-accent-dim transition-colors duration-150"
+            >
+              <span className="text-xs font-semibold tracking-wider uppercase text-brand-accent">
+                {w.prompt}
+              </span>
+              <span className="block text-[0.8125rem] text-brand-muted mt-0.5">
+                See {w.label} &rarr;
+              </span>
+            </a>
+          ))}
         </div>
       )}
 

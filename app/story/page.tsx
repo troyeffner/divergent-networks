@@ -16,7 +16,7 @@ const storyMoments: StoryMoment[] = [
     slug: "homeground",
     heading: "Planned to move to New York, and bought a house.",
     narrative:
-      "The decision to move from San Francisco to New York started with a question that no tool could answer properly: can I afford this, can I sustain it, and does it support the life I actually want? Every home buying tool collapsed those into one number. But they are three different questions with three different shapes. The gap was personal before it was a product.",
+      "The answers were already there. Can I afford this? Can I sustain it? Does it support the life I actually want? Three questions, three different shapes. Every home buying tool collapsed them into one number. But the data to hold all three existed. It was sitting in public records, in my own spending patterns, in the shape of the neighborhoods I was considering. No one had built the surface to look at it honestly.",
     connection:
       "This became Home Ground: a decision toolkit that holds all three questions without collapsing them.",
   },
@@ -24,7 +24,7 @@ const storyMoments: StoryMoment[] = [
     slug: "story-lab",
     heading: "Learned I could teach.",
     narrative:
-      "Being queer in a new place meant finding community on my own terms. I started running Pride Tales, themed storytelling gatherings where people share real stories from their own lives and are genuinely witnessed. That evolved into a 90-minute workshop teaching people to write a 5-minute story from their own lived experience. Improv hangouts in my home space became another way to create connection through sharing space. The method was simple: Task is what you were doing when it happened, Zoom is what you were feeling in that moment. That combination helps people find the real story inside their experience.",
+      "Being queer in a new place meant finding community on my own terms. But the stories were already there. Everyone had one. They just had no method to shape it and no space where it would be held. I started running Pride Tales, themed storytelling gatherings where people share real stories and are genuinely witnessed. That evolved into a 90-minute workshop teaching people to write a 5-minute story from their own lived experience. Improv hangouts in my home space became another way of noticing what was already in the room: people who wanted to connect and just needed permission. The method was simple: Task is what you were doing when it happened, Zoom is what you were feeling. That combination helps people find the real story they were already carrying.",
     connection:
       "This became Story Lab: storytelling workshops and gatherings where people learn to shape their stories and tell them in a space that holds what they share.",
   },
@@ -32,7 +32,7 @@ const storyMoments: StoryMoment[] = [
     slug: "smallbiz",
     heading: "Piloted a small business offering.",
     narrative:
-      "Being in a new community meant seeing the local businesses up close. The same bottlenecks kept appearing: handoffs that dropped information, steps that depended on one person's memory, decisions that stalled because the right data was in the wrong place. These are service design problems. But no one had translated service design into language a small business operator would recognize. The goal became bringing AI and agency to the people who need it most, in their own vocabulary.",
+      "The bottlenecks were right there. Handoffs that dropped information, steps that depended on one person's memory, decisions that stalled because the right data was in the wrong place. The operators were already solving these problems with workarounds, sticky notes, and gut instinct. They knew their businesses. No one had translated what they already knew into a system they could see and act on. The goal became bringing AI and agency to the people who need it most, in their own vocabulary.",
     connection:
       "This became Small Biz Operator: workflow bottleneck tools that apply service design in the operator's own language.",
   },
@@ -40,7 +40,7 @@ const storyMoments: StoryMoment[] = [
     slug: "commons",
     heading: "Piloted a photo-native community offering.",
     narrative:
-      "The community information existed, but it was scattered across platforms that did not live in the community. The people who knew what was happening had no native surface to share it. Facebook groups bury local posts in algorithmic feeds. Nextdoor treats neighborhoods as ad markets. The real knowledge was in people's heads with no place to put it.",
+      "The community knowledge was already there. Who runs the good barber shop. When the farmers market moves indoors. Which block has parking on street cleaning day. It lived in people's heads, in conversations at the hardware store, in the posters stapled to telephone poles. Facebook groups bury it in algorithmic feeds. Nextdoor treats it as an ad market. The knowledge was real. It just had no native surface.",
     connection:
       "This became The Commons: a photo-native community board where local information is discovered, not broadcast.",
   },
@@ -48,7 +48,7 @@ const storyMoments: StoryMoment[] = [
     slug: "one-second-local",
     heading: "Photos are nouns. Videos are verbs. That is life.",
     narrative:
-      "Through all of this, thousands of photos accumulated. But photos are locked. They are nouns: static, frozen, disconnected from each other. Videos are verbs: they move, they carry time. Life is a sequence, not a collection. Learning from your experience, even the hard parts, requires seeing the sequence. Take those photos too. The bad days, the uncertain moments, the transitions. Meaning lives in the pattern, not in any single frame.",
+      "Through all of this, thousands of photos accumulated. The record of daily life was already there, sitting in the camera roll. But photos are locked. They are nouns: static, frozen, disconnected from each other. Videos are verbs: they move, they carry time. The meaning was already in the sequence, not in any single frame. Take those photos too. The bad days, the uncertain moments, the transitions. The pattern was always there. It just needed a surface that could hold time.",
     connection:
       "This became One Second Local: a self-reflection tool that compresses each day to one moment and compiles them into a film you can traverse over time.",
   },
@@ -56,9 +56,17 @@ const storyMoments: StoryMoment[] = [
     slug: "tyfbaf",
     heading: "Friends wanted to visit. The trust was already there.",
     narrative:
-      "Once you have a home in a place worth visiting, friends want to swap. The coordination was the only friction. Every existing platform assumes strangers and adds insurance, deposits, and verification on top. Between friends, the trust already exists. The tool should honor that, not replace it.",
+      "Once you have a home in a place worth visiting, friends want to swap. The trust was already there. Years of friendship, shared meals, standing invitations. Every existing platform assumes strangers and layers on insurance, deposits, and verification. Between friends, the relationship is the infrastructure. It was already built. The tool should honor that, not replace it.",
     connection:
       "This became tyfbaf: friend-to-friend home swaps that start from trust, not from platform guarantees.",
+  },
+  {
+    slug: "linkedin-research-surface",
+    heading: "Wanted our UX community to actually see each other.",
+    narrative:
+      "The signal was already there. UX practitioners post, react, comment, and share what they care about every day. But LinkedIn treats all of it as broadcast content. None of it becomes visible as a community recognizing itself. The activity is there. The connections are there. The shared concerns are there. I wanted the people in my professional community to see each other through what they actually care about, not through who the algorithm promotes. The water was right there.",
+    connection:
+      "This became LinkedIn Research Surface: a layer that structures LinkedIn activity as research signal so a professional community can see its own patterns.",
   },
 ];
 
@@ -77,13 +85,16 @@ export default function StoryPage() {
         </Link>
 
         <h1 className="text-2xl md:text-3xl font-bold text-brand-text mb-4">
-          How this portfolio grew
+          This is water
         </h1>
         <p className="text-[0.9375rem] leading-relaxed text-brand-text opacity-75 mb-4">
-          Every product in this portfolio started from the same root: a decision to move from San Francisco to New York and build a life from scratch. The products are not separate bets. They grew from real problems encountered in sequence. Each one was traced through the same method before anything was built.
+          There is a famous bit about two young fish swimming along and an older fish passes by and says, &ldquo;Morning, boys. How&rsquo;s the water?&rdquo; And one young fish turns to the other and says, &ldquo;What the hell is water?&rdquo;
+        </p>
+        <p className="text-[0.9375rem] leading-relaxed text-brand-text opacity-75 mb-4">
+          Every product in this portfolio started the same way: by noticing what was already there. The photos already on your phone. The community knowledge already in people&rsquo;s heads. The stories you already lived. The friends you already trust. The professional signal already being generated. None of it needed to be invented. It needed a surface that could hold it.
         </p>
         <p className="text-[0.9375rem] leading-relaxed text-brand-text opacity-60 mb-12">
-          At Zillow, I watched something revealing: the business resisted putting jobs-to-be-done on the surface of the product, even though everyone agreed they were the truth. When we finally listed the jobs so the person could orient themselves, it was a clear winner. The business just was not sure. That tension between knowing what works and resisting the simplicity of it runs through everything here. These products put the job on the surface.
+          At Zillow, I watched the business resist putting jobs-to-be-done on the surface of the product, even though everyone agreed they were the truth. When we finally listed the jobs so the person could orient themselves, it was a clear winner. The company just was not sure. That tension between knowing what is real and resisting the simplicity of looking at it runs through everything here. These products look at the water.
         </p>
 
         <div className="h-px bg-brand-border mb-12" />
@@ -232,10 +243,10 @@ export default function StoryPage() {
               </div>
               <div className="flex-1">
                 <h2 className="text-lg font-semibold text-brand-text mb-2">
-                  Realized every product followed the same pattern.
+                  Every product was the same act: looking at the water.
                 </h2>
                 <p className="text-[0.9375rem] leading-relaxed text-brand-text opacity-65 mb-3">
-                  Each product started from a lived experience, not a market analysis. The pattern was consistent: trace what is actually happening, find where it breaks down, build the smallest thing that holds the real shape of the problem. Trace, root, re-soil, regrow. That cycle became Organic Design, and it runs underneath everything in this portfolio.
+                  The data was already in the public records. The stories were already in the people. The bottlenecks were already in the workflows. The community knowledge was already in people&rsquo;s heads. The photos were already in the camera roll. The trust was already in the friendships. The signal was already on LinkedIn. Every product in this portfolio started by noticing something real that was right there, then building the smallest surface that could hold it. Trace what is actually happening. Find where it breaks down. Build what holds the real shape. That cycle became Organic Design.
                 </p>
                 <Link
                   href="/work/organic-design"
@@ -248,32 +259,21 @@ export default function StoryPage() {
           </div>
         </div>
 
-        {/* Where is this going */}
+        {/* You just did it */}
         <div className="mt-16">
           <div className="h-px bg-brand-border mb-8" />
           <h2 className="text-xs font-semibold tracking-widest uppercase text-brand-muted mb-6">
-            Where is this going
+            You just did it
           </h2>
-          <ul className="space-y-4">
-            <li className="flex gap-3 items-start">
-              <span className="mt-1 shrink-0 text-brand-accent-dim">&bull;</span>
-              <p className="text-[0.9375rem] leading-relaxed text-brand-text opacity-75">
-                Each product in this portfolio is being built as a case study in Organic Design. The frameworks are not decoration. They are the working documents that drive what gets built and what gets cut.
-              </p>
-            </li>
-            <li className="flex gap-3 items-start">
-              <span className="mt-1 shrink-0 text-brand-accent-dim">&bull;</span>
-              <p className="text-[0.9375rem] leading-relaxed text-brand-text opacity-75">
-                The portfolio itself is becoming a live demonstration of the method. You are looking at it right now. The story you just read is the traversal. The products are the moments. The frameworks underneath are the soil.
-              </p>
-            </li>
-            <li className="flex gap-3 items-start">
-              <span className="mt-1 shrink-0 text-brand-accent-dim">&bull;</span>
-              <p className="text-[0.9375rem] leading-relaxed text-brand-text opacity-75">
-                If you see yourself in any of these jobs, or if you have expertise that could sharpen one of these products, that is the signal. The work is real, the method is documented, and the door is open.
-              </p>
-            </li>
-          </ul>
+          <p className="text-[0.9375rem] leading-relaxed text-brand-text opacity-75 mb-4">
+            You scrolled through this story and something caught your attention. You expanded a product, maybe looked at a framework, maybe skipped one that did not speak to you. You traced your own steps of understanding. That is the method. Not a pitch. Not a funnel. A self-guided path through what is real, where you find yourself in the work by following what resonates.
+          </p>
+          <p className="text-[0.9375rem] leading-relaxed text-brand-text opacity-75 mb-4">
+            If one of these products connected to something you are already living, that is not a coincidence. That is the water. The thing that was right in front of you the whole time.
+          </p>
+          <p className="text-[0.9375rem] leading-relaxed text-brand-text opacity-60">
+            The frameworks underneath each product are working documents, not decoration. The portfolio itself is a live demonstration of the method. And the door is open. If you see yourself in any of these jobs, or if you have expertise that could sharpen one of these products, that is the signal.
+          </p>
         </div>
 
         <div className="mt-12 pt-8 border-t border-brand-border flex gap-6">
