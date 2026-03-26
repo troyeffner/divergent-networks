@@ -5,13 +5,60 @@ import { supabase } from "@/lib/supabase";
 
 type FormState = "idle" | "submitting" | "success" | "error";
 
-const generalJobs = [
-  "Understand what users actually need",
-  "Turn research into product decisions",
-  "Build shared language across a team",
-  "Move from concept to working product",
-  "Evaluate whether a product idea has real traction",
-];
+const audienceJobs: Record<string, { label: string; description: string; jobs: string[] }> = {
+  friend: {
+    label: "Friend or supporter",
+    description: "You know Troy or found this through someone who does.",
+    jobs: [
+      "I want to support what Troy is building",
+      "I want to attend a storytelling event or improv hangout",
+      "I want to swap homes through tyfbaf",
+      "I want to try one of these products as an early user",
+      "I just want to stay in the loop",
+    ],
+  },
+  investor: {
+    label: "Investor or funder",
+    description: "You are evaluating the portfolio or a specific product.",
+    jobs: [
+      "I want to understand the thesis behind the portfolio",
+      "I want to evaluate market opportunity for a specific product",
+      "I want to see the product roadmap and development plan",
+      "I want to discuss funding or partnership structure",
+    ],
+  },
+  community: {
+    label: "Community builder",
+    description: "You work in a community and see overlap with something here.",
+    jobs: [
+      "I want to pilot one of these products in my community",
+      "I run a local organization and see a fit with The Commons",
+      "I facilitate storytelling or community events and want to connect",
+      "I want to bring Story Lab workshops to my area",
+    ],
+  },
+  probono: {
+    label: "Pro bono collaborator",
+    description: "You have skills that could sharpen one of these products.",
+    jobs: [
+      "I have design or research expertise and want to contribute",
+      "I have engineering skills that match a gap in one of these products",
+      "I want to learn by building alongside a real portfolio",
+      "I want to help with a specific product (I will say which below)",
+    ],
+  },
+  consulting: {
+    label: "Team or organization",
+    description: "Your team needs research, product design, or stakeholder alignment.",
+    jobs: [
+      "Understand what users actually need",
+      "Turn research into product decisions",
+      "Build shared language across a team",
+      "Move from concept to working product",
+      "Evaluate whether a product idea has real traction",
+    ],
+  },
+};
 
 const productJobs: Record<string, { label: string; jobs: string[] }> = {
   homeground: {
@@ -50,6 +97,23 @@ const productJobs: Record<string, { label: string; jobs: string[] }> = {
       "Find friends in my network who are open to home swaps",
     ],
   },
+  "story-lab": {
+    label: "Story Lab",
+    jobs: [
+      "Attend a Pride Tales storytelling gathering",
+      "Take the Story Craft workshop to shape my own story",
+      "Bring Story Lab to my community or organization",
+      "Learn to facilitate storytelling gatherings",
+    ],
+  },
+  "one-second-local": {
+    label: "One Second Local",
+    jobs: [
+      "Turn my daily photos into a reflection I can traverse over time",
+      "Build a practice of capturing one moment per day",
+      "See the pattern in my own experience across months",
+    ],
+  },
 };
 
 interface InterestFormProps {
@@ -58,12 +122,19 @@ interface InterestFormProps {
 
 export default function InterestForm({ product }: InterestFormProps) {
   const productConfig = product ? productJobs[product] : null;
-  const jobOptions = productConfig ? productConfig.jobs : generalJobs;
   const [state, setState] = useState<FormState>("idle");
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
+  const [selectedAudience, setSelectedAudience] = useState<string | null>(null);
   const [selectedJobs, setSelectedJobs] = useState<string[]>([]);
   const [note, setNote] = useState("");
+
+  // Three modes: product-specific, audience-selected, or audience picker
+  const jobOptions = productConfig
+    ? productConfig.jobs
+    : selectedAudience
+    ? audienceJobs[selectedAudience].jobs
+    : null;
 
   function toggleJob(job: string) {
     setSelectedJobs((prev) => {
@@ -86,6 +157,7 @@ export default function InterestForm({ product }: InterestFormProps) {
       note: note || null,
       source: "divergent-networks",
       product: product || null,
+      audience: selectedAudience || null,
     });
 
     if (error) {
@@ -94,6 +166,7 @@ export default function InterestForm({ product }: InterestFormProps) {
       setState("success");
       setName("");
       setEmail("");
+      setSelectedAudience(null);
       setSelectedJobs([]);
       setNote("");
     }
@@ -145,39 +218,78 @@ export default function InterestForm({ product }: InterestFormProps) {
         />
       </div>
 
-      <div>
-        <label className="block text-xs font-semibold tracking-widest uppercase text-brand-muted mb-3">
-          What are you trying to do? (pick up to 3)
-        </label>
-        <div className="space-y-2">
-          {jobOptions.map((job) => {
-            const isSelected = selectedJobs.includes(job);
-            const isDisabled = !isSelected && selectedJobs.length >= 3;
-            return (
-              <button
-                key={job}
-                type="button"
-                onClick={() => toggleJob(job)}
-                disabled={isDisabled}
-                className={`w-full text-left px-4 py-2.5 rounded border text-[0.9375rem] transition-colors duration-150 ${
-                  isSelected
-                    ? "border-brand-accent bg-brand-accent/10 text-brand-text"
-                    : isDisabled
-                    ? "border-brand-border text-brand-muted/50 cursor-not-allowed"
-                    : "border-brand-border text-brand-text opacity-75 hover:border-brand-accent-dim hover:opacity-100"
-                }`}
-              >
-                {job}
-              </button>
-            );
-          })}
+      {/* Audience picker (only when no product context) */}
+      {!productConfig && (
+        <div>
+          <label className="block text-xs font-semibold tracking-widest uppercase text-brand-muted mb-3">
+            What brings you here?
+          </label>
+          <div className="space-y-2">
+            {Object.entries(audienceJobs).map(([key, audience]) => {
+              const isSelected = selectedAudience === key;
+              return (
+                <button
+                  key={key}
+                  type="button"
+                  onClick={() => {
+                    setSelectedAudience(isSelected ? null : key);
+                    setSelectedJobs([]);
+                  }}
+                  className={`w-full text-left px-4 py-2.5 rounded border transition-colors duration-150 ${
+                    isSelected
+                      ? "border-brand-accent bg-brand-accent/10"
+                      : "border-brand-border hover:border-brand-accent-dim"
+                  }`}
+                >
+                  <span className={`text-[0.9375rem] ${isSelected ? "text-brand-text" : "text-brand-text opacity-75"}`}>
+                    {audience.label}
+                  </span>
+                  <span className="block text-xs text-brand-muted mt-0.5">
+                    {audience.description}
+                  </span>
+                </button>
+              );
+            })}
+          </div>
         </div>
-        {selectedJobs.length > 0 && (
-          <p className="text-xs text-brand-muted mt-2">
-            {selectedJobs.length} of 3 selected
-          </p>
-        )}
-      </div>
+      )}
+
+      {/* Job picker (shows after audience selection or for product-specific pages) */}
+      {jobOptions && (
+        <div>
+          <label className="block text-xs font-semibold tracking-widest uppercase text-brand-muted mb-3">
+            What are you trying to do? (pick up to 3)
+          </label>
+          <div className="space-y-2">
+            {jobOptions.map((job) => {
+              const isSelected = selectedJobs.includes(job);
+              const isDisabled = !isSelected && selectedJobs.length >= 3;
+              return (
+                <button
+                  key={job}
+                  type="button"
+                  onClick={() => toggleJob(job)}
+                  disabled={isDisabled}
+                  className={`w-full text-left px-4 py-2.5 rounded border text-[0.9375rem] transition-colors duration-150 ${
+                    isSelected
+                      ? "border-brand-accent bg-brand-accent/10 text-brand-text"
+                      : isDisabled
+                      ? "border-brand-border text-brand-muted/50 cursor-not-allowed"
+                      : "border-brand-border text-brand-text opacity-75 hover:border-brand-accent-dim hover:opacity-100"
+                  }`}
+                >
+                  {job}
+                </button>
+              );
+            })}
+          </div>
+          {selectedJobs.length > 0 && (
+            <p className="text-xs text-brand-muted mt-2">
+              {selectedJobs.length} of 3 selected
+            </p>
+          )}
+        </div>
+      )}
 
       <div>
         <label

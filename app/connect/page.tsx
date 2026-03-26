@@ -10,6 +10,11 @@ const productNames: Record<string, string> = {
   smallbiz: "Small Biz Operator",
   commons: "The Commons",
   tyfbaf: "tyfbaf",
+  "story-lab": "Story Lab",
+  "one-second-local": "One Second Local",
+  "color-coordinator": "Color Coordinator",
+  "satbuttons": "SAT Buttons",
+  "linkedin-research-surface": "LinkedIn Research Surface",
 };
 
 function ConnectContent() {
@@ -41,7 +46,7 @@ function ConnectContent() {
             Get in touch
           </h1>
           <p className="text-[0.9375rem] leading-relaxed text-brand-text opacity-85 mb-10">
-            For organizations ready to understand their users without guessing. For teams where the research needs to reach the decision.
+            Whether you found this portfolio through a friend, you are evaluating an opportunity, you see overlap with work in your own community, or your team needs research and product design support, start here. Tell me who you are and what you are trying to do.
           </p>
         </>
       )}
@@ -70,7 +75,7 @@ function ConnectContent() {
       <div className="h-px bg-brand-border mb-10" />
 
       <h2 className="text-xs font-semibold tracking-widest uppercase text-brand-muted mb-6">
-        {productName ? `What are you trying to do with ${productName}?` : "Tell me about your work"}
+        {productName ? `What are you trying to do with ${productName}?` : "Start here"}
       </h2>
 
       <InterestForm product={product} />
